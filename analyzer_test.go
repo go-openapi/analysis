@@ -147,7 +147,7 @@ func TestAnalyzer(t *testing.T) {
 }
 
 func TestDefinitionAnalysis(t *testing.T) {
-	doc, err := loadSpec(filepath.Join("..", "fixtures", "analysis", "definitions.yml"))
+	doc, err := loadSpec(filepath.Join("fixtures", "definitions.yml"))
 	if assert.NoError(t, err) {
 		analyzer := New(doc)
 		definitions := analyzer.allSchemas
@@ -201,7 +201,7 @@ func loadSpec(path string) (*spec.Swagger, error) {
 }
 
 func TestReferenceAnalysis(t *testing.T) {
-	doc, err := loadSpec(filepath.Join("..", "fixtures", "analysis", "references.yml"))
+	doc, err := loadSpec(filepath.Join("fixtures", "references.yml"))
 	if assert.NoError(t, err) {
 		definitions := New(doc).references
 
