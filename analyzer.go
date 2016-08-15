@@ -379,14 +379,8 @@ func (s *Spec) ProducesFor(operation *spec.Operation) []string {
 	return s.structMapKeys(prod)
 }
 
-func mapKeyFromParam(param *spec.Parameter) interface{} {
-	return struct {
-		Name string
-		In   string
-	}{
-		Name: fieldNameFromParam(param),
-		In:   param.In,
-	}
+func mapKeyFromParam(param *spec.Parameter) string {
+	return fmt.Sprintf("%s#%s", param.In, fieldNameFromParam(param))
 }
 
 func fieldNameFromParam(param *spec.Parameter) string {
@@ -396,7 +390,7 @@ func fieldNameFromParam(param *spec.Parameter) string {
 	return swag.ToGoName(param.Name)
 }
 
-func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[interface{}]spec.Parameter) {
+func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Parameter) {
 	for _, param := range parameters {
 		pr := param
 		if pr.Ref.String() != "" {
@@ -413,7 +407,7 @@ func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[interface{}]spec
 // ParametersFor the specified operation id
 func (s *Spec) ParametersFor(operationID string) []spec.Parameter {
 	gatherParams := func(pi *spec.PathItem, op *spec.Operation) []spec.Parameter {
-		bag := make(map[interface{}]spec.Parameter)
+		bag := make(map[string]spec.Parameter)
 		s.paramsAsMap(pi.Parameters, bag)
 		s.paramsAsMap(op.Parameters, bag)
 
@@ -451,8 +445,8 @@ func (s *Spec) ParametersFor(operationID string) []spec.Parameter {
 
 // ParamsFor the specified method and path. Aggregates them with the defaults etc, so it's all the params that
 // apply for the method and path.
-func (s *Spec) ParamsFor(method, path string) map[interface{}]spec.Parameter {
-	res := make(map[interface{}]spec.Parameter)
+func (s *Spec) ParamsFor(method, path string) map[string]spec.Parameter {
+	res := make(map[string]spec.Parameter)
 	if pi, ok := s.spec.Paths.Paths[path]; ok {
 		s.paramsAsMap(pi.Parameters, res)
 		s.paramsAsMap(s.operations[strings.ToUpper(method)][path].Parameters, res)
