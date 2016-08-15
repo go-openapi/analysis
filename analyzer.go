@@ -503,8 +503,12 @@ func (s *Spec) OperationIDs() []string {
 	}
 	result := make([]string, 0, len(s.operations))
 	for method, v := range s.operations {
-		for p := range v {
-			result = append(result, fmt.Sprintf("%s %s", strings.ToUpper(method), p))
+		for p, o := range v {
+			if o.ID != "" {
+				result = append(result, o.ID)
+			} else {
+				result = append(result, fmt.Sprintf("%s %s", strings.ToUpper(method), p))
+			}
 		}
 	}
 	return result
