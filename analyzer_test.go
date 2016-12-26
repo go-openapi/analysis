@@ -209,6 +209,9 @@ func TestReferenceAnalysis(t *testing.T) {
 		assertRefExists(t, definitions.parameters, "#/paths/~1some~1where~1{id}/parameters/0")
 		assertRefExists(t, definitions.parameters, "#/paths/~1some~1where~1{id}/get/parameters/0")
 
+		// pathITems
+		assertRefExists(t, definitions.pathItems, "#/paths/~1other~1place")
+
 		// responses
 		assertRefExists(t, definitions.responses, "#/paths/~1some~1where~1{id}/get/responses/404")
 

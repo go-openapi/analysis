@@ -31,11 +31,7 @@ type referenceAnalysis struct {
 	parameters map[string]spec.Ref
 	items      map[string]spec.Ref
 	allRefs    map[string]spec.Ref
-	referenced struct {
-		schemas    map[string]SchemaRef
-		responses  map[string]*spec.Response
-		parameters map[string]*spec.Parameter
-	}
+	pathItems  map[string]spec.Ref
 }
 
 func (r *referenceAnalysis) addRef(key string, ref spec.Ref) {
@@ -62,6 +58,11 @@ func (r *referenceAnalysis) addParamRef(key string, param *spec.Parameter) {
 	r.addRef(key, param.Ref)
 }
 
+func (r *referenceAnalysis) addPathItemRef(key string, pathItem *spec.PathItem) {
+	r.pathItems["#"+key] = pathItem.Ref
+	r.addRef(key, pathItem.Ref)
+}
+
 // New takes a swagger spec object and returns an analyzed spec document.
 // The analyzed document contains a number of indices that make it easier to
 // reason about semantics of a swagger specification for use in code generation
@@ -77,15 +78,13 @@ func New(doc *spec.Swagger) *Spec {
 		allOfs:      make(map[string]SchemaRef, 150),
 		references: referenceAnalysis{
 			schemas:    make(map[string]spec.Ref, 150),
+			pathItems:  make(map[string]spec.Ref, 150),
 			responses:  make(map[string]spec.Ref, 150),
 			parameters: make(map[string]spec.Ref, 150),
 			items:      make(map[string]spec.Ref, 150),
 			allRefs:    make(map[string]spec.Ref, 150),
 		},
 	}
-	a.references.referenced.schemas = make(map[string]SchemaRef, 150)
-	a.references.referenced.responses = make(map[string]*spec.Response, 150)
-	a.references.referenced.parameters = make(map[string]*spec.Parameter, 150)
 	a.initialize()
 	return a
 }
@@ -152,6 +151,10 @@ func (s *Spec) initialize() {
 func (s *Spec) analyzeOperations(path string, pi *spec.PathItem) {
 	// TODO: resolve refs here?
 	op := pi
+	if pi.Ref.String() != "" {
+		key := slashpath.Join("/paths", jsonpointer.Escape(path))
+		s.references.addPathItemRef(key, pi)
+	}
 	s.analyzeOperation("GET", path, op.Get)
 	s.analyzeOperation("PUT", path, op.Put)
 	s.analyzeOperation("POST", path, op.Post)

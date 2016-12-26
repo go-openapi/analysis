@@ -1,6 +1,6 @@
 language: go
 go:
-- 1.7.1
+- 1.7
 install:
 - go get -u github.com/stretchr/testify/assert
 - go get -u gopkg.in/yaml.v2
