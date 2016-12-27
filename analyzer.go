@@ -26,21 +26,28 @@ import (
 )
 
 type referenceAnalysis struct {
-	schemas    map[string]spec.Ref
-	responses  map[string]spec.Ref
-	parameters map[string]spec.Ref
-	items      map[string]spec.Ref
-	allRefs    map[string]spec.Ref
-	pathItems  map[string]spec.Ref
+	schemas        map[string]spec.Ref
+	responses      map[string]spec.Ref
+	parameters     map[string]spec.Ref
+	items          map[string]spec.Ref
+	headerItems    map[string]spec.Ref
+	parameterItems map[string]spec.Ref
+	allRefs        map[string]spec.Ref
+	pathItems      map[string]spec.Ref
 }
 
 func (r *referenceAnalysis) addRef(key string, ref spec.Ref) {
 	r.allRefs["#"+key] = ref
 }
 
-func (r *referenceAnalysis) addItemsRef(key string, items *spec.Items) {
+func (r *referenceAnalysis) addItemsRef(key string, items *spec.Items, location string) {
 	r.items["#"+key] = items.Ref
 	r.addRef(key, items.Ref)
+	if location == "header" {
+		r.headerItems["#"+key] = items.Ref
+	} else {
+		r.parameterItems["#"+key] = items.Ref
+	}
 }
 
 func (r *referenceAnalysis) addSchemaRef(key string, ref SchemaRef) {
@@ -95,14 +102,6 @@ func (p *patternAnalysis) addSchemaPattern(key, pattern string) {
 	p.addPattern(key, pattern)
 }
 
-type inlineSchemaAnalysis struct {
-	parameters map[string]SchemaRef
-	responses  map[string]SchemaRef
-	items      map[string]SchemaRef
-	schemas    map[string]SchemaRef
-	allInlined map[string]SchemaRef
-}
-
 // New takes a swagger spec object and returns an analyzed spec document.
 // The analyzed document contains a number of indices that make it easier to
 // reason about semantics of a swagger specification for use in code generation
@@ -117,12 +116,14 @@ func New(doc *spec.Swagger) *Spec {
 		allSchemas:  make(map[string]SchemaRef, 150),
 		allOfs:      make(map[string]SchemaRef, 150),
 		references: referenceAnalysis{
-			schemas:    make(map[string]spec.Ref, 150),
-			pathItems:  make(map[string]spec.Ref, 150),
-			responses:  make(map[string]spec.Ref, 150),
-			parameters: make(map[string]spec.Ref, 150),
-			items:      make(map[string]spec.Ref, 150),
-			allRefs:    make(map[string]spec.Ref, 150),
+			schemas:        make(map[string]spec.Ref, 150),
+			pathItems:      make(map[string]spec.Ref, 150),
+			responses:      make(map[string]spec.Ref, 150),
+			parameters:     make(map[string]spec.Ref, 150),
+			items:          make(map[string]spec.Ref, 150),
+			headerItems:    make(map[string]spec.Ref, 150),
+			parameterItems: make(map[string]spec.Ref, 150),
+			allRefs:        make(map[string]spec.Ref, 150),
 		},
 		patterns: patternAnalysis{
 			parameters:  make(map[string]string, 150),
@@ -130,13 +131,6 @@ func New(doc *spec.Swagger) *Spec {
 			items:       make(map[string]string, 150),
 			schemas:     make(map[string]string, 150),
 			allPatterns: make(map[string]string, 150),
-		},
-		inlined: inlineSchemaAnalysis{
-			parameters: make(map[string]SchemaRef, 150),
-			responses:  make(map[string]SchemaRef, 150),
-			items:      make(map[string]SchemaRef, 150),
-			schemas:    make(map[string]SchemaRef, 150),
-			allInlined: make(map[string]SchemaRef, 150),
 		},
 	}
 	a.initialize()
@@ -153,7 +147,6 @@ type Spec struct {
 	operations  map[string]map[string]*spec.Operation
 	references  referenceAnalysis
 	patterns    patternAnalysis
-	inlined     inlineSchemaAnalysis
 	allSchemas  map[string]SchemaRef
 	allOfs      map[string]SchemaRef
 }
@@ -177,7 +170,7 @@ func (s *Spec) initialize() {
 	for name, parameter := range s.spec.Parameters {
 		refPref := slashpath.Join("/parameters", jsonpointer.Escape(name))
 		if parameter.Items != nil {
-			s.analyzeItems("items", parameter.Items, refPref)
+			s.analyzeItems("items", parameter.Items, refPref, "parameter")
 		}
 		if parameter.In == "body" && parameter.Schema != nil {
 			s.analyzeSchema("schema", *parameter.Schema, refPref)
@@ -192,7 +185,7 @@ func (s *Spec) initialize() {
 		for k, v := range response.Headers {
 			hRefPref := slashpath.Join(refPref, "headers", k)
 			if v.Items != nil {
-				s.analyzeItems("items", v.Items, hRefPref)
+				s.analyzeItems("items", v.Items, hRefPref, "header")
 			}
 			if v.Pattern != "" {
 				s.patterns.addHeaderPattern(hRefPref, v.Pattern)
@@ -234,7 +227,7 @@ func (s *Spec) analyzeOperations(path string, pi *spec.PathItem) {
 			s.patterns.addParameterPattern(refPref, param.Pattern)
 		}
 		if param.Items != nil {
-			s.analyzeItems("items", param.Items, refPref)
+			s.analyzeItems("items", param.Items, refPref, "parameter")
 		}
 		if param.Schema != nil {
 			s.analyzeSchema("schema", *param.Schema, refPref)
@@ -242,14 +235,14 @@ func (s *Spec) analyzeOperations(path string, pi *spec.PathItem) {
 	}
 }
 
-func (s *Spec) analyzeItems(name string, items *spec.Items, prefix string) {
+func (s *Spec) analyzeItems(name string, items *spec.Items, prefix, location string) {
 	if items == nil {
 		return
 	}
 	refPref := slashpath.Join(prefix, name)
-	s.analyzeItems(name, items.Items, refPref)
+	s.analyzeItems(name, items.Items, refPref, location)
 	if items.Ref.String() != "" {
-		s.references.addItemsRef(refPref, items)
+		s.references.addItemsRef(refPref, items, location)
 	}
 	if items.Pattern != "" {
 		s.patterns.addItemsPattern(refPref, items.Pattern)
@@ -285,7 +278,7 @@ func (s *Spec) analyzeOperation(method, path string, op *spec.Operation) {
 		if param.Pattern != "" {
 			s.patterns.addParameterPattern(refPref, param.Pattern)
 		}
-		s.analyzeItems("items", param.Items, refPref)
+		s.analyzeItems("items", param.Items, refPref, "parameter")
 		if param.In == "body" && param.Schema != nil {
 			s.analyzeSchema("schema", *param.Schema, refPref)
 		}
@@ -298,7 +291,7 @@ func (s *Spec) analyzeOperation(method, path string, op *spec.Operation) {
 			}
 			for k, v := range op.Responses.Default.Headers {
 				hRefPref := slashpath.Join(refPref, "headers", k)
-				s.analyzeItems("items", v.Items, hRefPref)
+				s.analyzeItems("items", v.Items, hRefPref, "header")
 				if v.Pattern != "" {
 					s.patterns.addHeaderPattern(hRefPref, v.Pattern)
 				}
@@ -314,7 +307,7 @@ func (s *Spec) analyzeOperation(method, path string, op *spec.Operation) {
 			}
 			for k, v := range res.Headers {
 				hRefPref := slashpath.Join(refPref, "headers", k)
-				s.analyzeItems("items", v.Items, hRefPref)
+				s.analyzeItems("items", v.Items, hRefPref, "header")
 				if v.Pattern != "" {
 					s.patterns.addHeaderPattern(hRefPref, v.Pattern)
 				}
@@ -332,6 +325,7 @@ func (s *Spec) analyzeSchema(name string, schema spec.Schema, prefix string) {
 		Name:   name,
 		Schema: &schema,
 		Ref:    spec.MustCreateRef("#" + refURI),
+		Named:  prefix == "/definitions",
 	}
 	s.allSchemas["#"+refURI] = schRef
 	if schema.Ref.String() != "" {
@@ -354,7 +348,8 @@ func (s *Spec) analyzeSchema(name string, schema spec.Schema, prefix string) {
 		s.analyzeSchema(strconv.Itoa(i), v, slashpath.Join(refURI, "allOf"))
 	}
 	if len(schema.AllOf) > 0 {
-		s.allOfs["#"+refURI] = SchemaRef{Name: name, Schema: &schema, Ref: spec.MustCreateRef("#" + refURI)}
+		s.allOfs["#"+refURI] = schRef
+		// s.allOfs["#"+refURI] = SchemaRef{Name: name, Schema: &schema, Ref: spec.MustCreateRef("#" + refURI)}
 	}
 	for i, v := range schema.AnyOf {
 		s.analyzeSchema(strconv.Itoa(i), v, slashpath.Join(refURI, "anyOf"))
@@ -639,6 +634,7 @@ type SchemaRef struct {
 	Name   string
 	Ref    spec.Ref
 	Schema *spec.Schema
+	Named  bool
 }
 
 // SchemasWithAllOf returns schema references to all schemas that are defined
