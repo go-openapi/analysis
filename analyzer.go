@@ -151,6 +151,33 @@ type Spec struct {
 	allOfs      map[string]SchemaRef
 }
 
+func (s *Spec) reset() {
+	s.consumes = make(map[string]struct{}, 150)
+	s.produces = make(map[string]struct{}, 150)
+	s.authSchemes = make(map[string]struct{}, 150)
+	s.operations = make(map[string]map[string]*spec.Operation, 150)
+	s.allSchemas = make(map[string]SchemaRef, 150)
+	s.allOfs = make(map[string]SchemaRef, 150)
+	s.references.schemas = make(map[string]spec.Ref, 150)
+	s.references.pathItems = make(map[string]spec.Ref, 150)
+	s.references.responses = make(map[string]spec.Ref, 150)
+	s.references.parameters = make(map[string]spec.Ref, 150)
+	s.references.items = make(map[string]spec.Ref, 150)
+	s.references.headerItems = make(map[string]spec.Ref, 150)
+	s.references.parameterItems = make(map[string]spec.Ref, 150)
+	s.references.allRefs = make(map[string]spec.Ref, 150)
+	s.patterns.parameters = make(map[string]string, 150)
+	s.patterns.headers = make(map[string]string, 150)
+	s.patterns.items = make(map[string]string, 150)
+	s.patterns.schemas = make(map[string]string, 150)
+	s.patterns.allPatterns = make(map[string]string, 150)
+}
+
+func (s *Spec) reload() {
+	s.reset()
+	s.initialize()
+}
+
 func (s *Spec) initialize() {
 	for _, c := range s.spec.Consumes {
 		s.consumes[c] = struct{}{}
@@ -322,12 +349,14 @@ func (s *Spec) analyzeOperation(method, path string, op *spec.Operation) {
 func (s *Spec) analyzeSchema(name string, schema spec.Schema, prefix string) {
 	refURI := slashpath.Join(prefix, jsonpointer.Escape(name))
 	schRef := SchemaRef{
-		Name:   name,
-		Schema: &schema,
-		Ref:    spec.MustCreateRef("#" + refURI),
-		Named:  prefix == "/definitions",
+		Name:     name,
+		Schema:   &schema,
+		Ref:      spec.MustCreateRef("#" + refURI),
+		TopLevel: prefix == "/definitions",
 	}
+
 	s.allSchemas["#"+refURI] = schRef
+
 	if schema.Ref.String() != "" {
 		s.references.addSchemaRef(refURI, schRef)
 	}
@@ -349,7 +378,6 @@ func (s *Spec) analyzeSchema(name string, schema spec.Schema, prefix string) {
 	}
 	if len(schema.AllOf) > 0 {
 		s.allOfs["#"+refURI] = schRef
-		// s.allOfs["#"+refURI] = SchemaRef{Name: name, Schema: &schema, Ref: spec.MustCreateRef("#" + refURI)}
 	}
 	for i, v := range schema.AnyOf {
 		s.analyzeSchema(strconv.Itoa(i), v, slashpath.Join(refURI, "anyOf"))
@@ -631,10 +659,10 @@ func (s *Spec) RequiredSecuritySchemes() []string {
 
 // SchemaRef is a reference to a schema
 type SchemaRef struct {
-	Name   string
-	Ref    spec.Ref
-	Schema *spec.Schema
-	Named  bool
+	Name     string
+	Ref      spec.Ref
+	Schema   *spec.Schema
+	TopLevel bool
 }
 
 // SchemasWithAllOf returns schema references to all schemas that are defined

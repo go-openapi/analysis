@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-openapi/loads/fmts"
 	"github.com/go-openapi/spec"
+	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -188,6 +189,17 @@ func TestDefinitionAnalysis(t *testing.T) {
 }
 
 func loadSpec(path string) (*spec.Swagger, error) {
+	spec.PathLoader = func(path string) (json.RawMessage, error) {
+		ext := filepath.Ext(path)
+		if ext == ".yml" || ext == ".yaml" {
+			return fmts.YAMLDoc(path)
+		}
+		data, err := swag.LoadFromFileOrHTTP(path)
+		if err != nil {
+			return nil, err
+		}
+		return json.RawMessage(data), nil
+	}
 	data, err := fmts.YAMLDoc(path)
 	if err != nil {
 		return nil, err
