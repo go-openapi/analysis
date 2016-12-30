@@ -60,8 +60,8 @@ func Flatten(opts FlattenOpts) error {
 
 func nameInlinedSchemas(opts *FlattenOpts) error {
 	namer := &inlineSchemaNamer{Spec: opts.Swagger(), Operations: opRefsByRef(gatherOperations(opts.Spec, nil))}
-
 	depthFirst := sortDepthFirst(opts.Spec.allSchemas)
+
 	for _, key := range depthFirst {
 		sch := opts.Spec.allSchemas[key]
 		if sch.Schema != nil && sch.Schema.Ref.String() == "" && !sch.TopLevel { // inline schema
@@ -80,20 +80,56 @@ func nameInlinedSchemas(opts *FlattenOpts) error {
 	return nil
 }
 
-func sortDepthFirst(data map[string]SchemaRef) []string {
-	var res keys
+var depthGroupOrder = []string{"sharedOpParam", "opParam", "codeResponse", "defaultResponse", "definition"}
+
+func sortDepthFirst(data map[string]SchemaRef) (sorted []string) {
+	// group by category (shared params, op param, statuscode response, default response, definitions)
+	// sort groups internally by number of parts in the key and lexical names
+	// flatten groups into a single list of keys
+	grouped := make(map[string]keys, len(data))
 	for k := range data {
-		res = append(res, k)
+		split := keyParts(k)
+		var pk string
+		if split.IsSharedOperationParam() {
+			pk = "sharedOpParam"
+		}
+		if split.IsOperationParam() {
+			pk = "opParam"
+		}
+		if split.IsStatusCodeResponse() {
+			pk = "codeResponse"
+		}
+		if split.IsDefaultResponse() {
+			pk = "defaultResponse"
+		}
+		if split.IsDefinition() {
+			pk = "definition"
+		}
+		grouped[pk] = append(grouped[pk], key{len(split), k})
 	}
-	sort.Sort(res)
-	return res
+
+	for _, pk := range depthGroupOrder {
+		res := grouped[pk]
+		sort.Sort(res)
+		for _, v := range res {
+			sorted = append(sorted, v.Key)
+		}
+	}
+
+	return
 }
 
-type keys []string
+type key struct {
+	Segments int
+	Key      string
+}
+type keys []key
 
-func (k keys) Len() int           { return len(k) }
-func (k keys) Swap(i, j int)      { k[i], k[j] = k[j], k[i] }
-func (k keys) Less(i, j int) bool { return len(k[i]) > len(k[j]) && k[i] < k[j] }
+func (k keys) Len() int      { return len(k) }
+func (k keys) Swap(i, j int) { k[i], k[j] = k[j], k[i] }
+func (k keys) Less(i, j int) bool {
+	return k[i].Segments > k[j].Segments || (k[i].Segments == k[j].Segments && k[i].Key < k[j].Key)
+}
 
 type inlineSchemaNamer struct {
 	Spec       *swspec.Swagger

@@ -165,17 +165,6 @@ func TestImportExternalReferences(t *testing.T) {
 	}
 }
 
-// func TestNameInlinedSchemas(t *testing.T) {
-// 	bp := filepath.Join(".", "fixtures", "inline_schemas.yml")
-// 	sp, err := loadSpec(bp)
-// 	if assert.NoError(t, err) {
-// 		nameInlinedSchemas(&FlattenOpts{
-// 			Spec:     New(sp),
-// 			BasePath: bp,
-// 		})
-// 	}
-// }
-
 func TestRewriteSchemaRef(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
 	sp, err := loadSpec(bp)
@@ -440,3 +429,69 @@ func TestNamesFromKey(t *testing.T) {
 		}
 	}
 }
+
+func TestDepthFirstSort(t *testing.T) {
+	bp := filepath.Join("fixtures", "inline_schemas.yml")
+	sp, err := loadSpec(bp)
+	values := []string{
+		"#/paths/~1some~1where~1{id}/parameters/1/schema/properties/createdAt",
+		"#/paths/~1some~1where~1{id}/parameters/1/schema",
+		"#/paths/~1some~1where~1{id}/get/parameters/2/schema/properties/createdAt",
+		"#/paths/~1some~1where~1{id}/get/parameters/2/schema",
+		"#/paths/~1some~1where~1{id}/get/responses/200/schema/properties/id",
+		"#/paths/~1some~1where~1{id}/get/responses/200/schema/properties/value",
+		"#/paths/~1some~1where~1{id}/get/responses/200/schema",
+		"#/paths/~1some~1where~1{id}/get/responses/404/schema",
+		"#/paths/~1some~1where~1{id}/get/responses/default/schema/properties/createdAt",
+		"#/paths/~1some~1where~1{id}/get/responses/default/schema",
+		"#/definitions/datedRecords/items/1/properties/createdAt",
+		"#/definitions/datedTaggedRecords/items/1/properties/createdAt",
+		"#/definitions/namedThing/properties/name/properties/id",
+		"#/definitions/records/items/0/properties/createdAt",
+		"#/definitions/datedTaggedRecords/additionalItems/properties/id",
+		"#/definitions/datedTaggedRecords/additionalItems/properties/value",
+		"#/definitions/otherRecords/items/properties/createdAt",
+		"#/definitions/tags/additionalProperties/properties/id",
+		"#/definitions/tags/additionalProperties/properties/value",
+		"#/definitions/PneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism/properties/FloccinaucinihilipilificationCreatedAt",
+		"#/definitions/datedRecords/items/0",
+		"#/definitions/datedRecords/items/1",
+		"#/definitions/datedTag/allOf/0",
+		"#/definitions/datedTag/allOf/1",
+		"#/definitions/datedTag/properties/id",
+		"#/definitions/datedTag/properties/value",
+		"#/definitions/datedTaggedRecords/items/0",
+		"#/definitions/datedTaggedRecords/items/1",
+		"#/definitions/namedAgain/properties/id",
+		"#/definitions/namedThing/properties/name",
+		"#/definitions/records/items/0",
+		"#/definitions/datedTaggedRecords/additionalItems",
+		"#/definitions/otherRecords/items",
+		"#/definitions/tags/additionalProperties",
+		"#/definitions/PneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism",
+		"#/definitions/datedRecords",
+		"#/definitions/datedTag",
+		"#/definitions/datedTaggedRecords",
+		"#/definitions/namedAgain",
+		"#/definitions/namedThing",
+		"#/definitions/otherRecords",
+		"#/definitions/records",
+		"#/definitions/tags",
+	}
+	if assert.NoError(t, err) {
+		a := New(sp)
+		result := sortDepthFirst(a.allSchemas)
+		assert.Equal(t, values, result)
+	}
+}
+
+// func TestNameInlinedSchemas(t *testing.T) {
+// 	bp := filepath.Join(".", "fixtures", "inline_schemas.yml")
+// 	sp, err := loadSpec(bp)
+// 	if assert.NoError(t, err) {
+// 		nameInlinedSchemas(&FlattenOpts{
+// 			Spec:     New(sp),
+// 			BasePath: bp,
+// 		})
+// 	}
+// }

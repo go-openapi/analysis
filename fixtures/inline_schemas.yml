@@ -177,3 +177,11 @@ definitions:
           id:
             type: integer
             format: int64
+
+  # depth first should have this at the bottom, it's just a very long name
+  PneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism:
+    type: object
+    properties:
+      FloccinaucinihilipilificationCreatedAt:
+        type: integer
+        format: int64
