@@ -453,7 +453,6 @@ func TestDepthFirstSort(t *testing.T) {
 		"#/definitions/otherRecords/items/properties/createdAt",
 		"#/definitions/tags/additionalProperties/properties/id",
 		"#/definitions/tags/additionalProperties/properties/value",
-		"#/definitions/PneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism/properties/FloccinaucinihilipilificationCreatedAt",
 		"#/definitions/datedRecords/items/0",
 		"#/definitions/datedRecords/items/1",
 		"#/definitions/datedTag/allOf/0",
@@ -464,17 +463,18 @@ func TestDepthFirstSort(t *testing.T) {
 		"#/definitions/datedTaggedRecords/items/1",
 		"#/definitions/namedAgain/properties/id",
 		"#/definitions/namedThing/properties/name",
+		"#/definitions/pneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism/properties/floccinaucinihilipilificationCreatedAt",
 		"#/definitions/records/items/0",
 		"#/definitions/datedTaggedRecords/additionalItems",
 		"#/definitions/otherRecords/items",
 		"#/definitions/tags/additionalProperties",
-		"#/definitions/PneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism",
 		"#/definitions/datedRecords",
 		"#/definitions/datedTag",
 		"#/definitions/datedTaggedRecords",
 		"#/definitions/namedAgain",
 		"#/definitions/namedThing",
 		"#/definitions/otherRecords",
+		"#/definitions/pneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism",
 		"#/definitions/records",
 		"#/definitions/tags",
 	}
@@ -485,13 +485,94 @@ func TestDepthFirstSort(t *testing.T) {
 	}
 }
 
-// func TestNameInlinedSchemas(t *testing.T) {
-// 	bp := filepath.Join(".", "fixtures", "inline_schemas.yml")
-// 	sp, err := loadSpec(bp)
-// 	if assert.NoError(t, err) {
-// 		nameInlinedSchemas(&FlattenOpts{
-// 			Spec:     New(sp),
-// 			BasePath: bp,
-// 		})
-// 	}
-// }
+func TestNameInlinedSchemas(t *testing.T) {
+	bp := filepath.Join(".", "fixtures", "nested_inline_schemas.yml")
+	sp, err := loadSpec(bp)
+	values := []struct {
+		Key      string
+		Location string
+		Ref      spec.Ref
+	}{
+		{"#/paths/~1some~1where~1{id}/parameters/1/schema/items", "#/definitions/postSomeWhereIdParamsBody/items", spec.MustCreateRef("#/definitions/postSomeWhereIdParamsBodyItems")},
+		{"#/paths/~1some~1where~1{id}/parameters/1/schema", "#/paths/~1some~1where~1{id}/parameters/1/schema", spec.MustCreateRef("#/definitions/postSomeWhereIdParamsBody")},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema/properties/record/items/2/properties/name", "#/definitions/getSomeWhereIdParamsBodyRecordItems2/properties/name", spec.MustCreateRef("#/definitions/getSomeWhereIdParamsBodyRecordItems2Name")},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema/properties/record/items/1", "#/definitions/getSomeWhereIdParamsBodyRecord/items/1", spec.MustCreateRef("#/definitions/getSomeWhereIdParamsBodyRecordItems1")},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema/properties/record/items/2", "#/definitions/getSomeWhereIdParamsBodyRecord/items/2", spec.MustCreateRef("#/definitions/getSomeWhereIdParamsBodyRecordItems2")},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema/properties/record", "#/definitions/getSomeWhereIdParamsBodyOAIGen/properties/record", spec.MustCreateRef("#/definitions/getSomeWhereIdParamsBodyRecord")},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema", "#/paths/~1some~1where~1{id}/get/parameters/2/schema", spec.MustCreateRef("#/definitions/getSomeWhereIdParamsBodyOAIGen")},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema/properties/record/items/2/properties/name", "#/definitions/getSomeWhereIdOKBodyRecordItems2/properties/name", spec.MustCreateRef("#/definitions/getSomeWhereIdOKBodyRecordItems2Name")},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema/properties/record/items/1", "#/definitions/getSomeWhereIdOKBodyRecord/items/1", spec.MustCreateRef("#/definitions/getSomeWhereIdOKBodyRecordItems1")},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema/properties/record/items/2", "#/definitions/getSomeWhereIdOKBodyRecord/items/2", spec.MustCreateRef("#/definitions/getSomeWhereIdOKBodyRecordItems2")},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema/properties/record", "#/definitions/getSomeWhereIdOKBody/properties/record", spec.MustCreateRef("#/definitions/getSomeWhereIdOKBodyRecord")},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema", "#/paths/~1some~1where~1{id}/get/responses/200/schema", spec.MustCreateRef("#/definitions/getSomeWhereIdOKBody")},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema/properties/record/items/2/properties/name", "#/definitions/getSomeWhereIdDefaultBodyRecordItems2/properties/name", spec.MustCreateRef("#/definitions/getSomeWhereIdDefaultBodyRecordItems2Name")},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema/properties/record/items/1", "#/definitions/getSomeWhereIdDefaultBodyRecord/items/1", spec.MustCreateRef("#/definitions/getSomeWhereIdDefaultBodyRecordItems1")},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema/properties/record/items/2", "#/definitions/getSomeWhereIdDefaultBodyRecord/items/2", spec.MustCreateRef("#/definitions/getSomeWhereIdDefaultBodyRecordItems2")},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema/properties/record", "#/definitions/getSomeWhereIdDefaultBody/properties/record", spec.MustCreateRef("#/definitions/getSomeWhereIdDefaultBodyRecord")},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema", "#/paths/~1some~1where~1{id}/get/responses/default/schema", spec.MustCreateRef("#/definitions/getSomeWhereIdDefaultBody")},
+		{"#/definitions/nestedThing/properties/record/items/2/allOf/1/additionalProperties", "#/definitions/nestedThingRecordItems2AllOf1/additionalProperties", spec.MustCreateRef("#/definitions/nestedThingRecordItems2AllOf1AdditionalProperties")},
+		{"#/definitions/nestedThing/properties/record/items/2/allOf/1", "#/definitions/nestedThingRecordItems2/allOf/1", spec.MustCreateRef("#/definitions/nestedThingRecordItems2AllOf1")},
+		{"#/definitions/nestedThing/properties/record/items/2/properties/name", "#/definitions/nestedThingRecordItems2/properties/name", spec.MustCreateRef("#/definitions/nestedThingRecordItems2Name")},
+		{"#/definitions/nestedThing/properties/record/items/1", "#/definitions/nestedThingRecord/items/1", spec.MustCreateRef("#/definitions/nestedThingRecordItems1")},
+		{"#/definitions/nestedThing/properties/record/items/2", "#/definitions/nestedThingRecord/items/2", spec.MustCreateRef("#/definitions/nestedThingRecordItems2")},
+		{"#/definitions/datedRecords/items/1", "#/definitions/datedRecords/items/1", spec.MustCreateRef("#/definitions/datedRecordsItems1")},
+		{"#/definitions/datedTaggedRecords/items/1", "#/definitions/datedTaggedRecords/items/1", spec.MustCreateRef("#/definitions/datedTaggedRecordsItems1")},
+		{"#/definitions/namedThing/properties/name", "#/definitions/namedThing/properties/name", spec.MustCreateRef("#/definitions/namedThingName")},
+		{"#/definitions/nestedThing/properties/record", "#/definitions/nestedThing/properties/record", spec.MustCreateRef("#/definitions/nestedThingRecord")},
+		{"#/definitions/records/items/0", "#/definitions/records/items/0", spec.MustCreateRef("#/definitions/recordsItems0")},
+		{"#/definitions/datedTaggedRecords/additionalItems", "#/definitions/datedTaggedRecords/additionalItems", spec.MustCreateRef("#/definitions/datedTaggedRecordsItemsAdditionalItems")},
+		{"#/definitions/otherRecords/items", "#/definitions/otherRecords/items", spec.MustCreateRef("#/definitions/otherRecordsItems")},
+		{"#/definitions/tags/additionalProperties", "#/definitions/tags/additionalProperties", spec.MustCreateRef("#/definitions/tagsAdditionalProperties")},
+	}
+	if assert.NoError(t, err) {
+		err := nameInlinedSchemas(&FlattenOpts{
+			Spec:     New(sp),
+			BasePath: bp,
+		})
+
+		if assert.NoError(t, err) {
+			for i, v := range values {
+				ptr, err := jsonpointer.New(v.Location[1:])
+				if assert.NoError(t, err, "at %d for %s", i, v.Key) {
+					vv, _, err := ptr.Get(sp)
+
+					if assert.NoError(t, err, "at %d for %s", i, v.Key) {
+						switch tv := vv.(type) {
+						case *spec.Schema:
+							assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+						case spec.Schema:
+							assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+						case *spec.SchemaOrBool:
+							var sRef spec.Ref
+							if tv != nil && tv.Schema != nil {
+								sRef = tv.Schema.Ref
+							}
+							assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+						case *spec.SchemaOrArray:
+							var sRef spec.Ref
+							if tv != nil && tv.Schema != nil {
+								sRef = tv.Schema.Ref
+							}
+							assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+						default:
+							assert.Fail(t, "unknown type", "got %T", vv)
+						}
+					}
+				}
+			}
+		}
+
+		for k, rr := range New(sp).allSchemas {
+			if !strings.HasPrefix(k, "#/responses") && !strings.HasPrefix(k, "#/parameters") {
+				if rr.Schema != nil && rr.Schema.Ref.String() == "" && !rr.TopLevel {
+					asch, err := Schema(SchemaOpts{Schema: rr.Schema, Root: sp, BasePath: bp})
+					if assert.NoError(t, err, "for key: %s", k) {
+						if !asch.IsSimpleSchema {
+							assert.Fail(t, "not a top level schema", "for key: %s", k)
+						}
+					}
+				}
+			}
+		}
+	}
+}

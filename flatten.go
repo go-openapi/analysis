@@ -33,7 +33,14 @@ func (f *FlattenOpts) Swagger() *swspec.Swagger {
 	return f.Spec.spec
 }
 
-// Flatten an analyzed spec
+// Flatten an analyzed spec.
+//
+// To flatten a spec means:
+//
+// Expand the parameters, responses, path items, parameter items and header items.
+// Import external (http, file) references so they become internal to the document.
+// Move every inline schema to be a definition with an auto-generated name in a depth-first fashion.
+// Rewritten schemas get a vendor extension x-go-gen-location so we know in which package they need to be rendered.
 func Flatten(opts FlattenOpts) error {
 	// recursively expand responses, parameters, path items and items
 	err := swspec.ExpandSpec(opts.Swagger(), opts.ExpandOpts(true))
@@ -153,7 +160,7 @@ func (isn *inlineSchemaNamer) Name(key string, schema *swspec.Schema, aschema *A
 	for _, name := range namesFromKey(parts, aschema, isn.Operations) {
 		if name != "" {
 			// create unique name
-			newName := uniqifyName(isn.Spec.Definitions, name)
+			newName := uniqifyName(isn.Spec.Definitions, swag.ToJSONName(name))
 
 			// clone schema
 			sch, err := cloneSchema(schema)
@@ -712,7 +719,6 @@ func gatherOperations(specDoc *Spec, operationIDs []string) map[string]opRef {
 
 	for method, pathItem := range specDoc.Operations() {
 		for pth, operation := range pathItem {
-			// nm := ensureUniqueName(operation.ID, method, path, operations)
 			vv := *operation
 			oprefs = append(oprefs, opRef{
 				Key:    swag.ToGoName(strings.ToLower(method) + " " + pth),

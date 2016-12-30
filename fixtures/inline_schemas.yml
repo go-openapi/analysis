@@ -179,9 +179,9 @@ definitions:
             format: int64
 
   # depth first should have this at the bottom, it's just a very long name
-  PneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism:
+  pneumonoultramicroscopicsilicovolcanoconiosisAntidisestablishmentarianism:
     type: object
     properties:
-      FloccinaucinihilipilificationCreatedAt:
+      floccinaucinihilipilificationCreatedAt:
         type: integer
         format: int64
