@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/go-openapi/jsonpointer"
@@ -220,6 +221,219 @@ func TestRewriteSchemaRef(t *testing.T) {
 						default:
 							assert.Fail(t, "unknown type", "got %T", vv)
 						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestSplitKey(t *testing.T) {
+
+	type KeyFlag uint64
+
+	const (
+		isOperation KeyFlag = 1 << iota
+		isDefinition
+		isSharedOperationParam
+		isOperationParam
+		isOperationResponse
+		isDefaultResponse
+		isStatusCodeResponse
+	)
+
+	values := []struct {
+		Key         string
+		Flags       KeyFlag
+		PathItemRef spec.Ref
+		PathRef     spec.Ref
+		Name        string
+	}{
+		{
+			"#/paths/~1some~1where~1{id}/parameters/1/schema",
+			isOperation | isSharedOperationParam,
+			spec.Ref{},
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}"),
+			"",
+		},
+		{
+			"#/paths/~1some~1where~1{id}/get/parameters/2/schema",
+			isOperation | isOperationParam,
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}/GET"),
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}"),
+			"",
+		},
+		{
+			"#/paths/~1some~1where~1{id}/get/responses/default/schema",
+			isOperation | isOperationResponse | isDefaultResponse,
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}/GET"),
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}"),
+			"Default",
+		},
+		{
+			"#/paths/~1some~1where~1{id}/get/responses/200/schema",
+			isOperation | isOperationResponse | isStatusCodeResponse,
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}/GET"),
+			spec.MustCreateRef("#/paths/~1some~1where~1{id}"),
+			"OK",
+		},
+		{
+			"#/definitions/namedAgain",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"namedAgain",
+		},
+		{
+			"#/definitions/datedRecords/items/1",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"datedRecords",
+		},
+		{
+			"#/definitions/datedRecords/items/1",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"datedRecords",
+		},
+		{
+			"#/definitions/datedTaggedRecords/items/1",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"datedTaggedRecords",
+		},
+		{
+			"#/definitions/datedTaggedRecords/additionalItems",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"datedTaggedRecords",
+		},
+		{
+			"#/definitions/otherRecords/items",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"otherRecords",
+		},
+		{
+			"#/definitions/tags/additionalProperties",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"tags",
+		},
+		{
+			"#/definitions/namedThing/properties/name",
+			isDefinition,
+			spec.Ref{},
+			spec.Ref{},
+			"namedThing",
+		},
+	}
+
+	for i, v := range values {
+		parts := keyParts(v.Key)
+		pref := parts.PathRef()
+		piref := parts.PathItemRef()
+		assert.Equal(t, v.PathRef.String(), pref.String(), "pathRef: %s at %d", v.Key, i)
+		assert.Equal(t, v.PathItemRef.String(), piref.String(), "pathItemRef: %s at %d", v.Key, i)
+
+		if v.Flags&isOperation != 0 {
+			assert.True(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
+		}
+		if v.Flags&isDefinition != 0 {
+			assert.True(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
+			assert.Equal(t, v.Name, parts.DefinitionName(), "definition name: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
+			if v.Name != "" {
+				assert.Equal(t, v.Name, parts.ResponseName(), "response name: %s at %d", v.Key, i)
+			}
+		}
+		if v.Flags&isOperationParam != 0 {
+			assert.True(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
+		}
+		if v.Flags&isSharedOperationParam != 0 {
+			assert.True(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
+		}
+		if v.Flags&isOperationResponse != 0 {
+			assert.True(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
+		}
+		if v.Flags&isDefaultResponse != 0 {
+			assert.True(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
+		}
+		if v.Flags&isStatusCodeResponse != 0 {
+			assert.True(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
+		} else {
+			assert.False(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
+		}
+	}
+}
+
+func definitionPtr(key string) string {
+	if !strings.HasPrefix(key, "#/definitions") {
+		return key
+	}
+	return strings.Join(strings.Split(key, "/")[:3], "/")
+}
+
+func TestNamesFromKey(t *testing.T) {
+	bp := filepath.Join("fixtures", "inline_schemas.yml")
+	sp, err := loadSpec(bp)
+	if assert.NoError(t, err) {
+
+		values := []struct {
+			Key   string
+			Names []string
+		}{
+			{"#/paths/~1some~1where~1{id}/parameters/1/schema", []string{"GetSomeWhereID params body", "PostSomeWhereID params body"}},
+			{"#/paths/~1some~1where~1{id}/get/parameters/2/schema", []string{"GetSomeWhereID params body"}},
+			{"#/paths/~1some~1where~1{id}/get/responses/default/schema", []string{"GetSomeWhereID Default body"}},
+			{"#/paths/~1some~1where~1{id}/get/responses/200/schema", []string{"GetSomeWhereID OK body"}},
+			{"#/definitions/namedAgain", []string{"namedAgain"}},
+			{"#/definitions/datedTag/allOf/1", []string{"datedTag allOf 1"}},
+			{"#/definitions/datedRecords/items/1", []string{"datedRecords tuple 1"}},
+			{"#/definitions/datedTaggedRecords/items/1", []string{"datedTaggedRecords tuple 1"}},
+			{"#/definitions/datedTaggedRecords/additionalItems", []string{"datedTaggedRecords tuple additionalItems"}},
+			{"#/definitions/otherRecords/items", []string{"otherRecords items"}},
+			{"#/definitions/tags/additionalProperties", []string{"tags additionalProperties"}},
+			{"#/definitions/namedThing/properties/name", []string{"namedThing name"}},
+		}
+
+		for i, v := range values {
+			ptr, err := jsonpointer.New(definitionPtr(v.Key)[1:])
+			if assert.NoError(t, err) {
+				vv, _, err := ptr.Get(sp)
+				if assert.NoError(t, err) {
+					switch tv := vv.(type) {
+					case *spec.Schema:
+						aschema, err := Schema(SchemaOpts{Schema: tv, Root: sp, BasePath: bp})
+						if assert.NoError(t, err) {
+							names := namesFromKey(keyParts(v.Key), aschema, opRefsByRef(gatherOperations(New(sp), nil)))
+							assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
+						}
+					case spec.Schema:
+						aschema, err := Schema(SchemaOpts{Schema: &tv, Root: sp, BasePath: bp})
+						if assert.NoError(t, err) {
+							names := namesFromKey(keyParts(v.Key), aschema, opRefsByRef(gatherOperations(New(sp), nil)))
+							assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
+						}
+					default:
+						assert.Fail(t, "unknown type", "got %T", vv)
 					}
 				}
 			}

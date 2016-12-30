@@ -113,26 +113,39 @@ func (isn *inlineSchemaNamer) Name(key string, schema *swspec.Schema, aschema *A
 		log.Printf("naming inlined schema at %s", key)
 	}
 
-	for _, name := range nameFromKey(key, aschema, isn.Operations) {
+	parts := keyParts(key)
+	for _, name := range namesFromKey(parts, aschema, isn.Operations) {
+		if name != "" {
+			// create unique name
+			newName := uniqifyName(isn.Spec.Definitions, name)
 
-		// create unique name
-		newName := uniqifyName(isn.Spec.Definitions, name)
+			// clone schema
+			sch, err := cloneSchema(schema)
+			if err != nil {
+				return err
+			}
 
-		// clone schema
-		sch, err := cloneSchema(schema)
-		if err != nil {
-			return err
+			// replace values on schema
+			if err := rewriteSchemaToRef(isn.Spec, key, swspec.MustCreateRef("#/definitions/"+newName)); err != nil {
+				return fmt.Errorf("name inlined schema: %v", err)
+			}
+
+			sch.AddExtension("x-go-gen-location", genLocation(parts))
+			// save cloned schema to definitions
+			saveSchema(isn.Spec, newName, sch)
 		}
-
-		// replace values on schema
-		if err := rewriteSchemaToRef(isn.Spec, key, swspec.MustCreateRef("#/definitions/"+newName)); err != nil {
-			return fmt.Errorf("name inlined schema: %v", err)
-		}
-
-		// save cloned schema to definitions
-		saveSchema(isn.Spec, newName, sch)
 	}
 	return nil
+}
+
+func genLocation(parts splitKey) string {
+	if parts.IsOperation() {
+		return "operations"
+	}
+	if parts.IsDefinition() {
+		return "models"
+	}
+	return ""
 }
 
 func uniqifyName(definitions swspec.Definitions, name string) string {
@@ -158,27 +171,26 @@ func uniqifyName(definitions swspec.Definitions, name string) string {
 	return unique
 }
 
-func nameFromKey(key string, aschema *AnalyzedSchema, operations map[string]opRef) []string {
-	parts := keyParts(key)
+func namesFromKey(parts splitKey, aschema *AnalyzedSchema, operations map[string]opRef) []string {
+	var baseNames [][]string
+	var startIndex int
 	if parts.IsOperation() {
 		// params
 		if parts.IsOperationParam() || parts.IsSharedOperationParam() {
 			piref := parts.PathItemRef()
-			if piref.String() != "" {
+			if piref.String() != "" && parts.IsOperationParam() {
 				if op, ok := operations[piref.String()]; ok {
-					if parts.IsOperationParam() {
-						return []string{swag.ToGoName(op.ID + " ParamsBody")}
-					}
+					startIndex = 5
+					baseNames = append(baseNames, []string{op.ID, "params", "body"})
 				}
 			} else if parts.IsSharedOperationParam() {
 				pref := parts.PathRef()
-				var result []string
 				for k, v := range operations {
 					if strings.HasPrefix(k, pref.String()) {
-						result = append(result, swag.ToGoName(v.ID+" ParamsBody"))
+						startIndex = 4
+						baseNames = append(baseNames, []string{v.ID, "params", "body"})
 					}
 				}
-				return result
 			}
 		}
 		// responses
@@ -186,53 +198,103 @@ func nameFromKey(key string, aschema *AnalyzedSchema, operations map[string]opRe
 			piref := parts.PathItemRef()
 			if piref.String() != "" {
 				if op, ok := operations[piref.String()]; ok {
-					return []string{swag.ToGoName(op.ID + " " + parts.ResponseName() + " Body")}
+					startIndex = 6
+					baseNames = append(baseNames, []string{op.ID, parts.ResponseName(), "body"})
 				}
 			}
 		}
 	}
-	// definition: definition name
-	// tuple:
-	// tuple with extra:
-	// all of:
-	// all of with extra:
-	// additional properties with extra: schemaName + Anon
-	return nil
+
+	// definitions
+	if parts.IsDefinition() {
+		nm := parts.DefinitionName()
+		if nm != "" {
+			startIndex = 2
+			baseNames = append(baseNames, []string{parts.DefinitionName()})
+		}
+	}
+
+	var result []string
+	for _, segments := range baseNames {
+		nm := parts.BuildName(segments, startIndex, aschema)
+		if nm != "" {
+			result = append(result, nm)
+		}
+	}
+	sort.Strings(result)
+	return result
 }
 
 const (
-	pths      = "paths"
-	responses = "responses"
+	pths        = "paths"
+	responses   = "responses"
+	parameters  = "parameters"
+	definitions = "definitions"
 )
+
+var ignoredKeys map[string]struct{}
+
+func init() {
+	ignoredKeys = map[string]struct{}{
+		"schema":     {},
+		"properties": {},
+		"not":        {},
+		"anyOf":      {},
+		"oneOf":      {},
+	}
+}
 
 type splitKey []string
 
 func (s splitKey) IsDefinition() bool {
-	return len(s) == 2 && s[1] == "definition"
+	return len(s) > 1 && s[0] == definitions
+}
+
+func (s splitKey) DefinitionName() string {
+	if !s.IsDefinition() {
+		return ""
+	}
+	return s[1]
+}
+
+func (s splitKey) BuildName(segments []string, startIndex int, aschema *AnalyzedSchema) string {
+	for _, part := range s[startIndex:] {
+		if _, ignored := ignoredKeys[part]; !ignored {
+			if part == "items" || part == "additionalItems" {
+				if aschema.IsTuple || aschema.IsTupleWithExtra {
+					segments = append(segments, "tuple")
+				} else {
+					segments = append(segments, "items")
+				}
+				if part == "additionalItems" {
+					segments = append(segments, part)
+				}
+				continue
+			}
+			segments = append(segments, part)
+		}
+	}
+	return strings.Join(segments, " ")
 }
 
 func (s splitKey) IsOperation() bool {
-	return len(s) > 1 && s[1] == pths
+	return len(s) > 1 && s[0] == pths
 }
 
 func (s splitKey) IsSharedOperationParam() bool {
-	return len(s) > 2 && s[1] == pths && s[2] == "parameters"
+	return len(s) > 2 && s[0] == pths && s[2] == parameters
 }
 
 func (s splitKey) IsOperationParam() bool {
-	return len(s) > 3 && s[1] == pths && s[3] == "parameters"
-}
-
-func (s splitKey) IsSharedOperationResponse() bool {
-	return len(s) > 2 && s[1] == pths && s[2] == responses
+	return len(s) > 3 && s[0] == pths && s[3] == parameters
 }
 
 func (s splitKey) IsOperationResponse() bool {
-	return len(s) > 3 && s[1] == pths && s[3] == responses
+	return len(s) > 3 && s[0] == pths && s[3] == responses
 }
 
 func (s splitKey) IsDefaultResponse() bool {
-	return len(s) > 4 && s[1] == pths && s[3] == responses && s[4] == "default"
+	return len(s) > 4 && s[0] == pths && s[3] == responses && s[4] == "default"
 }
 
 func (s splitKey) IsStatusCodeResponse() bool {
@@ -240,7 +302,7 @@ func (s splitKey) IsStatusCodeResponse() bool {
 		_, err := strconv.Atoi(s[4])
 		return err == nil
 	}
-	return len(s) > 4 && s[1] == pths && s[3] == responses && isInt()
+	return len(s) > 4 && s[0] == pths && s[3] == responses && isInt()
 }
 
 func (s splitKey) ResponseName() string {
@@ -254,15 +316,35 @@ func (s splitKey) ResponseName() string {
 	return ""
 }
 
+var validMethods map[string]struct{}
+
+func init() {
+	validMethods = map[string]struct{}{
+		"GET":     {},
+		"HEAD":    {},
+		"OPTIONS": {},
+		"PATCH":   {},
+		"POST":    {},
+		"PUT":     {},
+		"DELETE":  {},
+	}
+}
+
 func (s splitKey) PathItemRef() swspec.Ref {
 	if len(s) < 3 {
 		return swspec.Ref{}
 	}
 	pth, method := s[1], s[2]
-	return swspec.MustCreateRef("#" + path.Join("/", pths, jsonpointer.Escape(pth), method))
+	if _, validMethod := validMethods[strings.ToUpper(method)]; !validMethod && !strings.HasPrefix(method, "x-") {
+		return swspec.Ref{}
+	}
+	return swspec.MustCreateRef("#" + path.Join("/", pths, jsonpointer.Escape(pth), strings.ToUpper(method)))
 }
 
 func (s splitKey) PathRef() swspec.Ref {
+	if !s.IsOperation() {
+		return swspec.Ref{}
+	}
 	return swspec.MustCreateRef("#" + path.Join("/", pths, jsonpointer.Escape(s[1])))
 }
 

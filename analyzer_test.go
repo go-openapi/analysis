@@ -183,8 +183,7 @@ func TestDefinitionAnalysis(t *testing.T) {
 		assertSchemaRefExists(t, definitions, "#/definitions/withAllOf/allOf/1")
 		allOfs := analyzer.allOfs
 		assert.Len(t, allOfs, 1)
-		_, hasAllOf := allOfs["#/definitions/withAllOf"]
-		assert.True(t, hasAllOf)
+		assert.Contains(t, allOfs, "#/definitions/withAllOf")
 	}
 }
 

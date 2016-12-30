@@ -25,7 +25,10 @@ responses:
 paths:
   "/some/where/{id}":
     parameters:
-      - $ref: "external/parameters.yml#/parameters/idParam"
+      - name: id
+        in: path
+        type: integer
+        format: int32
 
       - name: bodyId
         in: body
@@ -35,9 +38,17 @@ paths:
             createdAt:
               type: string
               format: date-time
+    post:
+      responses:
+        default:
+          description: all good
     get:
       parameters:
-      - $ref: "external/parameters.yml#/parameters/limitParam"
+      - name: limit
+        in: query
+        type: integer
+        format: int32
+        required: false
       - name: other
         in: query
         type: array
