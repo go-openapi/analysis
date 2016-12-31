@@ -174,6 +174,7 @@ func (isn *inlineSchemaNamer) Name(key string, schema *swspec.Schema, aschema *A
 			}
 
 			sch.AddExtension("x-go-gen-location", genLocation(parts))
+			// fmt.Printf("{\n  %q,\n  \"\",\n  spec.MustCreateRef(%q),\n  \"\",\n},\n", key, "#/definitions/"+newName)
 			// save cloned schema to definitions
 			saveSchema(isn.Spec, newName, sch)
 		}
