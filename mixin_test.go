@@ -3,9 +3,10 @@ package analysis
 import "testing"
 
 const (
-	widgetFile = "fixtures/widget-crud.yml"
-	fooFile    = "fixtures/foo-crud.yml"
-	barFile    = "fixtures/bar-crud.yml"
+	widgetFile  = "fixtures/widget-crud.yml"
+	fooFile     = "fixtures/foo-crud.yml"
+	barFile     = "fixtures/bar-crud.yml"
+	noPathsFile = "fixtures/no-paths.yml"
 )
 
 func TestMixin(t *testing.T) {
@@ -22,10 +23,14 @@ func TestMixin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not load '%v': %v\n", barFile, err)
 	}
+	mixin3, err := loadSpec(noPathsFile)
+	if err != nil {
+		t.Fatalf("Could not load '%v': %v\n", noPathsFile, err)
+	}
 
-	collisions := Mixin(primary, mixin1, mixin2)
-	if len(collisions) != 12 {
-		t.Errorf("TestMixin: Expected 10 collisions, got %v\n", len(collisions))
+	collisions := Mixin(primary, mixin1, mixin2, mixin3)
+	if len(collisions) != 16 {
+		t.Errorf("TestMixin: Expected 16 collisions, got %v\n%v", len(collisions), collisions)
 	}
 
 	if len(primary.Paths.Paths) != 7 {

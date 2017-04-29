@@ -29,6 +29,9 @@ import (
 func Mixin(primary *spec.Swagger, mixins ...*spec.Swagger) []string {
 	var skipped []string
 	opIds := getOpIds(primary)
+	if primary.Paths == nil {
+		primary.Paths = &spec.Paths{Paths: make(map[string]spec.PathItem)}
+	}
 	for i, m := range mixins {
 		for k, v := range m.Definitions {
 			// assume name collisions represent IDENTICAL type. careful.
@@ -39,27 +42,29 @@ func Mixin(primary *spec.Swagger, mixins ...*spec.Swagger) []string {
 			}
 			primary.Definitions[k] = v
 		}
-		for k, v := range m.Paths.Paths {
-			if _, exists := primary.Paths.Paths[k]; exists {
-				warn := fmt.Sprintf("paths entry '%v' already exists in primary or higher priority mixin, skipping\n", k)
-				skipped = append(skipped, warn)
-				continue
-			}
-
-			// Swagger requires that operationIds be
-			// unique within a spec. If we find a
-			// collision we append "Mixin0" to the
-			// operatoinId we are adding, where 0 is mixin
-			// index.  We assume that operationIds with
-			// all the proivded specs are already unique.
-			piops := pathItemOps(v)
-			for _, piop := range piops {
-				if opIds[piop.ID] {
-					piop.ID = fmt.Sprintf("%v%v%v", piop.ID, "Mixin", i)
+		if m.Paths != nil {
+			for k, v := range m.Paths.Paths {
+				if _, exists := primary.Paths.Paths[k]; exists {
+					warn := fmt.Sprintf("paths entry '%v' already exists in primary or higher priority mixin, skipping\n", k)
+					skipped = append(skipped, warn)
+					continue
 				}
-				opIds[piop.ID] = true
+
+				// Swagger requires that operationIds be
+				// unique within a spec. If we find a
+				// collision we append "Mixin0" to the
+				// operatoinId we are adding, where 0 is mixin
+				// index.  We assume that operationIds with
+				// all the proivded specs are already unique.
+				piops := pathItemOps(v)
+				for _, piop := range piops {
+					if opIds[piop.ID] {
+						piop.ID = fmt.Sprintf("%v%v%v", piop.ID, "Mixin", i)
+					}
+					opIds[piop.ID] = true
+				}
+				primary.Paths.Paths[k] = v
 			}
-			primary.Paths.Paths[k] = v
 		}
 		for k, v := range m.Parameters {
 			// could try to rename on conflict but would
@@ -95,27 +100,29 @@ func Mixin(primary *spec.Swagger, mixins ...*spec.Swagger) []string {
 // due to zero values being omitted upon re-serializing (omitempty) we
 // lose them unless we stick some chars in there.
 func FixEmptyResponseDescriptions(s *spec.Swagger) {
-	for _, v := range s.Paths.Paths {
-		if v.Get != nil {
-			FixEmptyDescs(v.Get.Responses)
-		}
-		if v.Put != nil {
-			FixEmptyDescs(v.Put.Responses)
-		}
-		if v.Post != nil {
-			FixEmptyDescs(v.Post.Responses)
-		}
-		if v.Delete != nil {
-			FixEmptyDescs(v.Delete.Responses)
-		}
-		if v.Options != nil {
-			FixEmptyDescs(v.Options.Responses)
-		}
-		if v.Head != nil {
-			FixEmptyDescs(v.Head.Responses)
-		}
-		if v.Patch != nil {
-			FixEmptyDescs(v.Patch.Responses)
+	if s.Paths != nil {
+		for _, v := range s.Paths.Paths {
+			if v.Get != nil {
+				FixEmptyDescs(v.Get.Responses)
+			}
+			if v.Put != nil {
+				FixEmptyDescs(v.Put.Responses)
+			}
+			if v.Post != nil {
+				FixEmptyDescs(v.Post.Responses)
+			}
+			if v.Delete != nil {
+				FixEmptyDescs(v.Delete.Responses)
+			}
+			if v.Options != nil {
+				FixEmptyDescs(v.Options.Responses)
+			}
+			if v.Head != nil {
+				FixEmptyDescs(v.Head.Responses)
+			}
+			if v.Patch != nil {
+				FixEmptyDescs(v.Patch.Responses)
+			}
 		}
 	}
 	for k, v := range s.Responses {
@@ -148,6 +155,9 @@ func FixEmptyDesc(rs *spec.Response) {
 // spec and returns them as the keys in a map with 'true' values.
 func getOpIds(s *spec.Swagger) map[string]bool {
 	rv := make(map[string]bool)
+	if s.Paths == nil {
+		return rv
+	}
 	for _, v := range s.Paths.Paths {
 		piops := pathItemOps(v)
 		for _, op := range piops {
