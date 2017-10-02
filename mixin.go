@@ -71,7 +71,7 @@ func Mixin(primary *spec.Swagger, mixins ...*spec.Swagger) []string {
 				// all the proivded specs are already unique.
 				piops := pathItemOps(v)
 				for _, piop := range piops {
-					if opIds[piop.ID] {
+					if piop.ID != "" && opIds[piop.ID] {
 						piop.ID = fmt.Sprintf("%v%v%v", piop.ID, "Mixin", i)
 					}
 					opIds[piop.ID] = true
