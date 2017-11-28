@@ -43,7 +43,7 @@ func (f *FlattenOpts) Swagger() *swspec.Swagger {
 // Rewritten schemas get a vendor extension x-go-gen-location so we know in which package they need to be rendered.
 func Flatten(opts FlattenOpts) error {
 	// recursively expand responses, parameters, path items and items
-	err := swspec.ExpandSpec(opts.Swagger(), opts.ExpandOpts(true))
+	err := swspec.ExpandSpec(opts.Swagger(), opts.ExpandOpts(false))
 	if err != nil {
 		return err
 	}
