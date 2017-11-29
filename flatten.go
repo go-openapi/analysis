@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"sort"
 	"strings"
@@ -42,8 +43,16 @@ func (f *FlattenOpts) Swagger() *swspec.Swagger {
 // Move every inline schema to be a definition with an auto-generated name in a depth-first fashion.
 // Rewritten schemas get a vendor extension x-go-gen-location so we know in which package they need to be rendered.
 func Flatten(opts FlattenOpts) error {
+	// Make sure opts.BasePath is an absolute path
+	if !path.IsAbs(opts.BasePath) {
+		cwd, _ := os.Getwd()
+		opts.BasePath = path.Join(cwd, opts.BasePath)
+	}
 	// recursively expand responses, parameters, path items and items
-	err := swspec.ExpandSpec(opts.Swagger(), opts.ExpandOpts(false))
+	err := swspec.ExpandSpec(opts.Swagger(), &swspec.ExpandOptions{
+		RelativeBase: opts.BasePath,
+		SkipSchemas:  true,
+	})
 	if err != nil {
 		return err
 	}
@@ -540,7 +549,13 @@ func importExternalReferences(opts *FlattenOpts) error {
 				log.Printf("importing external schema for [%s] from %s", strings.Join(entry.Keys, ", "), refStr)
 			}
 			// resolve to actual schema
-			sch, err := swspec.ResolveRefWithBase(opts.Swagger(), &entry.Ref, opts.ExpandOpts(false))
+			sch := new(swspec.Schema)
+			sch.Ref = entry.Ref
+			expandOpts := swspec.ExpandOptions{
+				RelativeBase: opts.BasePath,
+				SkipSchemas:  false,
+			}
+			err := swspec.ExpandSchemaWithBasePath(sch, nil, &expandOpts)
 			if err != nil {
 				return err
 			}
