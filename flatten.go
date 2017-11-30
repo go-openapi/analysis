@@ -77,7 +77,6 @@ func Flatten(opts FlattenOpts) error {
 func nameInlinedSchemas(opts *FlattenOpts) error {
 	namer := &inlineSchemaNamer{Spec: opts.Swagger(), Operations: opRefsByRef(gatherOperations(opts.Spec, nil))}
 	depthFirst := sortDepthFirst(opts.Spec.allSchemas)
-
 	for _, key := range depthFirst {
 		sch := opts.Spec.allSchemas[key]
 		if sch.Schema != nil && sch.Schema.Ref.String() == "" && !sch.TopLevel { // inline schema
