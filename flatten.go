@@ -18,6 +18,8 @@ import (
 
 // FlattenOpts configuration for flattening a swagger specification.
 type FlattenOpts struct {
+	// If Expand is true, we skip flattening the spec and expand it instead
+	Expand   bool
 	Spec     *Spec
 	BasePath string
 
@@ -51,7 +53,7 @@ func Flatten(opts FlattenOpts) error {
 	// recursively expand responses, parameters, path items and items
 	err := swspec.ExpandSpec(opts.Swagger(), &swspec.ExpandOptions{
 		RelativeBase: opts.BasePath,
-		SkipSchemas:  true,
+		SkipSchemas:  !opts.Expand,
 	})
 	if err != nil {
 		return err
