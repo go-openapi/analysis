@@ -312,9 +312,15 @@ func (s splitKey) DefinitionName() string {
 	return s[1]
 }
 
+func (s splitKey) isKeyName(i int) bool {
+	if i > 0 && s[i-1] == "properties" {
+		return true
+	}
+	return false
+}
 func (s splitKey) BuildName(segments []string, startIndex int, aschema *AnalyzedSchema) string {
-	for _, part := range s[startIndex:] {
-		if _, ignored := ignoredKeys[part]; !ignored {
+	for i, part := range s[startIndex:] {
+		if _, ignored := ignoredKeys[part]; !ignored || s.isKeyName(startIndex+i) {
 			if part == "items" || part == "additionalItems" {
 				if aschema.IsTuple || aschema.IsTupleWithExtra {
 					segments = append(segments, "tuple")
