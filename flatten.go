@@ -313,11 +313,23 @@ func (s splitKey) DefinitionName() string {
 }
 
 func (s splitKey) isKeyName(i int) bool {
-	if i > 0 && s[i-1] == "properties" {
+	if i <= 0 {
+		return false
+	}
+	count := 0
+	for idx := i - 1; idx > 0; idx-- {
+		if s[idx] != "properties" {
+			break
+		}
+		count++
+	}
+
+	if count%2 != 0 {
 		return true
 	}
 	return false
 }
+
 func (s splitKey) BuildName(segments []string, startIndex int, aschema *AnalyzedSchema) string {
 	for i, part := range s[startIndex:] {
 		if _, ignored := ignoredKeys[part]; !ignored || s.isKeyName(startIndex+i) {
