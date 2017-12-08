@@ -492,6 +492,9 @@ func TestBuildNameWithReservedKeyWord(t *testing.T) {
 	segments := []string{"fullview"}
 	newName := s.BuildName(segments, startIdx, nil)
 	assert.Equal(t, "fullview properties", newName)
+	s = splitKey([]string{"definitions", "fullview", "properties", "properties", "properties", "properties", "properties", "properties"})
+	newName = s.BuildName(segments, startIdx, nil)
+	assert.Equal(t, "fullview properties properties properties", newName)
 }
 
 func TestNameInlinedSchemas(t *testing.T) {
