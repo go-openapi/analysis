@@ -211,9 +211,18 @@ func uniqifyName(definitions swspec.Definitions, name string) string {
 		return name
 	}
 
-	if _, ok := definitions[name]; !ok {
+	unq := true
+	for k := range definitions {
+		if strings.ToLower(k) == strings.ToLower(name) {
+			unq = false
+			break
+		}
+	}
+
+	if unq {
 		return name
 	}
+
 	name += "OAIGen"
 	var idx int
 	unique := name
