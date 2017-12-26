@@ -505,18 +505,22 @@ func fieldNameFromParam(param *spec.Parameter) string {
 // on parameters.
 // This function takes as input the spec.Parameter which triggered the
 // error and the error itself.
-type ErrorOnParamFunc func(spec.Parameter, error)
+// If the callback function returns false, the calling function should bail.
+// If it returns true, the calling function should continue evaluating parameters.
+// A nil ErrorOnParamFunc must be evaluated as equivalent to panic().
+type ErrorOnParamFunc func(spec.Parameter, error) bool
 
 func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Parameter, callmeOnError ErrorOnParamFunc) {
 	for _, param := range parameters {
-		// TODO: assert non nil
 		pr := param
 		if pr.Ref.String() != "" {
 			obj, _, err := pr.Ref.GetPointer().Get(s.spec)
 			if err != nil {
 				if callmeOnError != nil {
-					callmeOnError(param, fmt.Errorf("invalid reference: %q", pr.Ref.String()))
-					continue
+					if callmeOnError(param, fmt.Errorf("invalid reference: %q", pr.Ref.String())) {
+						continue
+					}
+					break
 				} else {
 					panic(fmt.Sprintf("invalid reference: %q", pr.Ref.String()))
 				}
@@ -525,8 +529,10 @@ func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Para
 				pr = objAsParam
 			} else {
 				if callmeOnError != nil {
-					callmeOnError(param, fmt.Errorf("resolved reference is not a parameter: %q", pr.Ref.String()))
-					continue
+					if callmeOnError(param, fmt.Errorf("resolved reference is not a parameter: %q", pr.Ref.String())) {
+						continue
+					}
+					break
 				} else {
 					panic(fmt.Sprintf("resolved reference is not a parameter: %q", pr.Ref.String()))
 				}

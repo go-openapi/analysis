@@ -350,20 +350,77 @@ func TestAnalyzer_paramsAsMap(Pt *testing.T) {
 func TestAnalyzer_paramsAsMapWithCallback(Pt *testing.T) {
 	s := prepareTestParamsInvalid("fixture-342.yaml")
 	if assert.NotNil(Pt, s) {
+		// No bail out callback
 		m := make(map[string]spec.Parameter)
 		e := []string{}
 		pi, ok := s.spec.Paths.Paths["/fixture"]
 		if assert.True(Pt, ok) {
 			//func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Parameter, callmeOnError ErrorOnParamFunc) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
-			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) {
+			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
 				//Pt.Logf("ERROR on %+v : %v", param, err)
 				e = append(e, err.Error())
+				return true // Continue
 			})
 		}
 		assert.Contains(Pt, e, `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
 		assert.Contains(Pt, e, `invalid reference: "#/definitions/sample_info/properties/sids"`)
 
+		// bail out callback
+		m = make(map[string]spec.Parameter)
+		e = []string{}
+		pi, ok = s.spec.Paths.Paths["/fixture"]
+		if assert.True(Pt, ok) {
+			//func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Parameter, callmeOnError ErrorOnParamFunc) {
+			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
+				//Pt.Logf("ERROR on %+v : %v", param, err)
+				e = append(e, err.Error())
+				return false // Bail out
+			})
+		}
+		// We got one then bail out
+		assert.Len(Pt, e, 1)
+	}
+
+	// Bail out after ref failure: exercising another path
+	s = prepareTestParamsInvalid("fixture-342-2.yaml")
+	if assert.NotNil(Pt, s) {
+		// bail out callback
+		m := make(map[string]spec.Parameter)
+		e := []string{}
+		pi, ok := s.spec.Paths.Paths["/fixture"]
+		if assert.True(Pt, ok) {
+			//func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Parameter, callmeOnError ErrorOnParamFunc) {
+			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
+				//Pt.Logf("ERROR on %+v : %v", param, err)
+				e = append(e, err.Error())
+				return false // Bail out
+			})
+		}
+		// We got one then bail out
+		assert.Len(Pt, e, 1)
+	}
+
+	// Bail out after ref failure: exercising another path
+	s = prepareTestParamsInvalid("fixture-342-3.yaml")
+	if assert.NotNil(Pt, s) {
+		// bail out callback
+		m := make(map[string]spec.Parameter)
+		e := []string{}
+		pi, ok := s.spec.Paths.Paths["/fixture"]
+		if assert.True(Pt, ok) {
+			//func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Parameter, callmeOnError ErrorOnParamFunc) {
+			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
+				//Pt.Logf("ERROR on %+v : %v", param, err)
+				e = append(e, err.Error())
+				return false // Bail out
+			})
+		}
+		// We got one then bail out
+		assert.Len(Pt, e, 1)
 	}
 }
 
@@ -385,8 +442,9 @@ func TestAnalyzer_SafeParamsFor(Pt *testing.T) {
 		if assert.True(Pt, ok) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 			//func (s *Spec) SafeParamsFor(method, path string, callmeOnError ErrorOnParamFunc) map[string]spec.Parameter {
-			for range s.SafeParamsFor("Get", "/fixture", func(param spec.Parameter, err error) {
+			for range s.SafeParamsFor("Get", "/fixture", func(param spec.Parameter, err error) bool {
 				e = append(e, err.Error())
+				return true // Continue
 			}) {
 				assert.Fail(Pt, "There should be no safe parameter in this testcase")
 			}
@@ -428,8 +486,9 @@ func TestAnalyzer_SafeParametersFor(Pt *testing.T) {
 		if assert.True(Pt, ok) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 			//func (s *Spec) SafeParametersFor(operationID string, callmeOnError ErrorOnParamFunc) []spec.Parameter {
-			for range s.SafeParametersFor("fixtureOp", func(param spec.Parameter, err error) {
+			for range s.SafeParametersFor("fixtureOp", func(param spec.Parameter, err error) bool {
 				e = append(e, err.Error())
+				return true // Continue
 			}) {
 				assert.Fail(Pt, "There should be no safe parameter in this testcase")
 			}
