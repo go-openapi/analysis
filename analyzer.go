@@ -802,9 +802,9 @@ func (s *Spec) AllItemsReferences() (result []string) {
 }
 
 // AllReferences returns all the references found in the document
-func (s *Spec) AllReferences() (result []string) {
+func (s *Spec) AllReferences() (result []spec.Ref) {
 	for _, v := range s.references.allRefs {
-		result = append(result, v.String())
+		result = append(result, v)
 	}
 	return
 }
