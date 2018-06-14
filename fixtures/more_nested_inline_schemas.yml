@@ -42,6 +42,42 @@ paths:
                 format: date-time
     post:
       responses:
+        200:
+          description: some nested maps
+          schema:
+            type: object
+            additionalProperties:
+              type: object
+              additionalProperties:
+                type: object
+                additionalProperties:
+                  type: obect
+                  properties:
+                    prop1:
+                      type: integer
+                    prop2:
+                      type: string
+        204:
+          description: some nested maps
+          schema:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          prop3:
+                            type: integer
+                          prop4:
+                            type: string
         default:
           description: all good
     get:
@@ -96,7 +132,6 @@ paths:
                             format: date-time
       responses:
         default:
-          description: ok
           schema:
             type: object
             properties:
@@ -130,11 +165,9 @@ paths:
                               type: string
                               format: date-time
         404:
-          description: ok
           schema:
-            $ref: "errors.yml#/error"
+            $ref: "external/errors.yml#/error"
         200:
-          description: ok
           schema:
             type: object
             properties:
