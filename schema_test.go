@@ -45,7 +45,7 @@ var complexSchemas = []*spec.Schema{
 func knownRefs(base string) []spec.Ref {
 	urls := []string{"bool", "string", "integer", "float", "date", "object", "format"}
 
-	var result []spec.Ref
+	result := make([]spec.Ref, 0, len(urls))
 	for _, u := range urls {
 		result = append(result, spec.MustCreateRef(fmt.Sprintf("%s/%s", base, path.Join("known", u))))
 	}
@@ -55,7 +55,7 @@ func knownRefs(base string) []spec.Ref {
 func complexRefs(base string) []spec.Ref {
 	urls := []string{"object", "array", "map"}
 
-	var result []spec.Ref
+	result := make([]spec.Ref, 0, len(urls))
 	for _, u := range urls {
 		result = append(result, spec.MustCreateRef(fmt.Sprintf("%s/%s", base, path.Join("complex", u))))
 	}
