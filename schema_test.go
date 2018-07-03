@@ -165,6 +165,16 @@ func TestSchemaAnalysis_Array(t *testing.T) {
 		}
 	}
 
+	// edge case: unrestricted array (beyond Swagger)
+	at := spec.ArrayProperty(nil)
+	at.Items = nil
+	sch, err := Schema(SchemaOpts{Schema: at})
+	if assert.NoError(t, err) {
+		assert.True(t, sch.IsArray)
+		assert.False(t, sch.IsTuple)
+		assert.False(t, sch.IsKnownType)
+		assert.True(t, sch.IsSimpleSchema)
+	}
 }
 
 func TestSchemaAnalysis_Map(t *testing.T) {
@@ -203,6 +213,17 @@ func TestSchemaAnalysis_Tuple(t *testing.T) {
 	at.Items.Schemas = append(at.Items.Schemas, *spec.StringProperty(), *spec.Int64Property())
 
 	sch, err := Schema(SchemaOpts{Schema: at})
+	if assert.NoError(t, err) {
+		assert.True(t, sch.IsTuple)
+		assert.False(t, sch.IsTupleWithExtra)
+		assert.False(t, sch.IsKnownType)
+		assert.False(t, sch.IsSimpleSchema)
+	}
+
+	// edge case: tuple with a single element
+	at.Items = &spec.SchemaOrArray{}
+	at.Items.Schemas = append(at.Items.Schemas, *spec.StringProperty())
+	sch, err = Schema(SchemaOpts{Schema: at})
 	if assert.NoError(t, err) {
 		assert.True(t, sch.IsTuple)
 		assert.False(t, sch.IsTupleWithExtra)
