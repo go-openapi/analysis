@@ -164,7 +164,10 @@ func (a *AnalyzedSchema) inferArray() error {
 	// (yes, even if the Items array contains only one element).
 	// arrays in JSON schema may be unrestricted (i.e no Items specified).
 	// Note that arrays in Swagger MUST have Items. Nonetheless, we analyze unrestricted arrays.
-	a.IsArray = a.isArrayType() && (a.schema.Items == nil || a.schema.Items.Schema != nil)
+	//
+	// NOTE: the spec package misses the distinction between:
+	// items: [] and items: {}, so we consider both arrays here.
+	a.IsArray = a.isArrayType() && (a.schema.Items == nil || a.schema.Items.Schemas == nil)
 	if a.IsArray && a.hasItems {
 		if a.schema.Items.Schema != nil {
 			itsch, err := Schema(SchemaOpts{
