@@ -175,6 +175,17 @@ func TestSchemaAnalysis_Array(t *testing.T) {
 		assert.False(t, sch.IsKnownType)
 		assert.True(t, sch.IsSimpleSchema)
 	}
+
+	// unrestricted array with explicit empty schema
+	at = spec.ArrayProperty(nil)
+	at.Items = &spec.SchemaOrArray{}
+	sch, err = Schema(SchemaOpts{Schema: at})
+	if assert.NoError(t, err) {
+		assert.True(t, sch.IsArray)
+		assert.False(t, sch.IsTuple)
+		assert.False(t, sch.IsKnownType)
+		assert.True(t, sch.IsSimpleSchema)
+	}
 }
 
 func TestSchemaAnalysis_Map(t *testing.T) {
