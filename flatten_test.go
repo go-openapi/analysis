@@ -1894,3 +1894,14 @@ func TestFlatten_Issue_1774(t *testing.T) {
 		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
 	}
 }
+
+func TestFlatten_1429(t *testing.T) {
+	// nested / remote $ref in response / param schemas
+	// issue go-swagger/go-swagger#1429
+	bp := filepath.Join("fixtures", "bugs", "1429", "swagger.yaml")
+	sp := loadOrFail(t, bp)
+
+	an := New(sp)
+	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
+	assert.NoError(t, err)
+}
