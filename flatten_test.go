@@ -1862,3 +1862,32 @@ func TestFlatten_Issue_1796(t *testing.T) {
 		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
 	}
 }
+
+func TestFlatten_Issue_1767(t *testing.T) {
+	bp := filepath.Join("fixtures", "bugs", "1767", "fixture-1767.yaml")
+	sp := loadOrFail(t, bp)
+	an := New(sp)
+	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false})
+	assert.NoError(t, err)
+	// assert all $ref match  "$ref": "#/definitions/something"
+	for _, ref := range an.AllReferences() {
+		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
+	}
+}
+
+func TestFlatten_Issue_1774(t *testing.T) {
+	bp := filepath.Join("fixtures", "bugs", "1774", "def_api.yaml")
+	sp := loadOrFail(t, bp)
+	an := New(sp)
+	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, Expand: false,
+		RemoveUnused: false})
+	assert.NoError(t, err)
+	//bbb, _ := json.MarshalIndent(an.spec, "", " ")
+	//t.Logf("%s", string(bbb))
+	//t.Logf("%s", an.AllDefinitionReferences())
+	// assert all $ref match  "$ref": "#/definitions/something"
+	for _, ref := range an.AllReferences() {
+		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
+	}
+}
