@@ -1847,6 +1847,7 @@ func Test_NormalizePath(t *testing.T) {
 }
 
 func TestFlatten_Issue_1796(t *testing.T) {
+	// remote cyclic ref
 	bp := filepath.Join("fixtures", "bugs", "1796", "queryIssue.json")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
@@ -1864,6 +1865,7 @@ func TestFlatten_Issue_1796(t *testing.T) {
 }
 
 func TestFlatten_Issue_1767(t *testing.T) {
+	// remote cyclic ref again
 	bp := filepath.Join("fixtures", "bugs", "1767", "fixture-1767.yaml")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
@@ -1877,6 +1879,7 @@ func TestFlatten_Issue_1767(t *testing.T) {
 }
 
 func TestFlatten_Issue_1774(t *testing.T) {
+	// remote cyclic ref again
 	bp := filepath.Join("fixtures", "bugs", "1774", "def_api.yaml")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
