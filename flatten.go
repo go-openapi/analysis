@@ -512,7 +512,10 @@ const (
 	definitionsPath = "#/definitions"
 )
 
-var ignoredKeys map[string]struct{}
+var (
+	ignoredKeys  map[string]struct{}
+	validMethods map[string]struct{}
+)
 
 func init() {
 	ignoredKeys = map[string]struct{}{
@@ -521,6 +524,16 @@ func init() {
 		"not":        {},
 		"anyOf":      {},
 		"oneOf":      {},
+	}
+
+	validMethods = map[string]struct{}{
+		"GET":     {},
+		"HEAD":    {},
+		"OPTIONS": {},
+		"PATCH":   {},
+		"POST":    {},
+		"PUT":     {},
+		"DELETE":  {},
 	}
 }
 
@@ -619,26 +632,12 @@ func (s splitKey) ResponseName() string {
 	return ""
 }
 
-var validMethods map[string]struct{}
-
-func init() {
-	validMethods = map[string]struct{}{
-		"GET":     {},
-		"HEAD":    {},
-		"OPTIONS": {},
-		"PATCH":   {},
-		"POST":    {},
-		"PUT":     {},
-		"DELETE":  {},
-	}
-}
-
 func (s splitKey) PathItemRef() swspec.Ref {
 	if len(s) < 3 {
 		return swspec.Ref{}
 	}
 	pth, method := s[1], s[2]
-	if _, validMethod := validMethods[strings.ToUpper(method)]; !validMethod && !strings.HasPrefix(method, "x-") {
+	if _, isValidMethod := validMethods[strings.ToUpper(method)]; !isValidMethod && !strings.HasPrefix(method, "x-") {
 		return swspec.Ref{}
 	}
 	return swspec.MustCreateRef("#" + slashpath.Join("/", paths, jsonpointer.Escape(pth), strings.ToUpper(method)))
