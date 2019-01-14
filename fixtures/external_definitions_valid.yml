@@ -29,8 +29,9 @@ paths:
       - name: other
         in: query
         type: array
+        # $ref in parameter array items is not swagger 2.0 compliant
         items:
-          $ref: "external/definitions.yml#/definitions/named"
+          type: string
       - name: body
         in: body
         schema:
