@@ -26,7 +26,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/go-openapi/loads/fmts"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag"
 	"github.com/stretchr/testify/assert"
@@ -235,7 +234,7 @@ func loadSpec(path string) (*spec.Swagger, error) {
 	spec.PathLoader = func(path string) (json.RawMessage, error) {
 		ext := filepath.Ext(path)
 		if ext == ".yml" || ext == ".yaml" {
-			return fmts.YAMLDoc(path)
+			return swag.YAMLDoc(path)
 		}
 		data, err := swag.LoadFromFileOrHTTP(path)
 		if err != nil {
@@ -243,7 +242,7 @@ func loadSpec(path string) (*spec.Swagger, error) {
 		}
 		return json.RawMessage(data), nil
 	}
-	data, err := fmts.YAMLDoc(path)
+	data, err := swag.YAMLDoc(path)
 	if err != nil {
 		return nil, err
 	}
