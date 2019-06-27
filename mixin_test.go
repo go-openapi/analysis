@@ -15,6 +15,7 @@
 package analysis
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -26,6 +27,8 @@ const (
 	emptyPathsFile = "fixtures/empty-paths.json"
 	securityFile   = "fixtures/securitydef.yml"
 	otherMixin     = "fixtures/other-mixin.yml"
+	emptyProps     = "fixtures/empty-props.yml"
+	swaggerProps   = "fixtures/swagger-props.yml"
 )
 
 func TestMixin(t *testing.T) {
@@ -133,4 +136,21 @@ func TestMixinFromNilPath(t *testing.T) {
 	}
 	//bbb, _ := json.MarshalIndent(primary.Paths.Paths, "", " ")
 	//t.Log(string(bbb))
+}
+
+func TestMixinSwaggerProps(t *testing.T) {
+	primary, err := loadSpec(emptyProps)
+	if err != nil {
+		t.Fatalf("Could not load '%v': %v\n", emptyProps, err)
+	}
+	mixin, err := loadSpec(swaggerProps)
+	if err != nil {
+		t.Fatalf("Could not load '%v': %v\n", swaggerProps, err)
+	}
+	collisions := Mixin(primary, mixin)
+	if len(collisions) != 1 {
+		t.Errorf("TestMixin: Expected 1 collisions, got %v\n%v", len(collisions), collisions)
+	}
+	bbb, _ := json.MarshalIndent(primary, "", " ")
+	t.Log(string(bbb))
 }
