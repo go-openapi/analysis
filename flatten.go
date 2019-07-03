@@ -140,6 +140,9 @@ func Flatten(opts FlattenOpts) error {
 		cwd, _ := os.Getwd()
 		opts.BasePath = filepath.Join(cwd, opts.BasePath)
 	}
+	// make sure drive letter on windows is normalized to lower case
+	u, _ := url.Parse(opts.BasePath)
+	opts.BasePath = u.String()
 
 	opts.flattenContext = newContext()
 
@@ -925,7 +928,13 @@ type refRevIdx struct {
 // rebaseRef rebase a remote ref relative to a base ref.
 //
 // NOTE: does not support JSONschema ID for $ref (we assume we are working with swagger specs here).
+//
+// NOTE(windows):
+// * refs are assumed to have been normalized with drive letter lower cased (from go-openapi/spec)
+// * "/ in paths may appear as escape sequences
 func rebaseRef(baseRef string, ref string) string {
+	baseRef, _ = url.PathUnescape(baseRef)
+	ref, _ = url.PathUnescape(ref)
 	if baseRef == "" || baseRef == "." || strings.HasPrefix(baseRef, "#") {
 		return ref
 	}
@@ -950,14 +959,16 @@ func rebaseRef(baseRef string, ref string) string {
 	// there is a relative path
 	var basePath string
 	if baseURL.Host != "" {
+		// when there is a host, standard URI rules apply (with "/")
 		baseURL.Path = slashpath.Dir(baseURL.Path)
 		baseURL.Path = slashpath.Join(baseURL.Path, "/"+parts[0])
 		return baseURL.String()
 	}
 
+	// this is a local relative path
+	// basePart[0] and parts[0] are local filesystem directories/files
 	basePath = filepath.Dir(baseParts[0])
-
-	relPath := slashpath.Join(basePath, "/"+parts[0])
+	relPath := filepath.Join(basePath, string(filepath.Separator)+parts[0])
 	if len(parts) > 1 {
 		return strings.Join([]string{relPath, parts[1]}, "#")
 	}
@@ -965,19 +976,25 @@ func rebaseRef(baseRef string, ref string) string {
 }
 
 // normalizePath renders absolute path on remote file refs
+//
+// NOTE(windows):
+// * refs are assumed to have been normalized with drive letter lower cased (from go-openapi/spec)
+// * "/ in paths may appear as escape sequences
 func normalizePath(ref swspec.Ref, opts *FlattenOpts) (normalizedPath string) {
-	if ref.HasFragmentOnly || filepath.IsAbs(ref.String()) {
-		normalizedPath = ref.String()
+	uri, _ := url.PathUnescape(ref.String())
+	if ref.HasFragmentOnly || filepath.IsAbs(uri) {
+		normalizedPath = uri
 		return
 	}
 
-	refURL, _ := url.Parse(ref.String())
+	refURL, _ := url.Parse(uri)
 	if refURL.Host != "" {
-		normalizedPath = ref.String()
+		normalizedPath = uri
 		return
 	}
 
-	parts := strings.Split(ref.String(), "#")
+	parts := strings.Split(uri, "#")
+	// BasePath, parts[0] are local filesystem directories, guaranteed to be absolute at this stage
 	parts[0] = filepath.Join(filepath.Dir(opts.BasePath), parts[0])
 	normalizedPath = strings.Join(parts, "#")
 	return
