@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 	"testing"
 
@@ -2035,6 +2037,7 @@ func TestFlatten_Bitbucket(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+
 	assert.Len(t, sp.Definitions, 2) // only 2 remaining refs after expansion: circular $ref
 	_, ok := sp.Definitions["base_commit"]
 	assert.True(t, ok)
@@ -2185,20 +2188,34 @@ func TestFlatten_Issue_1621(t *testing.T) {
 			 }`, string(bbb))
 }
 
+// wrapWindowsPath adapts path expectations for tests running on windows
+func wrapWindowsPath(p string) string {
+	if goruntime.GOOS != "windows" {
+		return p
+	}
+	pp := filepath.FromSlash(p)
+	if !filepath.IsAbs(p) && []rune(pp)[0] == '\\' {
+		pp, _ := filepath.Abs(p)
+		u, _ := url.Parse(pp)
+		return u.String()
+	}
+	return pp
+}
+
 func Test_NormalizePath(t *testing.T) {
 	values := []struct{ Source, Expected string }{
 		{"#/definitions/A", "#/definitions/A"},
 		{"http://somewhere.com/definitions/A", "http://somewhere.com/definitions/A"},
-		{"/definitions/A", "/definitions/A"},
-		{"/definitions/errorModel.json#/definitions/A", "/definitions/errorModel.json#/definitions/A"},
+		{wrapWindowsPath("/definitions/A"), wrapWindowsPath("/definitions/A")}, // considered absolute on unix but not on windows
+		{wrapWindowsPath("/definitions/errorModel.json") + "#/definitions/A", wrapWindowsPath("/definitions/errorModel.json") + "#/definitions/A"},
 		{"http://somewhere.com", "http://somewhere.com"},
-		{"./definitions/definitions.yaml#/definitions/A", "/abs/to/spec/definitions/definitions.yaml#/definitions/A"},
-		{"#", "/abs/to/spec"},
+		{wrapWindowsPath("./definitions/definitions.yaml") + "#/definitions/A", wrapWindowsPath("/abs/to/spec/definitions/definitions.yaml") + "#/definitions/A"},
+		{"#", wrapWindowsPath("/abs/to/spec")},
 	}
 
 	for _, v := range values {
 		assert.Equal(t, v.Expected, normalizePath(spec.MustCreateRef(v.Source),
-			&FlattenOpts{BasePath: "/abs/to/spec/spec.json"}))
+			&FlattenOpts{BasePath: wrapWindowsPath("/abs/to/spec/spec.json")}))
 	}
 }
 
@@ -2267,10 +2284,10 @@ func TestRebaseRef(t *testing.T) {
 	assert.Equal(t, "#/definitions/abc", rebaseRef("", "#/definitions/abc"))
 	assert.Equal(t, "#/definitions/abc", rebaseRef(".", "#/definitions/abc"))
 	assert.Equal(t, "otherfile#/definitions/abc", rebaseRef("file#/definitions/base", "otherfile#/definitions/abc"))
-	assert.Equal(t, "../otherfile#/definitions/abc", rebaseRef("../file#/definitions/base", "./otherfile#/definitions/abc"))
-	assert.Equal(t, "../otherfile#/definitions/abc", rebaseRef("../file#/definitions/base", "otherfile#/definitions/abc"))
-	assert.Equal(t, "local/remote/otherfile#/definitions/abc", rebaseRef("local/file#/definitions/base", "remote/otherfile#/definitions/abc"))
-	assert.Equal(t, "local/remote/otherfile.yaml", rebaseRef("local/file.yaml", "remote/otherfile.yaml"))
+	assert.Equal(t, wrapWindowsPath("../otherfile")+"#/definitions/abc", rebaseRef(wrapWindowsPath("../file")+"#/definitions/base", wrapWindowsPath("./otherfile")+"#/definitions/abc"))
+	assert.Equal(t, wrapWindowsPath("../otherfile")+"#/definitions/abc", rebaseRef(wrapWindowsPath("../file")+"#/definitions/base", wrapWindowsPath("otherfile")+"#/definitions/abc"))
+	assert.Equal(t, wrapWindowsPath("local/remote/otherfile")+"#/definitions/abc", rebaseRef(wrapWindowsPath("local/file")+"#/definitions/base", wrapWindowsPath("remote/otherfile")+"#/definitions/abc"))
+	assert.Equal(t, wrapWindowsPath("local/remote/otherfile.yaml"), rebaseRef(wrapWindowsPath("local/file.yaml"), wrapWindowsPath("remote/otherfile.yaml")))
 
 	assert.Equal(t, "file#/definitions/abc", rebaseRef("file#/definitions/base", "#/definitions/abc"))
 
