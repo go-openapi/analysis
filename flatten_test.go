@@ -127,6 +127,9 @@ func TestUpdateRef(t *testing.T) {
 }
 
 func TestImportExternalReferences(t *testing.T) {
+	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stdout)
+
 	// this fixture is the same as external_definitions.yml, but no more
 	// checks if invalid construct is supported (i.e. $ref in parameters items)
 	bp := filepath.Join(".", "fixtures", "external_definitions_valid.yml")
@@ -2195,7 +2198,7 @@ func wrapWindowsPath(p string) string {
 	}
 	pp := filepath.FromSlash(p)
 	if !filepath.IsAbs(p) && []rune(pp)[0] == '\\' {
-		pp, _ := filepath.Abs(p)
+		pp, _ = filepath.Abs(p)
 		u, _ := url.Parse(pp)
 		return u.String()
 	}
