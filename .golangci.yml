@@ -20,3 +20,8 @@ linters:
     - lll
     - gochecknoglobals
     - gochecknoinits
+    # scopelint is useful, but also reports false positives
+    # that unfortunately can't be disabled. So we disable the
+    # linter rather than changing code that works.
+    # see: https://github.com/kyoh86/scopelint/issues/4
+    - scopelint
