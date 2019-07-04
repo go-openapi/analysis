@@ -15,7 +15,6 @@
 package analysis
 
 import (
-	"encoding/json"
 	"testing"
 )
 
@@ -151,6 +150,6 @@ func TestMixinSwaggerProps(t *testing.T) {
 	if len(collisions) != 1 {
 		t.Errorf("TestMixin: Expected 1 collisions, got %v\n%v", len(collisions), collisions)
 	}
-	bbb, _ := json.MarshalIndent(primary, "", " ")
-	t.Log(string(bbb))
+	//bbb, _ := json.MarshalIndent(primary, "", " ")
+	//t.Log(string(bbb))
 }
