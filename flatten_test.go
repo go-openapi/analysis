@@ -23,6 +23,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	goruntime "runtime"
 	"strings"
 	"testing"
@@ -30,6 +31,7 @@ import (
 	"github.com/go-openapi/jsonpointer"
 	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSaveDefinition(t *testing.T) {
@@ -2295,9 +2297,9 @@ func TestRebaseRef(t *testing.T) {
 	assert.Equal(t, "file#/definitions/abc", rebaseRef("file#/definitions/base", "#/definitions/abc"))
 
 	// with remote
-	assert.Equal(t, "https://example.com/base/definitions/abc", rebaseRef("https://example.com/base", "https://example.com/base/definitions/abc"))
-	assert.Equal(t, "https://example.com/base/definitions/abc", rebaseRef("https://example.com/base", "#/definitions/abc"))
-	assert.Equal(t, "https://example.com/base/dir/definitions/abc", rebaseRef("https://example.com/base", "#/dir/definitions/abc"))
+	assert.Equal(t, "https://example.com/base#/definitions/abc", rebaseRef("https://example.com/base", "https://example.com/base#/definitions/abc"))
+	assert.Equal(t, "https://example.com/base#/definitions/abc", rebaseRef("https://example.com/base", "#/definitions/abc"))
+	assert.Equal(t, "https://example.com/base#/dir/definitions/abc", rebaseRef("https://example.com/base", "#/dir/definitions/abc"))
 	assert.Equal(t, "https://example.com/base/dir/definitions/abc", rebaseRef("https://example.com/base/spec.yaml", "dir/definitions/abc"))
 	assert.Equal(t, "https://example.com/base/dir/definitions/abc", rebaseRef("https://example.com/base/", "dir/definitions/abc"))
 	assert.Equal(t, "https://example.com/dir/definitions/abc", rebaseRef("https://example.com/base", "dir/definitions/abc"))
@@ -2356,4 +2358,59 @@ func TestFlatten_1851(t *testing.T) {
           "Not OK"
          ]
 	 }`, string(jazon))
+}
+
+var (
+	rex    = regexp.MustCompile(`"\$ref":\s*"(.+)"`)
+	oairex = regexp.MustCompile(`oiagen`)
+)
+
+func checkRefs(t *testing.T, spec *spec.Swagger, expectNoConflict bool) {
+	// all $ref resolve locally
+	jazon, _ := json.MarshalIndent(spec, "", " ")
+	m := rex.FindAllStringSubmatch(string(jazon), -1)
+	if assert.NotNil(t, m) {
+		for _, matched := range m {
+			subMatch := matched[1]
+			assert.True(t, strings.HasPrefix(subMatch, "#/definitions/"),
+				"expected $ref to be inlined, got: %s", matched[0])
+		}
+	}
+
+	if expectNoConflict {
+		// no naming conflict
+		m := oairex.FindAllStringSubmatch(string(jazon), -1)
+		assert.Empty(t, m)
+	}
+}
+
+func testFlattenWithDefaults(t *testing.T, bp string) *Spec {
+	sp := loadOrFail(t, bp)
+	an := New(sp)
+	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
+	require.NoError(t, err)
+	return an
+}
+
+func TestFlatten_RemoteAbsolute(t *testing.T) {
+	// this one has simple remote ref pattern
+	an := testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-mini.json"))
+	checkRefs(t, an.spec, true)
+
+	// this has no remote ref
+	an = testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger.json"))
+	checkRefs(t, an.spec, true)
+
+	// this one has local ref, no naming conflict (same as previous but with external ref imported)
+	an = testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-local-ref.json"))
+	checkRefs(t, an.spec, true)
+
+	// this one has remote ref, no naming conflict (same as previous but with external ref imported)
+	an = testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-remote-only-ref.json"))
+	checkRefs(t, an.spec, true)
+
+	// this one has both remote and local ref with naming conflict.
+	// This creates some "oiagen" definitions to address naming conflict, which are removed by the oaigen pruning process (reinlined / merged with parents).
+	an = testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-ref.json"))
+	checkRefs(t, an.spec, false)
 }
