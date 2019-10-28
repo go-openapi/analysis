@@ -1265,28 +1265,25 @@ func TestFlatten(t *testing.T) {
 
 func TestFlatten_oaigenFull(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
+	var sp *spec.Swagger
+	defer func() {
+		if t.Failed() && sp != nil {
+			bbb, _ := json.MarshalIndent(sp, "", " ")
+			t.Logf("%s", string(bbb))
+		}
+	}()
 
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "oaigen", "fixture-oaigen.yaml")
 	sp, err := loadSpec(bp)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, err)
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
-	//Debug = true
 	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
 	msg := logCapture.String()
 
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
-
-	//bbb, _ := json.MarshalIndent(sp, "", " ")
-	//t.Logf("%s", string(bbb))
+	require.NoError(t, err)
 
 	if !assert.Containsf(t, msg, "warning: duplicate flattened definition name resolved as aAOAIGen",
 		"Expected log message") {
@@ -1338,22 +1335,24 @@ func TestFlatten_oaigenFull(t *testing.T) {
 	res = getDefinition(t, sp, "bB")
 	assert.JSONEqf(t, `{"type": "string", "format": "date-time"}`, res, "Expected a simple schema for response")
 
-	res = getDefinition(t, sp, "bItems")
+	_, ok := sp.Definitions["bItems"]
+	assert.Falsef(t, ok, "Did not expect a definition for %s", "bItems")
+
+	res = getDefinition(t, sp, "d")
 	assert.JSONEqf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "c": {
 		     "type": "integer"
 		    }
-		   },
-		   "x-go-gen-location": "models"
+		   }
 	}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "b")
 	assert.JSONEqf(t, `{
 		   "type": "array",
 		   "items": {
-			   "$ref": "#/definitions/bItems"
+			   "$ref": "#/definitions/d"
 		   }
 	}`, res, "Expected a ref in response")
 
@@ -1459,27 +1458,25 @@ func TestFlatten_oaigenFull(t *testing.T) {
 
 func TestFlatten_oaigenMinimal(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
+	var sp *spec.Swagger
+	defer func() {
+		if t.Failed() && sp != nil {
+			bbb, _ := json.MarshalIndent(sp, "", " ")
+			t.Logf("%s", string(bbb))
+		}
+	}()
 
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "oaigen", "fixture-oaigen.yaml")
 	sp, err := loadSpec(bp)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, err)
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
 	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
-	//bb, _ := json.MarshalIndent(sp, "", " ")
-	//t.Log(string(bb))
+	require.NoError(t, err)
 
 	msg := logCapture.String()
-	//t.Log(msg)
 	if !assert.NotContainsf(t, msg,
 		"warning: duplicate flattened definition name resolved as aAOAIGen", "Expected log message") {
 		t.Logf("Captured log: %s", msg)
@@ -1531,22 +1528,24 @@ func TestFlatten_oaigenMinimal(t *testing.T) {
 	res = getDefinition(t, sp, "bB")
 	assert.JSONEqf(t, `{"type": "string", "format": "date-time"}`, res, "Expected a simple schema for response")
 
-	res = getDefinition(t, sp, "bItems")
+	_, ok := sp.Definitions["bItems"]
+	assert.Falsef(t, ok, "Did not expect a definition for %s", "bItems")
+
+	res = getDefinition(t, sp, "d")
 	assert.JSONEqf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "c": {
 		     "type": "integer"
 		    }
-		   },
-		   "x-go-gen-location": "models"
+		   }
 	}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "b")
 	assert.JSONEqf(t, `{
 		   "type": "array",
 		   "items": {
-			   "$ref": "#/definitions/bItems"
+			   "$ref": "#/definitions/d"
 		   }
 	}`, res, "Expected a ref in response")
 
@@ -1666,22 +1665,18 @@ func TestFlatten_oaigen_1260ter(t *testing.T) {
 
 func getDefinition(t *testing.T, sp *spec.Swagger, key string) string {
 	d, ok := sp.Definitions[key]
-	if !assert.Truef(t, ok, "Expected definition for %s", key) {
-		t.FailNow()
-	}
+	require.Truef(t, ok, "Expected definition for %s", key)
 	res, _ := json.Marshal(d)
 	return string(res)
 }
 
 func getInPath(t *testing.T, sp *spec.Swagger, path, key string) string {
 	ptr, erp := jsonpointer.New(key)
-	if !assert.NoError(t, erp, "at %s no key", key) {
-		t.FailNow()
-	}
+	require.NoError(t, erp, "at %s no key", key)
+
 	d, _, erg := ptr.Get(sp.Paths.Paths[path])
-	if !assert.NoError(t, erg, "at %s no value for %s", path, key) {
-		t.FailNow()
-	}
+	require.NoError(t, erg, "at %s no value for %s", path, key)
+
 	res, _ := json.Marshal(d)
 	return string(res)
 }
@@ -1691,7 +1686,7 @@ func TestMoreNameInlinedSchemas(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	res := getInPath(t, sp, "/some/where/{id}", "/post/responses/200/schema")
 	assert.JSONEqf(t,
@@ -1850,9 +1845,16 @@ func TestOperationIDs(t *testing.T) {
 
 func TestFlatten_Pointers(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
+	var sp *spec.Swagger
+	defer func() {
+		if t.Failed() && sp != nil {
+			bbb, _ := json.MarshalIndent(sp, "", " ")
+			t.Logf("%s", string(bbb))
+		}
+	}()
 
 	bp := filepath.Join("fixtures", "pointers", "fixture-pointers.yaml")
-	sp := loadOrFail(t, bp)
+	sp = loadOrFail(t, bp)
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
@@ -1862,8 +1864,6 @@ func TestFlatten_Pointers(t *testing.T) {
 		t.FailNow()
 		return
 	}
-	//bb, _ := json.MarshalIndent(sp, "", " ")
-	//t.Log(string(bb))
 	msg := logCapture.String()
 	if !assert.NotContains(t, msg, "warning") {
 		t.Log(msg)
@@ -2225,16 +2225,21 @@ func Test_NormalizePath(t *testing.T) {
 }
 
 func TestFlatten_Issue_1796(t *testing.T) {
+	var sp *spec.Swagger
+	defer func() {
+		if t.Failed() && sp != nil {
+			bbb, _ := json.MarshalIndent(sp, "", " ")
+			t.Logf("%s", string(bbb))
+		}
+	}()
+
 	// remote cyclic ref
 	bp := filepath.Join("fixtures", "bugs", "1796", "queryIssue.json")
-	sp := loadOrFail(t, bp)
+	sp = loadOrFail(t, bp)
 	an := New(sp)
 	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false})
-	assert.NoError(t, err)
-	//bbb, _ := json.MarshalIndent(an.spec, "", " ")
-	//t.Logf("%s", string(bbb))
-	//t.Logf("%s", an.AllDefinitionReferences())
+	require.NoError(t, err)
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
@@ -2249,7 +2254,8 @@ func TestFlatten_Issue_1767(t *testing.T) {
 	an := New(sp)
 	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
 		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
@@ -2257,16 +2263,22 @@ func TestFlatten_Issue_1767(t *testing.T) {
 }
 
 func TestFlatten_Issue_1774(t *testing.T) {
+	var sp *spec.Swagger
+	defer func() {
+		if t.Failed() && sp != nil {
+			bbb, _ := json.MarshalIndent(sp, "", " ")
+			t.Logf("%s", string(bbb))
+		}
+	}()
+
 	// remote cyclic ref again
 	bp := filepath.Join("fixtures", "bugs", "1774", "def_api.yaml")
-	sp := loadOrFail(t, bp)
+	sp = loadOrFail(t, bp)
 	an := New(sp)
 	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, Expand: false,
 		RemoveUnused: false})
-	assert.NoError(t, err)
-	//bbb, _ := json.MarshalIndent(an.spec, "", " ")
-	//t.Logf("%s", string(bbb))
-	//t.Logf("%s", an.AllDefinitionReferences())
+	require.NoError(t, err)
+
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
 		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
@@ -2281,7 +2293,7 @@ func TestFlatten_1429(t *testing.T) {
 
 	an := New(sp)
 	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestRebaseRef(t *testing.T) {
@@ -2316,8 +2328,6 @@ func TestFlatten_1851(t *testing.T) {
 	assert.NoError(t, err)
 	var jazon []byte
 
-	//bbb, _ := json.MarshalIndent(an.spec, "", " ")
-	//t.Logf("%s", string(bbb))
 	serverDefinition, ok := an.spec.Definitions["server"]
 	assert.True(t, ok)
 	serverStatusDefinition, ok := an.spec.Definitions["serverStatus"]
@@ -2413,4 +2423,57 @@ func TestFlatten_RemoteAbsolute(t *testing.T) {
 	// This creates some "oiagen" definitions to address naming conflict, which are removed by the oaigen pruning process (reinlined / merged with parents).
 	an = testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-ref.json"))
 	checkRefs(t, an.spec, false)
+}
+
+func TestTopmostFirs(t *testing.T) {
+	assert.Equal(t, []string{"/a/b", "/a/b/c"}, topmostFirst([]string{"/a/b/c", "/a/b"}))
+	assert.Equal(t, []string{"/a/b", "/a/c"}, topmostFirst([]string{"/a/c", "/a/b"}))
+	assert.Equal(t, []string{"/a/b", "/a/c", "/a/b/c", "/a/b/d", "/a/a/b/d"}, topmostFirst([]string{"/a/a/b/d", "/a/b", "/a/b/c", "/a/b/d", "/a/c"}))
+}
+
+func TestFlatten_2092(t *testing.T) {
+	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stdout)
+
+	bp := filepath.Join("fixtures", "bugs", "2092", "swagger.yaml")
+	rexOAIGen := regexp.MustCompile(`(?i)("\$ref":\s*")(.?oaigen.?)"`)
+
+	// #2092 exhibits a stability issue: repeat 100 times the process to make sure it is stable
+	var bb, bb2 string
+	for i := 0; i < 100; i++ {
+		sp := loadOrFail(t, bp)
+		an := New(sp)
+		err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
+		require.NoError(t, err)
+
+		bbb, _ := json.MarshalIndent(an.spec, "", " ")
+
+		if i == 0 {
+			// verify we don't have dangling oaigen refs
+			bb = string(bbb)
+			if !assert.False(t, rexOAIGen.Match(bbb)) {
+				t.Logf("%s", bb)
+			}
+		} else {
+			// verify that we produce a stable result
+			assert.JSONEq(t, bb, string(bbb))
+		}
+
+		err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: true})
+		require.NoError(t, err)
+
+		err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
+		require.NoError(t, err)
+
+		bbb, _ = json.MarshalIndent(an.spec, "", " ")
+		if i == 0 {
+			bb2 = string(bbb)
+			if !assert.False(t, rexOAIGen.Match(bbb)) {
+				t.Logf("%s", string(bbb))
+			}
+		} else {
+			// verify that we produce a stable result
+			assert.JSONEq(t, bb2, string(bbb))
+		}
+	}
 }
