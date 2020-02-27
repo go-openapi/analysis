@@ -334,7 +334,7 @@ func mergeSwaggerProps(primary *spec.Swagger, m *spec.Swagger) []string {
 		} else if m.Info.Contact != nil {
 			var csk []string
 			primary.Info.Contact.Extensions, csk = mergeExtensions(primary.Info.Contact.Extensions, m.Info.Contact.Extensions)
-			skipped = append(skipped,csk...)
+			skipped = append(skipped, csk...)
 			if primary.Info.Contact.Name == "" {
 				primary.Info.Contact.Name = m.Info.Contact.Name
 			}
