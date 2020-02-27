@@ -351,7 +351,7 @@ func mergeSwaggerProps(primary *spec.Swagger, m *spec.Swagger) []string {
 		} else if m.Info.License != nil {
 			var lsk []string
 			primary.Info.License.Extensions, lsk = mergeExtensions(primary.Info.License.Extensions, m.Info.License.Extensions)
-			skipped = append(skipped,lsk...)
+			skipped = append(skipped, lsk...)
 			if primary.Info.License.Name == "" {
 				primary.Info.License.Name = m.Info.License.Name
 			}
