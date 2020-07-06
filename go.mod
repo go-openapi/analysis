@@ -1,5 +1,7 @@
 module github.com/go-openapi/analysis
 
+replace github.com/go-openapi/spec => github.com/fredbi/spec v0.19.6-0.20201124193232-e6f3ca6657aa
+
 require (
 	github.com/go-openapi/jsonpointer v0.19.5
 	github.com/go-openapi/loads v0.19.6

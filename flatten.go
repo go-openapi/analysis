@@ -156,6 +156,8 @@ func Flatten(opts FlattenOpts) error {
 		return err
 	}
 
+	opts.Spec.reload() // re-analyze
+
 	// strip current file from $ref's, so we can recognize them as proper definitions
 	// In particular, this works around for issue go-openapi/spec#76: leading absolute file in $ref is stripped
 	if err := normalizeRef(&opts); err != nil {
@@ -1750,17 +1752,21 @@ DOWNREF:
 // leading absolute file in $ref is stripped
 func normalizeRef(opts *FlattenOpts) error {
 	debugLog("normalizeRef")
-	opts.Spec.reload() // re-analyze
+	altered := false
 	for k, w := range opts.Spec.references.allRefs {
-		if strings.HasPrefix(w.String(), opts.BasePath+definitionsPath) { // may be a mix of / and \, depending on OS
-			// strip base path from definition
-			debugLog("stripping absolute path for: %s", w.String())
-			if err := updateRef(opts.Swagger(), k,
-				swspec.MustCreateRef(slashpath.Join(definitionsPath, slashpath.Base(w.String())))); err != nil {
-				return err
-			}
+		if !strings.HasPrefix(w.String(), opts.BasePath+definitionsPath) { // may be a mix of / and \, depending on OS
+			continue
+		}
+		altered = true
+		// strip base path from definition
+		debugLog("stripping absolute path for: %s", w.String())
+		if err := updateRef(opts.Swagger(), k,
+			swspec.MustCreateRef(slashpath.Join(definitionsPath, slashpath.Base(w.String())))); err != nil {
+			return err
 		}
 	}
-	opts.Spec.reload() // re-analyze
+	if altered {
+		opts.Spec.reload() // re-analyze
+	}
 	return nil
 }

@@ -22,6 +22,12 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/docker/go-units v0.4.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
+github.com/fredbi/spec v0.19.6-0.20201124140641-cf8db28c9437 h1:VfpxZzlbi1LhXuTPx2r63CKH5bolHui+RxywZ1czc3U=
+github.com/fredbi/spec v0.19.6-0.20201124140641-cf8db28c9437/go.mod h1:gwrgJS15eCUgjLpMjBJmbZezCsw88LmgeEip0M63doA=
+github.com/fredbi/spec v0.19.6-0.20201124165238-080f6d24b4c5 h1:nGvKSWfgW3FBQfuGBtbwvH9jY4HksUU73VEahGcpnn8=
+github.com/fredbi/spec v0.19.6-0.20201124165238-080f6d24b4c5/go.mod h1:gwrgJS15eCUgjLpMjBJmbZezCsw88LmgeEip0M63doA=
+github.com/fredbi/spec v0.19.6-0.20201124193232-e6f3ca6657aa h1:aGzFKa4hgxy+JBvF3WYTapw1ur42WjZ0opce9PzKcZI=
+github.com/fredbi/spec v0.19.6-0.20201124193232-e6f3ca6657aa/go.mod h1:gwrgJS15eCUgjLpMjBJmbZezCsw88LmgeEip0M63doA=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/go-openapi/analysis v0.0.0-20180825180245-b006789cd277/go.mod h1:k70tL6pCuVxPJOHXQ+wIac1FUrvNkHolPie/cLEU6hI=
