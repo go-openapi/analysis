@@ -291,6 +291,7 @@ func TestReferenceAnalysis(t *testing.T) {
 	}
 }
 
+// nolint: unparam
 func assertRefExists(t testing.TB, data map[string]spec.Ref, key string) bool {
 	if _, ok := data[key]; !ok {
 		return assert.Fail(t, fmt.Sprintf("expected %q to exist in the ref bag", key))
@@ -298,6 +299,7 @@ func assertRefExists(t testing.TB, data map[string]spec.Ref, key string) bool {
 	return true
 }
 
+// nolint: unparam
 func assertSchemaRefExists(t testing.TB, data map[string]SchemaRef, key string) bool {
 	if _, ok := data[key]; !ok {
 		return assert.Fail(t, fmt.Sprintf("expected %q to exist in schema ref bag", key))
@@ -340,6 +342,7 @@ func TestPatternAnalysis(t *testing.T) {
 	}
 }
 
+// nolint: unparam
 func assertPattern(t testing.TB, data map[string]string, key, pattern string) bool {
 	if assert.Contains(t, data, key) {
 		return assert.Equal(t, pattern, data[key])
@@ -423,7 +426,7 @@ func TestAnalyzer_paramsAsMapWithCallback(pt *testing.T) {
 		if assert.True(pt, ok) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
-				//pt.Logf("ERROR on %+v : %v", param, err)
+				// pt.Logf("ERROR on %+v : %v", param, err)
 				e = append(e, err.Error())
 				return true // Continue
 			})
@@ -438,7 +441,7 @@ func TestAnalyzer_paramsAsMapWithCallback(pt *testing.T) {
 		if assert.True(pt, ok) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
-				//pt.Logf("ERROR on %+v : %v", param, err)
+				// pt.Logf("ERROR on %+v : %v", param, err)
 				e = append(e, err.Error())
 				return false // Bail out
 			})
@@ -457,7 +460,7 @@ func TestAnalyzer_paramsAsMapWithCallback(pt *testing.T) {
 		if assert.True(pt, ok) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
-				//pt.Logf("ERROR on %+v : %v", param, err)
+				// pt.Logf("ERROR on %+v : %v", param, err)
 				e = append(e, err.Error())
 				return false // Bail out
 			})
@@ -476,7 +479,7 @@ func TestAnalyzer_paramsAsMapWithCallback(pt *testing.T) {
 		if assert.True(pt, ok) {
 			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 			s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
-				//pt.Logf("ERROR on %+v : %v", param, err)
+				// pt.Logf("ERROR on %+v : %v", param, err)
 				e = append(e, err.Error())
 				return false // Bail out
 			})
@@ -565,7 +568,7 @@ func panickerParametersFor() {
 	pi, ok := s.spec.Paths.Paths["/fixture"]
 	if ok {
 		pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
-		//func (s *Spec) ParametersFor(operationID string) []spec.Parameter {
+		// func (s *Spec) ParametersFor(operationID string) []spec.Parameter {
 		s.ParametersFor("fixtureOp")
 	}
 }
@@ -667,10 +670,10 @@ func TestSecurityRequirements(t *testing.T) {
 	require.Empty(t, reqs2[1][0].Scopes)
 	require.Len(t, reqs2[2], 2)
 	//
-	//require.Equal(t, reqs2[2][0].Name, "basic")
+	// require.Equal(t, reqs2[2][0].Name, "basic")
 	require.Contains(t, reqs2[2], SecurityRequirement{Name: "basic", Scopes: []string{}})
 	require.Empty(t, reqs2[2][0].Scopes)
-	//require.Equal(t, reqs2[2][1].Name, "apiKey")
+	// require.Equal(t, reqs2[2][1].Name, "apiKey")
 	require.Contains(t, reqs2[2], SecurityRequirement{Name: "apiKey", Scopes: []string{}})
 	require.Empty(t, reqs2[2][1].Scopes)
 }
@@ -814,9 +817,9 @@ func TestMoreParamAnalysis(t *testing.T) {
 
 	schemaRefs := an.AllDefinitions()
 	assert.Lenf(t, schemaRefs, 14, "Expected 14 schema definitions in this spec")
-	//for _, refs := range schemaRefs {
+	// for _, refs := range schemaRefs {
 	//	t.Logf("Schema Ref: %s (%s)", refs.Name, refs.Ref.String())
-	//}
+	// }
 	schemaRefs = an.SchemasWithAllOf()
 	assert.Lenf(t, schemaRefs, 1, "Expected 1 schema with AllOf definition in this spec")
 
@@ -936,6 +939,7 @@ func TestEnumAnalysis(t *testing.T) {
 	}
 }
 
+// nolint: unparam
 func assertEnum(t testing.TB, data map[string][]interface{}, key string, enum []interface{}) bool {
 	if assert.Contains(t, data, key) {
 		return assert.Equal(t, enum, data[key])

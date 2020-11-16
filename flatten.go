@@ -1041,7 +1041,7 @@ func nameFromRef(ref swspec.Ref) string {
 			return swag.ToJSONName(bn)
 		}
 	}
-	return swag.ToJSONName(strings.Replace(u.Host, ".", " ", -1))
+	return swag.ToJSONName(strings.ReplaceAll(u.Host, ".", " "))
 }
 
 func saveSchema(spec *swspec.Swagger, name string, schema *swspec.Schema) {
