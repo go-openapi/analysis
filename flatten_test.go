@@ -216,14 +216,17 @@ func TestImportExternalReferences(t *testing.T) {
             ],
             "responses": {
              "200": {
+			  "description": "",
               "schema": {
                "$ref": "#/definitions/tag"
               }
              },
              "404": {
+			  "description": "",
               "$ref": "external/responses.yml#/responses/notFound"
              },
              "default": {
+			  "description": "",
               "schema": {
                "$ref": "#/definitions/record"
               }
@@ -353,9 +356,10 @@ func TestImportExternalReferences(t *testing.T) {
          },
          "responses": {
           "someResponse": {
-           "schema": {
-            "$ref": "#/definitions/record"
-           }
+		    "description": "",
+            "schema": {
+              "$ref": "#/definitions/record"
+            }
           }
          }
         }`, string(bb))
@@ -431,16 +435,19 @@ func TestImportExternalReferences(t *testing.T) {
             ],
             "responses": {
              "200": {
+			  "description": "",
               "schema": {
                "$ref": "#/definitions/tag"
               }
              },
              "404": {
+			  "description": "",
               "schema": {
                "$ref": "#/definitions/error"
               }
              },
              "default": {
+			  "description": "",
               "schema": {
                "$ref": "#/definitions/record"
               }

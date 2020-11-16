@@ -778,6 +778,9 @@ func rewriteParentRef(spec *swspec.Swagger, key string, ref swspec.Ref) error {
 		}
 		container.Schemas[idx] = swspec.Schema{SchemaProps: swspec.SchemaProps{Ref: ref}}
 
+	case swspec.SchemaProperties:
+		container[entry] = swspec.Schema{SchemaProps: swspec.SchemaProps{Ref: ref}}
+
 	// NOTE: can't have case *swspec.SchemaOrBool = parent in this case is *Schema
 
 	default:
@@ -1155,6 +1158,9 @@ func updateRef(spec interface{}, key string, ref swspec.Ref) error {
 			}
 			container.Schemas[idx] = swspec.Schema{SchemaProps: swspec.SchemaProps{Ref: ref}}
 
+		case swspec.SchemaProperties:
+			container[entry] = swspec.Schema{SchemaProps: swspec.SchemaProps{Ref: ref}}
+
 		// NOTE: can't have case *swspec.SchemaOrBool = parent in this case is *Schema
 
 		default:
@@ -1205,6 +1211,9 @@ func updateRefWithSchema(spec *swspec.Swagger, key string, sch *swspec.Schema) e
 				return fmt.Errorf("%s not a number: %v", pth, err)
 			}
 			container.Schemas[idx] = *sch
+
+		case swspec.SchemaProperties:
+			container[entry] = *sch
 
 		// NOTE: can't have case *swspec.SchemaOrBool = parent in this case is *Schema
 
