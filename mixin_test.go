@@ -113,8 +113,8 @@ func TestMixin(t *testing.T) {
 	if len(collisions) != 0 {
 		t.Errorf("TestMixin: Expected 0 collisions, got %v\n%v", len(collisions), collisions)
 	}
-	//bbb, _ := json.MarshalIndent(primary, "", " ")
-	//t.Log(string(bbb))
+	// bbb, _ := json.MarshalIndent(primary, "", " ")
+	// t.Log(string(bbb))
 }
 
 func TestMixinFromNilPath(t *testing.T) {
@@ -133,8 +133,8 @@ func TestMixinFromNilPath(t *testing.T) {
 	if len(primary.Paths.Paths) != 3 {
 		t.Errorf("TestMixin: Expected 3 paths in merged, got %v\n", len(primary.Paths.Paths))
 	}
-	//bbb, _ := json.MarshalIndent(primary.Paths.Paths, "", " ")
-	//t.Log(string(bbb))
+	// bbb, _ := json.MarshalIndent(primary.Paths.Paths, "", " ")
+	// t.Log(string(bbb))
 }
 
 func TestMixinSwaggerProps(t *testing.T) {
@@ -150,6 +150,6 @@ func TestMixinSwaggerProps(t *testing.T) {
 	if len(collisions) != 1 {
 		t.Errorf("TestMixin: Expected 1 collisions, got %v\n%v", len(collisions), collisions)
 	}
-	//bbb, _ := json.MarshalIndent(primary, "", " ")
-	//t.Log(string(bbb))
+	// bbb, _ := json.MarshalIndent(primary, "", " ")
+	// t.Log(string(bbb))
 }

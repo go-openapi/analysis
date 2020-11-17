@@ -385,7 +385,7 @@ func TestImportExternalReferences(t *testing.T) {
 	assert.NoError(t, err)
 
 	bbb, _ := json.MarshalIndent(an.spec, "", " ")
-	//t.Logf("%s", string(bbb))
+	// t.Logf("%s", string(bbb))
 	assert.JSONEq(t, `{
 		"swagger": "2.0",
          "info": {
@@ -910,15 +910,15 @@ func TestNameInlinedSchemas(t *testing.T) {
 			spec.MustCreateRef("#/definitions/getSomeWhereIdDefaultBody"),
 		},
 		// maps:
-		//{"#/definitions/nestedThing/properties/record/items/2/allOf/1/additionalProperties",
-		//"#/definitions/nestedThingRecordItems2AllOf1/additionalProperties",
-		//spec.MustCreateRef("#/definitions/nestedThingRecordItems2AllOf1AdditionalProperties"),
+		// {"#/definitions/nestedThing/properties/record/items/2/allOf/1/additionalProperties",
+		// "#/definitions/nestedThingRecordItems2AllOf1/additionalProperties",
+		// spec.MustCreateRef("#/definitions/nestedThingRecordItems2AllOf1AdditionalProperties"),
 		// },
 
-		//{"#/definitions/nestedThing/properties/record/items/2/allOf/1",
-		//"#/definitions/nestedThingRecordItems2/allOf/1",
-		//spec.MustCreateRef("#/definitions/nestedThingRecordItems2AllOf1"),
-		//},
+		// {"#/definitions/nestedThing/properties/record/items/2/allOf/1",
+		// "#/definitions/nestedThingRecordItems2/allOf/1",
+		// spec.MustCreateRef("#/definitions/nestedThingRecordItems2AllOf1"),
+		// },
 		{"#/definitions/nestedThing/properties/record/items/2/properties/name",
 			"#/definitions/nestedThingRecordItems2/properties/name",
 			spec.MustCreateRef("#/definitions/nestedThingRecordItems2Name"),

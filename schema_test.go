@@ -329,8 +329,8 @@ func TestSchemaAnalys_InvalidSchema(t *testing.T) {
 	_, err = Schema(SchemaOpts{Schema: &def, Root: sp, BasePath: bp})
 	assert.Error(t, err, "expected an error here")
 
-	//bbb, _ := json.MarshalIndent(def, "", " ")
-	//log.Printf(string(bbb))
+	// bbb, _ := json.MarshalIndent(def, "", " ")
+	// log.Printf(string(bbb))
 }
 
 func TestSchemaAnalysis_EdgeCases(t *testing.T) {
