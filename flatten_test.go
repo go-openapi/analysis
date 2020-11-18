@@ -222,7 +222,6 @@ func TestImportExternalReferences(t *testing.T) {
               }
              },
              "404": {
-			  "description": "",
               "$ref": "external/responses.yml#/responses/notFound"
              },
              "default": {
