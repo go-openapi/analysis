@@ -19,12 +19,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	goruntime "runtime"
 	"strings"
 	"testing"
 
@@ -98,32 +96,30 @@ var refFixture = []struct {
 
 func TestUpdateRef(t *testing.T) {
 	bp := filepath.Join("fixtures", "external_definitions.yml")
-	sp, err := loadSpec(bp)
-	if assert.NoError(t, err) {
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
 
-		for _, v := range refFixture {
-			err := updateRef(sp, v.Key, v.Ref)
-			if assert.NoError(t, err) {
-				ptr, err := jsonpointer.New(v.Key[1:])
-				if assert.NoError(t, err) {
-					vv, _, err := ptr.Get(sp)
+	for _, v := range refFixture {
+		err := updateRef(sp, v.Key, v.Ref)
+		require.NoError(t, err)
 
-					if assert.NoError(t, err) {
-						switch tv := vv.(type) {
-						case *spec.Schema:
-							assert.Equal(t, v.Ref.String(), tv.Ref.String())
-						case spec.Schema:
-							assert.Equal(t, v.Ref.String(), tv.Ref.String())
-						case *spec.SchemaOrBool:
-							assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String())
-						case *spec.SchemaOrArray:
-							assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String())
-						default:
-							assert.Fail(t, "unknown type", "got %T", vv)
-						}
-					}
-				}
-			}
+		ptr, err := jsonpointer.New(v.Key[1:])
+		require.NoError(t, err)
+
+		vv, _, err := ptr.Get(sp)
+		require.NoError(t, err)
+
+		switch tv := vv.(type) {
+		case *spec.Schema:
+			assert.Equal(t, v.Ref.String(), tv.Ref.String())
+		case spec.Schema:
+			assert.Equal(t, v.Ref.String(), tv.Ref.String())
+		case *spec.SchemaOrBool:
+			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String())
+		case *spec.SchemaOrArray:
+			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String())
+		default:
+			assert.Fail(t, "unknown type", "got %T", vv)
 		}
 	}
 }
@@ -136,9 +132,8 @@ func TestImportExternalReferences(t *testing.T) {
 	// checks if invalid construct is supported (i.e. $ref in parameters items)
 	bp := filepath.Join(".", "fixtures", "external_definitions_valid.yml")
 	sp, err := loadSpec(bp)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
+
 	opts := &FlattenOpts{
 		Spec:     New(sp),
 		BasePath: bp,
@@ -146,9 +141,7 @@ func TestImportExternalReferences(t *testing.T) {
 	// NOTE(fredbi): now we no more expand, but merely resolve and iterate until there is no more ext ref
 	// so calling importExternalReferences is no more idempotent
 	_, err = importExternalReferences(opts)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	for i, v := range refFixture {
 		// there is 1 notable difference with the updateRef test:
@@ -157,27 +150,28 @@ func TestImportExternalReferences(t *testing.T) {
 		}
 
 		ptr, erj := jsonpointer.New(v.Key[1:])
-		if assert.NoErrorf(t, erj, "error on jsonpointer.New(%q)", v.Key[1:]) {
-			vv, _, erg := ptr.Get(sp)
-			if assert.NoErrorf(t, erg, "error on ptr.Get(p for key=%s)", v.Key[1:]) {
-				switch tv := vv.(type) {
-				case *spec.Schema:
-					assert.Equal(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
-				case spec.Schema:
-					assert.Equal(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
-				case *spec.SchemaOrBool:
-					assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
-				case *spec.SchemaOrArray:
-					assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
-				default:
-					assert.Fail(t, "unknown type", "got %T", vv)
-				}
-			}
+		require.NoErrorf(t, erj, "error on jsonpointer.New(%q)", v.Key[1:])
+
+		vv, _, erg := ptr.Get(sp)
+		require.NoErrorf(t, erg, "error on ptr.Get(p for key=%s)", v.Key[1:])
+
+		switch tv := vv.(type) {
+		case *spec.Schema:
+			require.Equal(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
+		case spec.Schema:
+			require.Equal(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
+		case *spec.SchemaOrBool:
+			require.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
+		case *spec.SchemaOrArray:
+			require.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
+		default:
+			require.Fail(t, "unknown type", "got %T", vv)
 		}
-		assert.Len(t, sp.Definitions, 11)
-		assert.Contains(t, sp.Definitions, "tag")
-		assert.Contains(t, sp.Definitions, "named")
-		assert.Contains(t, sp.Definitions, "record")
+
+		require.Len(t, sp.Definitions, 11)
+		require.Contains(t, sp.Definitions, "tag")
+		require.Contains(t, sp.Definitions, "named")
+		require.Contains(t, sp.Definitions, "record")
 	}
 
 	// check the complete result for clarity
@@ -369,22 +363,20 @@ func TestImportExternalReferences(t *testing.T) {
 		Spec:     New(sp),
 		BasePath: bp,
 	})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
+
 	opts.Spec.reload()
 	for _, ref := range opts.Spec.references.schemas {
-		assert.True(t, ref.HasFragmentOnly)
+		require.True(t, ref.HasFragmentOnly)
 	}
 
 	// now try complete flatten
 	sp = loadOrFail(t, bp)
 	an := New(sp)
 	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: true})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	bbb, _ := json.MarshalIndent(an.spec, "", " ")
-	// t.Logf("%s", string(bbb))
 	assert.JSONEq(t, `{
 		"swagger": "2.0",
          "info": {
@@ -523,37 +515,34 @@ func TestImportExternalReferences(t *testing.T) {
 func TestRewriteSchemaRef(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
 	sp, err := loadSpec(bp)
-	if assert.NoError(t, err) {
+	require.NoError(t, err)
 
-		for i, v := range refFixture {
-			err := rewriteSchemaToRef(sp, v.Key, v.Ref)
-			if assert.NoError(t, err) {
-				ptr, err := jsonpointer.New(v.Key[1:])
-				if assert.NoError(t, err) {
-					vv, _, err := ptr.Get(sp)
+	for i, v := range refFixture {
+		err := rewriteSchemaToRef(sp, v.Key, v.Ref)
+		require.NoError(t, err)
 
-					if assert.NoError(t, err) {
-						switch tv := vv.(type) {
-						case *spec.Schema:
-							assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
-						case spec.Schema:
-							assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
-						case *spec.SchemaOrBool:
-							assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
-						case *spec.SchemaOrArray:
-							assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
-						default:
-							assert.Fail(t, "unknown type", "got %T", vv)
-						}
-					}
-				}
-			}
+		ptr, err := jsonpointer.New(v.Key[1:])
+		require.NoError(t, err)
+
+		vv, _, err := ptr.Get(sp)
+		require.NoError(t, err)
+
+		switch tv := vv.(type) {
+		case *spec.Schema:
+			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+		case spec.Schema:
+			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+		case *spec.SchemaOrBool:
+			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
+		case *spec.SchemaOrArray:
+			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
+		default:
+			assert.Fail(t, "unknown type", "got %T", vv)
 		}
 	}
 }
 
 func TestSplitKey(t *testing.T) {
-
 	type KeyFlag uint64
 
 	const (
@@ -671,6 +660,7 @@ func TestSplitKey(t *testing.T) {
 		} else {
 			assert.False(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
 		}
+
 		if v.Flags&isDefinition != 0 {
 			assert.True(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
 			assert.Equal(t, v.Name, parts.DefinitionName(), "definition name: %s at %d", v.Key, i)
@@ -680,26 +670,31 @@ func TestSplitKey(t *testing.T) {
 				assert.Equal(t, v.Name, parts.ResponseName(), "response name: %s at %d", v.Key, i)
 			}
 		}
+
 		if v.Flags&isOperationParam != 0 {
 			assert.True(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
 		} else {
 			assert.False(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
 		}
+
 		if v.Flags&isSharedOperationParam != 0 {
 			assert.True(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
 		} else {
 			assert.False(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
 		}
+
 		if v.Flags&isOperationResponse != 0 {
 			assert.True(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
 		} else {
 			assert.False(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
 		}
+
 		if v.Flags&isDefaultResponse != 0 {
 			assert.True(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
 		} else {
 			assert.False(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
 		}
+
 		if v.Flags&isStatusCodeResponse != 0 {
 			assert.True(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
 		} else {
@@ -708,67 +703,61 @@ func TestSplitKey(t *testing.T) {
 	}
 }
 
-func definitionPtr(key string) string {
-	if !strings.HasPrefix(key, "#/definitions") {
-		return key
-	}
-	return strings.Join(strings.Split(key, "/")[:3], "/")
-}
-
 func TestNamesFromKey(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
-	sp, err := loadSpec(bp)
-	if assert.NoError(t, err) {
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
 
-		values := []struct {
-			Key   string
-			Names []string
-		}{
-			{"#/paths/~1some~1where~1{id}/parameters/1/schema",
-				[]string{"GetSomeWhereID params body", "PostSomeWhereID params body"}},
-			{"#/paths/~1some~1where~1{id}/get/parameters/2/schema", []string{"GetSomeWhereID params body"}},
-			{"#/paths/~1some~1where~1{id}/get/responses/default/schema", []string{"GetSomeWhereID Default body"}},
-			{"#/paths/~1some~1where~1{id}/get/responses/200/schema", []string{"GetSomeWhereID OK body"}},
-			{"#/definitions/namedAgain", []string{"namedAgain"}},
-			{"#/definitions/datedTag/allOf/1", []string{"datedTag allOf 1"}},
-			{"#/definitions/datedRecords/items/1", []string{"datedRecords tuple 1"}},
-			{"#/definitions/datedTaggedRecords/items/1", []string{"datedTaggedRecords tuple 1"}},
-			{"#/definitions/datedTaggedRecords/additionalItems", []string{"datedTaggedRecords tuple additionalItems"}},
-			{"#/definitions/otherRecords/items", []string{"otherRecords items"}},
-			{"#/definitions/tags/additionalProperties", []string{"tags additionalProperties"}},
-			{"#/definitions/namedThing/properties/name", []string{"namedThing name"}},
-		}
+	values := []struct {
+		Key   string
+		Names []string
+	}{
+		{"#/paths/~1some~1where~1{id}/parameters/1/schema",
+			[]string{"GetSomeWhereID params body", "PostSomeWhereID params body"}},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema", []string{"GetSomeWhereID params body"}},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema", []string{"GetSomeWhereID Default body"}},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema", []string{"GetSomeWhereID OK body"}},
+		{"#/definitions/namedAgain", []string{"namedAgain"}},
+		{"#/definitions/datedTag/allOf/1", []string{"datedTag allOf 1"}},
+		{"#/definitions/datedRecords/items/1", []string{"datedRecords tuple 1"}},
+		{"#/definitions/datedTaggedRecords/items/1", []string{"datedTaggedRecords tuple 1"}},
+		{"#/definitions/datedTaggedRecords/additionalItems", []string{"datedTaggedRecords tuple additionalItems"}},
+		{"#/definitions/otherRecords/items", []string{"otherRecords items"}},
+		{"#/definitions/tags/additionalProperties", []string{"tags additionalProperties"}},
+		{"#/definitions/namedThing/properties/name", []string{"namedThing name"}},
+	}
 
-		for i, v := range values {
-			ptr, err := jsonpointer.New(definitionPtr(v.Key)[1:])
+	for i, v := range values {
+		ptr, err := jsonpointer.New(definitionPtr(v.Key)[1:])
+		require.NoError(t, err)
+
+		vv, _, err := ptr.Get(sp)
+		require.NoError(t, err)
+
+		switch tv := vv.(type) {
+		case *spec.Schema:
+			aschema, err := Schema(SchemaOpts{Schema: tv, Root: sp, BasePath: bp})
 			if assert.NoError(t, err) {
-				vv, _, err := ptr.Get(sp)
-				if assert.NoError(t, err) {
-					switch tv := vv.(type) {
-					case *spec.Schema:
-						aschema, err := Schema(SchemaOpts{Schema: tv, Root: sp, BasePath: bp})
-						if assert.NoError(t, err) {
-							names := namesFromKey(keyParts(v.Key), aschema, opRefsByRef(gatherOperations(New(sp), nil)))
-							assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
-						}
-					case spec.Schema:
-						aschema, err := Schema(SchemaOpts{Schema: &tv, Root: sp, BasePath: bp})
-						if assert.NoError(t, err) {
-							names := namesFromKey(keyParts(v.Key), aschema, opRefsByRef(gatherOperations(New(sp), nil)))
-							assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
-						}
-					default:
-						assert.Fail(t, "unknown type", "got %T", vv)
-					}
-				}
+				names := namesFromKey(keyParts(v.Key), aschema, opRefsByRef(gatherOperations(New(sp), nil)))
+				assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
 			}
+		case spec.Schema:
+			aschema, err := Schema(SchemaOpts{Schema: &tv, Root: sp, BasePath: bp})
+			if assert.NoError(t, err) {
+				names := namesFromKey(keyParts(v.Key), aschema, opRefsByRef(gatherOperations(New(sp), nil)))
+				assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
+			}
+		default:
+			assert.Fail(t, "unknown type", "got %T", vv)
 		}
 	}
 }
 
 func TestDepthFirstSort(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
-	sp, err := loadSpec(bp)
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
+
 	values := []string{
 		// Added shared parameters and responses
 		"#/parameters/someParam/schema/properties/createdAt",
@@ -820,11 +809,10 @@ func TestDepthFirstSort(t *testing.T) {
 		"#/definitions/records",
 		"#/definitions/tags",
 	}
-	if assert.NoError(t, err) {
-		a := New(sp)
-		result := sortDepthFirst(a.allSchemas)
-		assert.Equal(t, values, result)
-	}
+
+	a := New(sp)
+	result := sortDepthFirst(a.allSchemas)
+	assert.Equal(t, values, result)
 }
 
 func TestBuildNameWithReservedKeyWord(t *testing.T) {
@@ -833,6 +821,7 @@ func TestBuildNameWithReservedKeyWord(t *testing.T) {
 	segments := []string{"fullview"}
 	newName := s.BuildName(segments, startIdx, nil)
 	assert.Equal(t, "fullview properties", newName)
+
 	s = splitKey([]string{"definitions", "fullview",
 		"properties", "properties", "properties", "properties", "properties", "properties"})
 	newName = s.BuildName(segments, startIdx, nil)
@@ -977,64 +966,57 @@ func TestNameInlinedSchemas(t *testing.T) {
 	bp := filepath.Join("fixtures", "nested_inline_schemas.yml")
 	sp := loadOrFail(t, bp)
 
-	ere := spec.ExpandSpec(sp, &spec.ExpandOptions{
+	require.NoError(t, spec.ExpandSpec(sp, &spec.ExpandOptions{
 		RelativeBase: bp,
 		SkipSchemas:  true,
-	})
-	if !assert.NoError(t, ere) {
-		t.FailNow()
-		return
-	}
+	}))
 
-	ern := nameInlinedSchemas(&FlattenOpts{
+	require.NoError(t, nameInlinedSchemas(&FlattenOpts{
 		Spec:     New(sp),
 		BasePath: bp,
-	})
-	if !assert.NoError(t, ern) {
-		t.FailNow()
-		return
-	}
+	}))
 
 	for i, v := range values {
 		ptr, err := jsonpointer.New(v.Location[1:])
-		if assert.NoError(t, err, "at %d for %s", i, v.Key) {
-			vv, _, err := ptr.Get(sp)
+		require.NoErrorf(t, err, "at %d for %s", i, v.Key)
 
-			if assert.NoError(t, err, "at %d for %s", i, v.Key) {
-				switch tv := vv.(type) {
-				case *spec.Schema:
-					assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
-				case spec.Schema:
-					assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
-				case *spec.SchemaOrBool:
-					var sRef spec.Ref
-					if tv != nil && tv.Schema != nil {
-						sRef = tv.Schema.Ref
-					}
-					assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
-				case *spec.SchemaOrArray:
-					var sRef spec.Ref
-					if tv != nil && tv.Schema != nil {
-						sRef = tv.Schema.Ref
-					}
-					assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
-				default:
-					assert.Fail(t, "unknown type", "got %T", vv)
-				}
+		vv, _, err := ptr.Get(sp)
+		require.NoErrorf(t, err, "at %d for %s", i, v.Key)
+
+		switch tv := vv.(type) {
+		case *spec.Schema:
+			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+		case spec.Schema:
+			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+		case *spec.SchemaOrBool:
+			var sRef spec.Ref
+			if tv != nil && tv.Schema != nil {
+				sRef = tv.Schema.Ref
 			}
+			assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+		case *spec.SchemaOrArray:
+			var sRef spec.Ref
+			if tv != nil && tv.Schema != nil {
+				sRef = tv.Schema.Ref
+			}
+			assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+		default:
+			assert.Fail(t, "unknown type", "got %T", vv)
 		}
 	}
 
 	for k, rr := range New(sp).allSchemas {
-		if !strings.HasPrefix(k, "#/responses") && !strings.HasPrefix(k, "#/parameters") {
-			if rr.Schema != nil && rr.Schema.Ref.String() == "" && !rr.TopLevel {
-				asch, err := Schema(SchemaOpts{Schema: rr.Schema, Root: sp, BasePath: bp})
-				if assert.NoError(t, err, "for key: %s", k) {
-					if !asch.IsSimpleSchema && !asch.IsArray && !asch.IsMap {
-						assert.Fail(t, "not a top level schema", "for key: %s", k)
-					}
-				}
-			}
+		if strings.HasPrefix(k, "#/responses") || strings.HasPrefix(k, "#/parameters") {
+			continue
+		}
+		if rr.Schema == nil || rr.Schema.Ref.String() != "" || rr.TopLevel {
+			continue
+		}
+		asch, err := Schema(SchemaOpts{Schema: rr.Schema, Root: sp, BasePath: bp})
+		require.NoErrorf(t, err, "for key: %s", k)
+
+		if !asch.IsSimpleSchema && !asch.IsArray && !asch.IsMap {
+			assert.Fail(t, "not a top level schema", "for key: %s", k)
 		}
 	}
 }
@@ -1042,7 +1024,9 @@ func TestNameInlinedSchemas(t *testing.T) {
 func TestFlatten(t *testing.T) {
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "flatten.yml")
-	sp, err := loadSpec(bp)
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
+
 	values := []struct {
 		Key      string
 		Location string
@@ -1226,51 +1210,50 @@ func TestFlatten(t *testing.T) {
 			"date",
 		},
 	}
-	if assert.NoError(t, err) {
-		err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp})
-		if assert.NoError(t, err) {
-			for i, v := range values {
-				pk := v.Key[1:]
-				if v.Location != "" {
-					pk = v.Location[1:]
-				}
-				ptr, err := jsonpointer.New(pk)
-				if assert.NoError(t, err, "at %d for %s", i, v.Key) {
-					d, _, err := ptr.Get(sp)
-					if assert.NoError(t, err) {
-						if v.Ref.String() != "" {
-							switch s := d.(type) {
-							case *spec.Schema:
-								assert.Equal(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
-							case spec.Schema:
-								assert.Equal(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
-							case *spec.SchemaOrArray:
-								var sRef spec.Ref
-								if s != nil && s.Schema != nil {
-									sRef = s.Schema.Ref
-								}
-								assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
-							case *spec.SchemaOrBool:
-								var sRef spec.Ref
-								if s != nil && s.Schema != nil {
-									sRef = s.Schema.Ref
-								}
-								assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
-							default:
-								assert.Fail(t, "unknown type", "got %T at %d for %s", d, i, v.Key)
-							}
-						} else {
-							assert.Equal(t, v.Expected, d)
-						}
-					}
-				}
+
+	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp}))
+
+	for i, v := range values {
+		pk := v.Key[1:]
+		if v.Location != "" {
+			pk = v.Location[1:]
+		}
+
+		ptr, err := jsonpointer.New(pk)
+		require.NoError(t, err, "at %d for %s", i, v.Key)
+
+		d, _, err := ptr.Get(sp)
+		require.NoError(t, err)
+
+		if v.Ref.String() == "" {
+			assert.Equal(t, v.Expected, d)
+			continue
+		}
+
+		switch s := d.(type) {
+		case *spec.Schema:
+			assert.Equal(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
+		case spec.Schema:
+			assert.Equal(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
+		case *spec.SchemaOrArray:
+			var sRef spec.Ref
+			if s != nil && s.Schema != nil {
+				sRef = s.Schema.Ref
 			}
+			assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+		case *spec.SchemaOrBool:
+			var sRef spec.Ref
+			if s != nil && s.Schema != nil {
+				sRef = s.Schema.Ref
+			}
+			assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+		default:
+			assert.Fail(t, "unknown type", "got %T at %d for %s", d, i, v.Key)
 		}
 	}
 }
 
 func TestFlatten_oaigenFull(t *testing.T) {
-	defer log.SetOutput(os.Stdout)
 	var sp *spec.Swagger
 	defer func() {
 		if t.Failed() && sp != nil {
@@ -1281,15 +1264,16 @@ func TestFlatten_oaigenFull(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "oaigen", "fixture-oaigen.yaml")
-	sp, err := loadSpec(bp)
-	require.NoError(t, err)
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
-	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
-	msg := logCapture.String()
+	defer log.SetOutput(os.Stdout)
 
-	require.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
+
+	msg := logCapture.String()
 
 	if !assert.Containsf(t, msg, "warning: duplicate flattened definition name resolved as aAOAIGen",
 		"Expected log message") {
@@ -1299,6 +1283,7 @@ func TestFlatten_oaigenFull(t *testing.T) {
 		"Expected log message") {
 		t.Logf("Captured log: %s", msg)
 	}
+
 	res := getInPath(t, sp, "/some/where", "/get/responses/204/schema")
 	assert.JSONEqf(t, `{"$ref": "#/definitions/uniqueName1"}`, res, "Expected a simple schema for response")
 
@@ -1463,7 +1448,6 @@ func TestFlatten_oaigenFull(t *testing.T) {
 }
 
 func TestFlatten_oaigenMinimal(t *testing.T) {
-	defer log.SetOutput(os.Stdout)
 	var sp *spec.Swagger
 	defer func() {
 		if t.Failed() && sp != nil {
@@ -1474,13 +1458,14 @@ func TestFlatten_oaigenMinimal(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "oaigen", "fixture-oaigen.yaml")
-	sp, err := loadSpec(bp)
-	require.NoError(t, err)
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
-	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	require.NoError(t, err)
+	defer log.SetOutput(os.Stdout)
+
+	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 
 	msg := logCapture.String()
 	if !assert.NotContainsf(t, msg,
@@ -1618,34 +1603,25 @@ func TestFlatten_oaigenMinimal(t *testing.T) {
 	}`, res, "Expected a simple schema for response")
 }
 
-func loadOrFail(t *testing.T, bp string) *spec.Swagger {
-	cwd, _ := os.Getwd()
-	sp, err := loadSpec(filepath.Join(cwd, bp))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return nil
-	}
-	return sp
-}
-
-func assertNoOAIGen(t *testing.T, bp string, sp *spec.Swagger) bool {
+func assertNoOAIGen(t *testing.T, bp string, sp *spec.Swagger) (success bool) {
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
-	err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
-	if !assert.NoError(t, err) {
-		t.Fail()
-		return false
-	}
+	defer log.SetOutput(os.Stdout)
+
+	defer func() {
+		success = !t.Failed()
+	}()
+
+	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
+
 	msg := logCapture.String()
 	assert.NotContains(t, msg, "warning")
 
 	for k := range sp.Definitions {
-		if !assert.NotContains(t, k, "OAIGen") {
-			t.Fail()
-			return false
-		}
+		require.NotContains(t, k, "OAIGen")
 	}
-	return true
+
+	return
 }
 
 func TestFlatten_oaigen_1260(t *testing.T) {
@@ -1734,10 +1710,7 @@ func TestRemoveUnused(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: false, Minimal: true, RemoveUnused: true})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, err)
 
 	assert.Nil(t, sp.Parameters)
 	assert.Nil(t, sp.Responses)
@@ -1745,11 +1718,7 @@ func TestRemoveUnused(t *testing.T) {
 	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
 	sp = loadOrFail(t, bp)
 	an := New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: true, RemoveUnused: true})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: true, RemoveUnused: true}))
 
 	assert.Nil(t, sp.Parameters)
 	assert.Nil(t, sp.Responses)
@@ -1770,19 +1739,14 @@ func TestRemoveUnused(t *testing.T) {
 	assert.False(t, ok, "Did not expect to find #/definitions/unused")
 
 	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
-	sp, err = loadSpec(bp)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	sp, erl := loadSpec(bp)
+	require.NoError(t, erl)
+
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
+	defer log.SetOutput(os.Stdout)
 
-	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: true})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: true}))
 
 	msg := logCapture.String()
 	if !assert.Containsf(t, msg, "info: removing unused definition: unused", "Expected log message") {
@@ -1800,8 +1764,7 @@ func TestOperationIDs(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, RemoveUnused: false}))
 
 	res := gatherOperations(New(sp), []string{"getSomeWhere", "getSomeWhereElse"})
 	_, ok := res["getSomeWhere"]
@@ -1850,8 +1813,8 @@ func TestOperationIDs(t *testing.T) {
 }
 
 func TestFlatten_Pointers(t *testing.T) {
-	defer log.SetOutput(os.Stdout)
 	var sp *spec.Swagger
+
 	defer func() {
 		if t.Failed() && sp != nil {
 			bbb, _ := json.MarshalIndent(sp, "", " ")
@@ -1864,16 +1827,13 @@ func TestFlatten_Pointers(t *testing.T) {
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
+	defer log.SetOutput(os.Stdout)
+
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
+
 	msg := logCapture.String()
-	if !assert.NotContains(t, msg, "warning") {
-		t.Log(msg)
-	}
+	require.NotContainsf(t, msg, "warning", msg)
 
 	// re-analyse and check all $ref's point to #/definitions
 	bn := New(sp)
@@ -1884,90 +1844,47 @@ func TestFlatten_Pointers(t *testing.T) {
 
 // unit test guards in flatten not easily testable with actual specs
 func TestFlatten_ErrorHandling(t *testing.T) {
+	const wantedFailure = "Expected a failure"
 	bp := filepath.Join("fixtures", "errors", "fixture-unexpandable.yaml")
 
 	// invalid spec expansion
 	sp := loadOrFail(t, bp)
 
-	err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: true})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: true}), wantedFailure)
 
 	// reload original spec
 	sp = loadOrFail(t, bp)
-	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false}), wantedFailure)
 
 	bp = filepath.Join("fixtures", "errors", "fixture-unexpandable-2.yaml")
 	sp = loadOrFail(t, bp)
-	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false}), wantedFailure)
 
 	// reload original spec
 	sp = loadOrFail(t, bp)
-	err = Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Minimal: true, Expand: false})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Minimal: true, Expand: false}), wantedFailure)
 
 	// reload original spec
 	sp = loadOrFail(t, bp)
-	err = rewriteSchemaToRef(sp, "#/invalidPointer/key", spec.Ref{})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, rewriteSchemaToRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
 
-	err = rewriteParentRef(sp, "#/invalidPointer/key", spec.Ref{})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, rewriteParentRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
 
-	err = updateRef(sp, "#/invalidPointer/key", spec.Ref{})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, updateRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
 
-	err = updateRefWithSchema(sp, "#/invalidPointer/key", &spec.Schema{})
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, updateRefWithSchema(sp, "#/invalidPointer/key", &spec.Schema{}), wantedFailure)
 
-	_, _, err = getPointerFromKey(sp, "#/invalidPointer/key")
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	_, _, err := getPointerFromKey(sp, "#/invalidPointer/key")
+	require.Errorf(t, err, wantedFailure)
 
 	_, _, err = getPointerFromKey(sp, "--->#/invalidJsonPointer")
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, err, wantedFailure)
 
 	_, _, _, err = getParentFromKey(sp, "#/invalidPointer/key")
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, err, wantedFailure)
 
 	_, _, _, err = getParentFromKey(sp, "--->#/invalidJsonPointer")
-	if !assert.Errorf(t, err, "Expected a failure") {
-		t.FailNow()
-		return
-	}
+	require.Errorf(t, err, wantedFailure)
 
 	assert.NotPanics(t, saveNilSchema)
 }
@@ -2003,11 +1920,7 @@ func TestFlatten_PointersLoop(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	if !assert.Error(t, err) {
-		t.FailNow()
-		return
-	}
+	require.Error(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 }
 
 func TestFlatten_Bitbucket(t *testing.T) {
@@ -2018,36 +1931,22 @@ func TestFlatten_Bitbucket(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 
 	// reload original spec
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
 
 	// reload original spec
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: false})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-		return
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: false}))
+
 	// reload original spec
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: true})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: true}))
 
 	assert.Len(t, sp.Definitions, 2) // only 2 remaining refs after expansion: circular $ref
 	_, ok := sp.Definitions["base_commit"]
@@ -2066,74 +1965,64 @@ func TestFlatten_Issue_1602(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	// reload spec
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, Expand: false,
+		RemoveUnused: false}))
 
 	// reload spec
 	// with  prior expansion, a pseudo schema is produced
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, Expand: true,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, Expand: true,
+		RemoveUnused: false}))
 
 	// full testcase
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-full.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-2.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-3.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-4.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-5.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-6.yaml")
 	sp = loadOrFail(t, bp)
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 }
 
 func TestFlatten_Issue_1614(t *testing.T) {
@@ -2147,18 +2036,15 @@ func TestFlatten_Issue_1614(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1614", "gitea.yaml")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
+
 	msg := logCapture.String()
-	if !assert.Containsf(t, msg, `warning: found $ref "#/responses/empty" (response) interpreted as schema`,
-		"Expected log message") {
-		t.Logf("Captured log: %s", msg)
-	}
-	if !assert.Containsf(t, msg, `warning: found $ref "#/responses/forbidden" (response) interpreted as schema`,
-		"Expected log message") {
-		t.Logf("Captured log: %s", msg)
-	}
+	require.Containsf(t, msg, `warning: found $ref "#/responses/empty" (response) interpreted as schema`,
+		"Expected log message. Captured log: %s", msg)
+
+	require.Containsf(t, msg, `warning: found $ref "#/responses/forbidden" (response) interpreted as schema`,
+		"Expected log message. Captured log: %s", msg)
 
 	// check responses subject to warning have been expanded
 	bbb, _ := json.Marshal(sp)
@@ -2173,9 +2059,8 @@ func TestFlatten_Issue_1621(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1621", "fixture-1621.yaml")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	sch1 := sp.Paths.Paths["/v4/users/"].Get.Responses.StatusCodeResponses[200].Schema
 	bbb, _ := json.Marshal(sch1)
@@ -2197,20 +2082,6 @@ func TestFlatten_Issue_1621(t *testing.T) {
 	assert.JSONEq(t, `{
 			 "$ref": "#/definitions/v4UserListItem"
 			 }`, string(bbb))
-}
-
-// wrapWindowsPath adapts path expectations for tests running on windows
-func wrapWindowsPath(p string) string {
-	if goruntime.GOOS != "windows" {
-		return p
-	}
-	pp := filepath.FromSlash(p)
-	if !filepath.IsAbs(p) && []rune(pp)[0] == '\\' {
-		pp, _ = filepath.Abs(p)
-		u, _ := url.Parse(pp)
-		return u.String()
-	}
-	return pp
 }
 
 func Test_NormalizePath(t *testing.T) {
@@ -2243,9 +2114,8 @@ func TestFlatten_Issue_1796(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1796", "queryIssue.json")
 	sp = loadOrFail(t, bp)
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	require.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
@@ -2258,9 +2128,8 @@ func TestFlatten_Issue_1767(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1767", "fixture-1767.yaml")
 	sp := loadOrFail(t, bp)
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false})
-	require.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false}))
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
@@ -2281,9 +2150,8 @@ func TestFlatten_Issue_1774(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1774", "def_api.yaml")
 	sp = loadOrFail(t, bp)
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, Expand: false,
-		RemoveUnused: false})
-	require.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, Expand: false,
+		RemoveUnused: false}))
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
@@ -2298,8 +2166,7 @@ func TestFlatten_1429(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	require.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 }
 
 func TestRebaseRef(t *testing.T) {
@@ -2330,8 +2197,8 @@ func TestFlatten_1851(t *testing.T) {
 	sp := loadOrFail(t, bp)
 
 	an := New(sp)
-	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
+
 	var jazon []byte
 
 	serverDefinition, ok := an.spec.Definitions["server"]
@@ -2356,8 +2223,8 @@ func TestFlatten_1851(t *testing.T) {
 	sp = loadOrFail(t, bp)
 
 	an = New(sp)
-	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
-	assert.NoError(t, err)
+	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
+
 	serverDefinition, ok = an.spec.Definitions["Server"]
 	assert.True(t, ok)
 	serverStatusDefinition, ok = an.spec.Definitions["ServerStatus"]
@@ -2385,12 +2252,11 @@ func checkRefs(t *testing.T, spec *spec.Swagger, expectNoConflict bool) {
 	// all $ref resolve locally
 	jazon, _ := json.MarshalIndent(spec, "", " ")
 	m := rex.FindAllStringSubmatch(string(jazon), -1)
-	if assert.NotNil(t, m) {
-		for _, matched := range m {
-			subMatch := matched[1]
-			assert.True(t, strings.HasPrefix(subMatch, "#/definitions/"),
-				"expected $ref to be inlined, got: %s", matched[0])
-		}
+	require.NotNil(t, m)
+	for _, matched := range m {
+		subMatch := matched[1]
+		assert.True(t, strings.HasPrefix(subMatch, "#/definitions/"),
+			"expected $ref to be inlined, got: %s", matched[0])
 	}
 
 	if expectNoConflict {
@@ -2457,9 +2323,7 @@ func TestFlatten_2092(t *testing.T) {
 		if i == 0 {
 			// verify we don't have dangling oaigen refs
 			bb = string(bbb)
-			if !assert.False(t, rexOAIGen.Match(bbb)) {
-				t.Logf("%s", bb)
-			}
+			require.Falsef(t, rexOAIGen.Match(bbb), "unmatched regexp for: %s", bb)
 		} else {
 			// verify that we produce a stable result
 			assert.JSONEq(t, bb, string(bbb))
@@ -2474,12 +2338,91 @@ func TestFlatten_2092(t *testing.T) {
 		bbb, _ = json.MarshalIndent(an.spec, "", " ")
 		if i == 0 {
 			bb2 = string(bbb)
-			if !assert.False(t, rexOAIGen.Match(bbb)) {
-				t.Logf("%s", string(bbb))
-			}
+			require.Falsef(t, rexOAIGen.Match(bbb), "unmatched regexp for: %s")
 		} else {
 			// verify that we produce a stable result
 			assert.JSONEq(t, bb2, string(bbb))
 		}
 	}
+}
+
+func TestFlatten_2113(t *testing.T) {
+	// flatten $ref under path
+
+	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stdout)
+
+	bp := filepath.Join("fixtures", "bugs", "2113", "base.yaml")
+
+	sp := loadOrFail(t, bp)
+	an := New(sp)
+	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: false})
+	require.NoError(t, err)
+
+	sp = loadOrFail(t, bp)
+	an = New(sp)
+	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
+	require.NoError(t, err)
+
+	jazon, err := json.MarshalIndent(sp, "", " ")
+	require.NoError(t, err)
+
+	expected := `
+	{
+     "swagger": "2.0",
+     "info": {
+      "title": "nested $ref fixture",
+      "version": "1"
+     },
+     "paths": {
+      "/dummy": {
+       "get": {
+        "responses": {
+         "200": {
+          "description": "OK",
+          "schema": {
+           "$ref": "#/definitions/dummy"
+          }
+         }
+        }
+       }
+      },
+      "/example": {
+       "get": {
+        "responses": {
+         "200": {
+          "description": "OK",
+          "schema": {
+           "$ref": "#/definitions/example"
+          }
+         }
+        }
+       }
+      }
+     },
+     "definitions": {
+      "dummy": {
+       "required": [
+        "dummyPayload"
+       ],
+       "properties": {
+        "dummyPayload": {
+         "type": "string"
+        }
+       }
+      },
+      "example": {
+       "required": [
+        "payload"
+       ],
+       "properties": {
+        "payload": {
+         "type": "string"
+        }
+       },
+       "$schema": "http://json-schema.org/draft-07/schema"
+      }
+     }
+	}`
+	require.JSONEq(t, expected, string(jazon))
 }
