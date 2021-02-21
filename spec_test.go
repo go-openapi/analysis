@@ -136,6 +136,7 @@ func TestIssue66(t *testing.T) {
 func makeFileSpec(t testing.TB) (string, func()) {
 	file := "./openapi.yaml"
 	require.NoError(t, ioutil.WriteFile(file, fixtureIssue66(), 0600))
+
 	return file, func() {
 		_ = os.Remove(file)
 	}

@@ -12,48 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package analysis
+package debug
 
 import (
 	"io/ioutil"
 	"os"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	logMutex = &sync.Mutex{}
+	"github.com/stretchr/testify/require"
 )
 
 func TestDebug(t *testing.T) {
-	tmpFile, _ := ioutil.TempFile("", "debug-test")
+	tmpFile, err := ioutil.TempFile("", "debug-test")
+	require.NoError(t, err)
+
+	output = tmpFile
+
 	tmpName := tmpFile.Name()
 	defer func() {
-		Debug = false
-		// mutex for -race
-		logMutex.Unlock()
-		os.Remove(tmpName)
+		_ = os.Remove(tmpName)
 	}()
 
-	// mutex for -race
-	logMutex.Lock()
-	Debug = true
-	debugOptions()
-	defer func() {
-		analysisLogger.SetOutput(os.Stdout)
-	}()
+	testLogger := GetLogger("test", true)
 
-	analysisLogger.SetOutput(tmpFile)
-
-	debugLog("A debug")
-	Debug = false
+	testLogger("A debug: %s", "a string")
 	tmpFile.Close()
 
-	flushed, _ := os.Open(tmpName)
-	buf := make([]byte, 500)
-	_, _ = flushed.Read(buf)
-	analysisLogger.SetOutput(os.Stdout)
-	assert.Contains(t, string(buf), "A debug")
+	flushed, err := ioutil.ReadFile(tmpName)
+	require.NoError(t, err)
+
+	assert.Contains(t, string(flushed), "A debug: a string")
+
+	tmpEmptyFile, err := ioutil.TempFile("", "debug-test")
+	require.NoError(t, err)
+	tmpEmpty := tmpEmptyFile.Name()
+	defer func() {
+		_ = os.Remove(tmpEmpty)
+	}()
+
+	testLogger = GetLogger("test", false)
+	testLogger("A debug: %s", "a string")
+	tmpFile.Close()
+
+	flushed, err = ioutil.ReadFile(tmpEmpty)
+	require.NoError(t, err)
+
+	assert.Empty(t, flushed)
 }

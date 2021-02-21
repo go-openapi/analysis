@@ -26,6 +26,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/jsonpointer"
 	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
@@ -96,7 +97,7 @@ var refFixture = []struct {
 
 func TestUpdateRef(t *testing.T) {
 	bp := filepath.Join("fixtures", "external_definitions.yml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	for _, v := range refFixture {
@@ -131,7 +132,7 @@ func TestImportExternalReferences(t *testing.T) {
 	// this fixture is the same as external_definitions.yml, but no more
 	// checks if invalid construct is supported (i.e. $ref in parameters items)
 	bp := filepath.Join(".", "fixtures", "external_definitions_valid.yml")
-	sp, err := loadSpec(bp)
+	sp, err := antest.LoadSpec(bp)
 	require.NoError(t, err)
 
 	opts := &FlattenOpts{
@@ -371,7 +372,7 @@ func TestImportExternalReferences(t *testing.T) {
 	}
 
 	// now try complete flatten
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an := New(sp)
 	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: true})
 	require.NoError(t, err)
@@ -514,7 +515,7 @@ func TestImportExternalReferences(t *testing.T) {
 
 func TestRewriteSchemaRef(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
-	sp, err := loadSpec(bp)
+	sp, err := antest.LoadSpec(bp)
 	require.NoError(t, err)
 
 	for i, v := range refFixture {
@@ -705,7 +706,7 @@ func TestSplitKey(t *testing.T) {
 
 func TestNamesFromKey(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	values := []struct {
@@ -755,7 +756,7 @@ func TestNamesFromKey(t *testing.T) {
 
 func TestDepthFirstSort(t *testing.T) {
 	bp := filepath.Join("fixtures", "inline_schemas.yml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	values := []string{
@@ -964,7 +965,7 @@ func TestNameInlinedSchemas(t *testing.T) {
 	}
 
 	bp := filepath.Join("fixtures", "nested_inline_schemas.yml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	require.NoError(t, spec.ExpandSpec(sp, &spec.ExpandOptions{
 		RelativeBase: bp,
@@ -1024,7 +1025,7 @@ func TestNameInlinedSchemas(t *testing.T) {
 func TestFlatten(t *testing.T) {
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "flatten.yml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	values := []struct {
@@ -1264,7 +1265,7 @@ func TestFlatten_oaigenFull(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "oaigen", "fixture-oaigen.yaml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	var logCapture bytes.Buffer
@@ -1458,7 +1459,7 @@ func TestFlatten_oaigenMinimal(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "oaigen", "fixture-oaigen.yaml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	var logCapture bytes.Buffer
@@ -1627,21 +1628,21 @@ func assertNoOAIGen(t *testing.T, bp string, sp *spec.Swagger) (success bool) {
 func TestFlatten_oaigen_1260(t *testing.T) {
 	// test fixture from issue go-swagger/go-swagger#1260
 	bp := filepath.Join("fixtures", "oaigen", "test3-swagger.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	assert.Truef(t, assertNoOAIGen(t, bp, sp), "did not expect an OAIGen definition here")
 }
 
 func TestFlatten_oaigen_1260bis(t *testing.T) {
 	// test fixture from issue go-swagger/go-swagger#1260
 	bp := filepath.Join("fixtures", "oaigen", "test3-bis-swagger.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	assert.Truef(t, assertNoOAIGen(t, bp, sp), "did not expect an OAIGen definition here")
 }
 
 func TestFlatten_oaigen_1260ter(t *testing.T) {
 	// test fixture from issue go-swagger/go-swagger#1260
 	bp := filepath.Join("fixtures", "oaigen", "test3-ter-swagger.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	assert.Truef(t, assertNoOAIGen(t, bp, sp), "did not expect an OAIGen definition here")
 }
 
@@ -1665,7 +1666,7 @@ func getInPath(t *testing.T, sp *spec.Swagger, path, key string) string {
 
 func TestMoreNameInlinedSchemas(t *testing.T) {
 	bp := filepath.Join("fixtures", "more_nested_inline_schemas.yml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false})
 	require.NoError(t, err)
@@ -1707,7 +1708,7 @@ func TestMoreNameInlinedSchemas(t *testing.T) {
 
 func TestRemoveUnused(t *testing.T) {
 	bp := filepath.Join("fixtures", "oaigen", "fixture-oaigen.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	err := Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: false, Minimal: true, RemoveUnused: true})
 	require.NoError(t, err)
@@ -1716,7 +1717,7 @@ func TestRemoveUnused(t *testing.T) {
 	assert.Nil(t, sp.Responses)
 
 	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: true, RemoveUnused: true}))
 
@@ -1739,7 +1740,7 @@ func TestRemoveUnused(t *testing.T) {
 	assert.False(t, ok, "Did not expect to find #/definitions/unused")
 
 	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
-	sp, erl := loadSpec(bp)
+	sp, erl := antest.LoadSpec(bp)
 	require.NoError(t, erl)
 
 	var logCapture bytes.Buffer
@@ -1761,7 +1762,7 @@ func TestRemoveUnused(t *testing.T) {
 
 func TestOperationIDs(t *testing.T) {
 	bp := filepath.Join("fixtures", "operations", "fixture-operations.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, RemoveUnused: false}))
@@ -1823,7 +1824,7 @@ func TestFlatten_Pointers(t *testing.T) {
 	}()
 
 	bp := filepath.Join("fixtures", "pointers", "fixture-pointers.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 
 	var logCapture bytes.Buffer
 	log.SetOutput(&logCapture)
@@ -1848,24 +1849,24 @@ func TestFlatten_ErrorHandling(t *testing.T) {
 	bp := filepath.Join("fixtures", "errors", "fixture-unexpandable.yaml")
 
 	// invalid spec expansion
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: true}), wantedFailure)
 
 	// reload original spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false}), wantedFailure)
 
 	bp = filepath.Join("fixtures", "errors", "fixture-unexpandable-2.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false}), wantedFailure)
 
 	// reload original spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Minimal: true, Expand: false}), wantedFailure)
 
 	// reload original spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	require.Errorf(t, rewriteSchemaToRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
 
 	require.Errorf(t, rewriteParentRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
@@ -1892,7 +1893,7 @@ func TestFlatten_ErrorHandling(t *testing.T) {
 func saveNilSchema() {
 	cwd, _ := os.Getwd()
 	bp := filepath.Join(cwd, "fixtures", "errors", "fixture-unexpandable-2.yaml")
-	sp, _ := loadSpec(bp)
+	sp, _ := antest.LoadSpec(bp)
 	saveSchema(sp, "ThisNilSchema", nil)
 }
 
@@ -1917,7 +1918,7 @@ func TestFlatten_PointersLoop(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "pointers", "fixture-pointers-loop.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
 	require.Error(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
@@ -1928,23 +1929,23 @@ func TestFlatten_Bitbucket(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "bugs", "bitbucket.json")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 
 	// reload original spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
 
 	// reload original spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: false}))
 
 	// reload original spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: true}))
 
@@ -1963,63 +1964,63 @@ func TestFlatten_Issue_1602(t *testing.T) {
 
 	// minimal repro test case
 	bp := filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	// reload spec
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, Expand: false,
 		RemoveUnused: false}))
 
 	// reload spec
 	// with  prior expansion, a pseudo schema is produced
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, Expand: true,
 		RemoveUnused: false}))
 
 	// full testcase
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-full.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-2.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-3.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-4.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-5.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
 
 	bp = filepath.Join("fixtures", "bugs", "1602", "fixture-1602-6.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
@@ -2034,7 +2035,7 @@ func TestFlatten_Issue_1614(t *testing.T) {
 	// test warnings
 
 	bp := filepath.Join("fixtures", "bugs", "1614", "gitea.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
@@ -2057,7 +2058,7 @@ func TestFlatten_Issue_1621(t *testing.T) {
 
 	// minimal repro test case
 	bp := filepath.Join("fixtures", "bugs", "1621", "fixture-1621.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
@@ -2112,7 +2113,7 @@ func TestFlatten_Issue_1796(t *testing.T) {
 
 	// remote cyclic ref
 	bp := filepath.Join("fixtures", "bugs", "1796", "queryIssue.json")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
@@ -2126,7 +2127,7 @@ func TestFlatten_Issue_1796(t *testing.T) {
 func TestFlatten_Issue_1767(t *testing.T) {
 	// remote cyclic ref again
 	bp := filepath.Join("fixtures", "bugs", "1767", "fixture-1767.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
 		RemoveUnused: false}))
@@ -2148,7 +2149,7 @@ func TestFlatten_Issue_1774(t *testing.T) {
 
 	// remote cyclic ref again
 	bp := filepath.Join("fixtures", "bugs", "1774", "def_api.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, Expand: false,
 		RemoveUnused: false}))
@@ -2163,7 +2164,7 @@ func TestFlatten_1429(t *testing.T) {
 	// nested / remote $ref in response / param schemas
 	// issue go-swagger/go-swagger#1429
 	bp := filepath.Join("fixtures", "bugs", "1429", "swagger.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
@@ -2194,7 +2195,7 @@ func TestFlatten_1851(t *testing.T) {
 	// nested / remote $ref in response / param schemas
 	// issue go-swagger/go-swagger#1851
 	bp := filepath.Join("fixtures", "bugs", "1851", "fixture-1851.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
@@ -2220,7 +2221,7 @@ func TestFlatten_1851(t *testing.T) {
 
 	// additional test case: this one used to work
 	bp = filepath.Join("fixtures", "bugs", "1851", "fixture-1851-2.yaml")
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 
 	an = New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
@@ -2267,7 +2268,7 @@ func checkRefs(t *testing.T, spec *spec.Swagger, expectNoConflict bool) {
 }
 
 func testFlattenWithDefaults(t *testing.T, bp string) *Spec {
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
 	require.NoError(t, err)
@@ -2313,7 +2314,7 @@ func TestFlatten_2092(t *testing.T) {
 	// #2092 exhibits a stability issue: repeat 100 times the process to make sure it is stable
 	var bb, bb2 string
 	for i := 0; i < 100; i++ {
-		sp := loadOrFail(t, bp)
+		sp := antest.LoadOrFail(t, bp)
 		an := New(sp)
 		err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
 		require.NoError(t, err)
@@ -2354,12 +2355,12 @@ func TestFlatten_2113(t *testing.T) {
 
 	bp := filepath.Join("fixtures", "bugs", "2113", "base.yaml")
 
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	err := Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Expand: true, RemoveUnused: false})
 	require.NoError(t, err)
 
-	sp = loadOrFail(t, bp)
+	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
 	err = Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false})
 	require.NoError(t, err)

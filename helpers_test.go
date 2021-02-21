@@ -2,14 +2,9 @@ package analysis
 
 import (
 	"net/url"
-	"os"
 	"path/filepath"
 	goruntime "runtime"
 	"strings"
-	"testing"
-
-	"github.com/go-openapi/spec"
-	"github.com/stretchr/testify/require"
 )
 
 // wrapWindowsPath adapts path expectations for tests running on windows
@@ -31,12 +26,4 @@ func definitionPtr(key string) string {
 		return key
 	}
 	return strings.Join(strings.Split(key, "/")[:3], "/")
-}
-
-func loadOrFail(t *testing.T, bp string) *spec.Swagger {
-	cwd, _ := os.Getwd()
-	sp, err := loadSpec(filepath.Join(cwd, bp))
-	require.NoError(t, err)
-
-	return sp
 }
