@@ -26,7 +26,6 @@ import (
 
 	"strconv"
 
-	"github.com/go-openapi/analysis/internal"
 	"github.com/go-openapi/jsonpointer"
 	swspec "github.com/go-openapi/spec"
 	"github.com/go-openapi/swag"
@@ -1069,7 +1068,7 @@ func getPointerFromKey(spec interface{}, key string) (string, interface{}, error
 		return "", spec, nil
 	}
 	// unescape chars in key, e.g. "{}" from path params
-	pth, _ := internal.PathUnescape(key[1:])
+	pth, _ := url.PathUnescape(key[1:])
 	ptr, err := jsonpointer.New(pth)
 	if err != nil {
 		return "", nil, err
@@ -1092,7 +1091,7 @@ func getParentFromKey(spec interface{}, key string) (string, string, interface{}
 		panic("unexpected type used in getPointerFromKey")
 	}
 	// unescape chars in key, e.g. "{}" from path params
-	pth, _ := internal.PathUnescape(key[1:])
+	pth, _ := url.PathUnescape(key[1:])
 
 	parent, entry := slashpath.Dir(pth), slashpath.Base(pth)
 	debugLog("getting schema holder at: %s, with entry: %s", parent, entry)

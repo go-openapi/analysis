@@ -12,16 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package debug
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"runtime"
 )
 
-func Test_PathUnescape(t *testing.T) {
-	res, err := PathUnescape("%7Babc%7D%2F%23%7B123%7D")
-	assert.NoError(t, err)
-	assert.Equal(t, "{abc}/#{123}", res)
+var (
+	output = os.Stdout
+)
+
+// GetLogger provides a prefix debug logger
+func GetLogger(prefix string, debug bool) func(string, ...interface{}) {
+	if debug {
+		logger := log.New(output, fmt.Sprintf("%s:", prefix), log.LstdFlags)
+
+		return func(msg string, args ...interface{}) {
+			_, file1, pos1, _ := runtime.Caller(1)
+			logger.Printf("%s:%d: %s", filepath.Base(file1), pos1, fmt.Sprintf(msg, args...))
+		}
+	}
+
+	return func(msg string, args ...interface{}) {}
 }

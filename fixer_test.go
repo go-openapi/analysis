@@ -19,19 +19,22 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func Test_FixEmptyResponseDescriptions(t *testing.T) {
+func TestFixer_EmptyResponseDescriptions(t *testing.T) {
+	t.Parallel()
+
 	bp := filepath.Join("fixtures", "fixer", "fixer.yaml")
-	sp := loadOrFail(t, bp)
+	sp := antest.LoadOrFail(t, bp)
+
 	FixEmptyResponseDescriptions(sp)
 
 	for path, pathItem := range sp.Paths.Paths {
-		if !assert.NotNil(t, pathItem, "expected a fixture with all path items provided in: %s", path) {
-			continue
-		}
+		require.NotNil(t, pathItem, "expected a fixture with all path items provided in: %s", path)
 
 		if path == "/noDesc" {
 			// scope for fixed descriptions
@@ -41,14 +44,15 @@ func Test_FixEmptyResponseDescriptions(t *testing.T) {
 			assertAllVerbs(t, pathItem, false)
 		}
 	}
-	for r, resp := range sp.Responses {
-		pin := resp
-		assert.Truef(t, assertResponse(t, "/responses/"+r, &pin, true),
+
+	for r, toPin := range sp.Responses {
+		resp := toPin
+		assert.Truef(t, assertResponse(t, "/responses/"+r, &resp, true),
 			"expected a fixed empty description in response %s", r)
 	}
 }
 
-func assertAllVerbs(t *testing.T, pathItem spec.PathItem, isEmpty bool) {
+func assertAllVerbs(t testing.TB, pathItem spec.PathItem, isEmpty bool) {
 	msg := "expected %s description for %s"
 	var mode string
 	if isEmpty {
@@ -56,6 +60,7 @@ func assertAllVerbs(t *testing.T, pathItem spec.PathItem, isEmpty bool) {
 	} else {
 		mode = "an unmodified"
 	}
+
 	assert.Truef(t, assertResponseInOperation(t, pathItem.Get, isEmpty), msg, mode, "GET")
 	assert.Truef(t, assertResponseInOperation(t, pathItem.Put, isEmpty), msg, mode, "PUT")
 	assert.Truef(t, assertResponseInOperation(t, pathItem.Post, isEmpty), msg, mode, "POST")
@@ -65,36 +70,44 @@ func assertAllVerbs(t *testing.T, pathItem spec.PathItem, isEmpty bool) {
 	assert.Truef(t, assertResponseInOperation(t, pathItem.Head, isEmpty), msg, mode, "HEAD")
 }
 
-func assertResponseInOperation(t *testing.T, op *spec.Operation, isEmpty bool) (result bool) {
-	result = true
-	if op == nil {
-		t.Fatalf("expected a fixture with all REST verbs set")
+func assertResponseInOperation(t testing.TB, op *spec.Operation, isEmpty bool) bool {
+	require.NotNilf(t, op, "expected a fixture with all REST verbs set")
+
+	if op.Responses == nil {
+		return true
 	}
-	if op.Responses != nil {
-		if op.Responses.Default != nil {
-			assert.Truef(t, assertResponse(t, "default", op.Responses.Default, isEmpty),
-				"unexpected description in response %s for operation", "default")
-		}
-		for code, resp := range op.Responses.StatusCodeResponses {
-			pin := resp
-			assert.Truef(t, assertResponse(t, strconv.Itoa(code), &pin, isEmpty),
-				"unexpected description in response %d for operation", code)
-		}
+
+	if op.Responses.Default != nil {
+		return assert.Truef(t, assertResponse(t, "default", op.Responses.Default, isEmpty),
+			"unexpected description in response %s for operation", "default")
 	}
-	return
+
+	for code, resp := range op.Responses.StatusCodeResponses {
+		pin := resp
+
+		return assert.Truef(t, assertResponse(t, strconv.Itoa(code), &pin, isEmpty),
+			"unexpected description in response %d for operation", code)
+	}
+
+	return true
 }
-func assertResponse(t *testing.T, path string, resp *spec.Response, isEmpty bool) bool {
+
+func assertResponse(t testing.TB, path string, resp *spec.Response, isEmpty bool) bool {
 	var expected string
+
 	if isEmpty {
 		expected = "(empty)"
 	} else {
 		expected = "my description"
 	}
+
 	if resp.Ref.String() != "" {
 		expected = ""
 	}
+
 	if !assert.Equalf(t, expected, resp.Description, "unexpected description for resp. %s", path) {
 		return false
 	}
+
 	return true
 }
