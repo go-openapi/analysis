@@ -1,0 +1,180 @@
+{
+  "swagger": "2.0",
+  "info": {
+   "title": "reference analysis",
+   "version": "0.1.0"
+  },
+  "paths": {
+   "/other/place": {
+    "$ref": "external/pathItem.yml"
+   },
+   "/some/where/{id}": {
+    "get": {
+     "parameters": [
+      {
+       "$ref": "external/parameters.yml#/parameters/limitParam"
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "name": "other",
+       "in": "query"
+      },
+      {
+       "name": "body",
+       "in": "body",
+       "schema": {
+        "$ref": "#/definitions/record"
+       }
+      }
+     ],
+     "responses": {
+      "200": {
+			  "description": "",
+       "schema": {
+        "$ref": "#/definitions/tag"
+       }
+      },
+      "404": {
+       "$ref": "external/responses.yml#/responses/notFound"
+      },
+      "default": {
+			  "description": "",
+       "schema": {
+        "$ref": "#/definitions/record"
+       }
+      }
+     }
+    },
+    "parameters": [
+     {
+      "$ref": "external/parameters.yml#/parameters/idParam"
+     },
+     {
+      "name": "bodyId",
+      "in": "body",
+      "schema": {
+       "$ref": "#/definitions/record"
+      }
+     }
+    ]
+   }
+  },
+  "definitions": {
+   "datedRecords": {
+    "type": "array",
+    "items": [
+     {
+      "type": "string",
+      "format": "date-time"
+     },
+     {
+      "$ref": "#/definitions/record"
+     }
+    ]
+   },
+   "datedTag": {
+    "allOf": [
+     {
+      "type": "string",
+      "format": "date"
+     },
+     {
+      "$ref": "#/definitions/tag"
+     }
+    ]
+   },
+   "datedTaggedRecords": {
+    "type": "array",
+    "items": [
+     {
+      "type": "string",
+      "format": "date-time"
+     },
+     {
+      "$ref": "#/definitions/record"
+     }
+    ],
+    "additionalItems": {
+     "$ref": "#/definitions/tag"
+    }
+   },
+   "named": {
+    "type": "string"
+   },
+   "namedAgain": {
+    "$ref": "#/definitions/named"
+   },
+   "namedThing": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "$ref": "#/definitions/named"
+     }
+    }
+   },
+   "otherRecords": {
+    "type": "array",
+    "items": {
+     "$ref": "#/definitions/record"
+    }
+   },
+   "record": {
+    "type": "object",
+    "properties": {
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "records": {
+    "type": "array",
+    "items": [
+     {
+      "$ref": "#/definitions/record"
+     }
+    ]
+   },
+   "tag": {
+    "type": "object",
+    "properties": {
+     "audit": {
+      "$ref": "external/definitions.yml#/definitions/record"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "value": {
+      "type": "string"
+     }
+    }
+   },
+   "tags": {
+    "type": "object",
+    "additionalProperties": {
+     "$ref": "#/definitions/tag"
+    }
+   }
+  },
+  "parameters": {
+   "someParam": {
+    "name": "someParam",
+    "in": "body",
+    "schema": {
+     "$ref": "#/definitions/record"
+    }
+   }
+  },
+  "responses": {
+   "someResponse": {
+		    "description": "",
+     "schema": {
+       "$ref": "#/definitions/record"
+     }
+   }
+  }
+}
