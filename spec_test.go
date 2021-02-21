@@ -1,7 +1,6 @@
 package analysis_test
 
 import (
-	"flag"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-openapi/analysis"
+	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag"
@@ -16,18 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var enableLongTests bool
-
-func init() {
-	flag.BoolVar(&enableLongTests, "enable-long", false, "enable long runnning tests")
-}
-
 func skipNotify(t *testing.T) {
 	t.Log("To enable this long running test, use -args -enable-long in your go test command line")
 }
 
 func Test_FlattenAzure(t *testing.T) {
-	if !enableLongTests {
+	if !antest.LongTestsEnabled() {
 		skipNotify(t)
 		t.SkipNow()
 	}
@@ -53,7 +47,7 @@ func Test_FlattenAzure(t *testing.T) {
 }
 
 func TestRemoteFlattenAzure_Expand(t *testing.T) {
-	if !enableLongTests {
+	if !antest.LongTestsEnabled() {
 		skipNotify(t)
 		t.SkipNow()
 	}
@@ -79,7 +73,7 @@ func TestRemoteFlattenAzure_Expand(t *testing.T) {
 }
 
 func TestRemoteFlattenAzure_Flatten(t *testing.T) {
-	if !enableLongTests {
+	if !antest.LongTestsEnabled() {
 		skipNotify(t)
 		t.SkipNow()
 	}

@@ -2,6 +2,7 @@ package antest
 
 import (
 	"encoding/json"
+	"flag"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,7 +13,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var oncePathLoader sync.Once
+var (
+	oncePathLoader  sync.Once
+	enableLongTests bool
+)
+
+func init() {
+	if flag.Lookup("enable-long") == nil {
+		flag.BoolVar(&enableLongTests, "enable-long", false, "enable long runnning tests")
+	}
+}
+
+// LongTestsEnabled returns the CLI flag
+func LongTestsEnabled() bool {
+	return enableLongTests
+}
 
 func initPathLoader() {
 	spec.PathLoader = func(path string) (json.RawMessage, error) {

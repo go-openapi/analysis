@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"testing"
 
+	_ "github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
 )

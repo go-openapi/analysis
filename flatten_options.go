@@ -3,7 +3,7 @@ package analysis
 import (
 	"log"
 
-	swspec "github.com/go-openapi/spec"
+	"github.com/go-openapi/spec"
 )
 
 // FlattenOpts configuration for flattening a swagger specification.
@@ -32,8 +32,8 @@ type FlattenOpts struct {
 }
 
 // ExpandOpts creates a spec.ExpandOptions to configure expanding a specification document.
-func (f *FlattenOpts) ExpandOpts(skipSchemas bool) *swspec.ExpandOptions {
-	return &swspec.ExpandOptions{
+func (f *FlattenOpts) ExpandOpts(skipSchemas bool) *spec.ExpandOptions {
+	return &spec.ExpandOptions{
 		RelativeBase:    f.BasePath,
 		SkipSchemas:     skipSchemas,
 		ContinueOnError: f.ContinueOnError,
@@ -41,7 +41,7 @@ func (f *FlattenOpts) ExpandOpts(skipSchemas bool) *swspec.ExpandOptions {
 }
 
 // Swagger gets the swagger specification for this flatten operation
-func (f *FlattenOpts) Swagger() *swspec.Swagger {
+func (f *FlattenOpts) Swagger() *spec.Swagger {
 	return f.Spec.spec
 }
 
