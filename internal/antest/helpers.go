@@ -11,8 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// LoadSpec loads a json a yaml spec
-func LoadSpec(path string) (*spec.Swagger, error) {
+func init() {
 	spec.PathLoader = func(path string) (json.RawMessage, error) {
 		ext := filepath.Ext(path)
 		if ext == ".yml" || ext == ".yaml" {
@@ -26,7 +25,10 @@ func LoadSpec(path string) (*spec.Swagger, error) {
 
 		return json.RawMessage(data), nil
 	}
+}
 
+// LoadSpec loads a json a yaml spec
+func LoadSpec(path string) (*spec.Swagger, error) {
 	data, err := swag.YAMLDoc(path)
 	if err != nil {
 		return nil, err
