@@ -2,11 +2,11 @@ package normalize
 
 import (
 	"net/url"
-	slashpath "path"
+	"path"
 	"path/filepath"
 	"strings"
 
-	swspec "github.com/go-openapi/spec"
+	"github.com/go-openapi/spec"
 )
 
 // RebaseRef rebases a remote ref relative to a base ref.
@@ -19,6 +19,7 @@ import (
 func RebaseRef(baseRef string, ref string) string {
 	baseRef, _ = url.PathUnescape(baseRef)
 	ref, _ = url.PathUnescape(ref)
+
 	if baseRef == "" || baseRef == "." || strings.HasPrefix(baseRef, "#") {
 		return ref
 	}
@@ -45,8 +46,8 @@ func RebaseRef(baseRef string, ref string) string {
 	var basePath string
 	if baseURL.Host != "" {
 		// when there is a host, standard URI rules apply (with "/")
-		baseURL.Path = slashpath.Dir(baseURL.Path)
-		baseURL.Path = slashpath.Join(baseURL.Path, "/"+parts[0])
+		baseURL.Path = path.Dir(baseURL.Path)
+		baseURL.Path = path.Join(baseURL.Path, "/"+parts[0])
 
 		return baseURL.String()
 	}
@@ -67,25 +68,20 @@ func RebaseRef(baseRef string, ref string) string {
 // NOTE(windows):
 // * refs are assumed to have been normalized with drive letter lower cased (from go-openapi/spec)
 // * "/ in paths may appear as escape sequences
-func Path(ref swspec.Ref, basePath string /*opts *FlattenOpts*/) (normalizedPath string) {
+func Path(ref spec.Ref, basePath string) string {
 	uri, _ := url.PathUnescape(ref.String())
 	if ref.HasFragmentOnly || filepath.IsAbs(uri) {
-		normalizedPath = uri
-
-		return
+		return uri
 	}
 
 	refURL, _ := url.Parse(uri)
 	if refURL.Host != "" {
-		normalizedPath = uri
-
-		return
+		return uri
 	}
 
 	parts := strings.Split(uri, "#")
 	// BasePath, parts[0] are local filesystem directories, guaranteed to be absolute at this stage
 	parts[0] = filepath.Join(filepath.Dir(basePath), parts[0])
-	normalizedPath = strings.Join(parts, "#")
 
-	return
+	return strings.Join(parts, "#")
 }

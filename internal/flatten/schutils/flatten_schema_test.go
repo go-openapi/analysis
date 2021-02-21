@@ -3,11 +3,12 @@ package schutils
 import (
 	"testing"
 
+	_ "github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFlattenSchema_SaveDefinition(t *testing.T) {
+func TestFlattenSchema_Save(t *testing.T) {
 	t.Parallel()
 
 	sp := &spec.Swagger{}

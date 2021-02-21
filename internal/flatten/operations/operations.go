@@ -1,12 +1,12 @@
 package operations
 
 import (
-	slashpath "path"
+	"path"
 	"sort"
 	"strings"
 
 	"github.com/go-openapi/jsonpointer"
-	swspec "github.com/go-openapi/spec"
+	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag"
 )
 
@@ -31,8 +31,8 @@ type OpRef struct {
 	Path   string
 	Key    string
 	ID     string
-	Op     *swspec.Operation
-	Ref    swspec.Ref
+	Op     *spec.Operation
+	Ref    spec.Ref
 }
 
 // OpRefs is a sortable collection of operations
@@ -44,7 +44,7 @@ func (o OpRefs) Less(i, j int) bool { return o[i].Key < o[j].Key }
 
 // Provider knows how to collect operations from a spec
 type Provider interface {
-	Operations() map[string]map[string]*swspec.Operation
+	Operations() map[string]map[string]*spec.Operation
 }
 
 // GatherOperations builds a map of sorted operations from a spec
@@ -60,7 +60,7 @@ func GatherOperations(specDoc Provider, operationIDs []string) map[string]OpRef 
 				Path:   pth,
 				ID:     vv.ID,
 				Op:     &vv,
-				Ref:    swspec.MustCreateRef("#" + slashpath.Join("/paths", jsonpointer.Escape(pth), method)),
+				Ref:    spec.MustCreateRef("#" + path.Join("/paths", jsonpointer.Escape(pth), method)),
 			})
 		}
 	}
