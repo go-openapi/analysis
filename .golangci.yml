@@ -49,3 +49,4 @@ linters:
     - thelper
     - ifshort
     - forbidigo
+    - cyclop
