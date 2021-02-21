@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/go-openapi/spec"
@@ -11,7 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
+var oncePathLoader sync.Once
+
+func initPathLoader() {
 	spec.PathLoader = func(path string) (json.RawMessage, error) {
 		ext := filepath.Ext(path)
 		if ext == ".yml" || ext == ".yaml" {
@@ -29,6 +32,8 @@ func init() {
 
 // LoadSpec loads a json a yaml spec
 func LoadSpec(path string) (*spec.Swagger, error) {
+	oncePathLoader.Do(initPathLoader)
+
 	data, err := swag.YAMLDoc(path)
 	if err != nil {
 		return nil, err
