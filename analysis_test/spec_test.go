@@ -28,7 +28,7 @@ func Test_FlattenAzure(t *testing.T) {
 	t.Parallel()
 
 	// Local copy of https://raw.githubusercontent.com/Azure/azure-rest-api-specs/master/specification/network/resource-manager/Microsoft.Network/stable/2020-04-01/publicIpAddress.json
-	url := "fixtures/azure/publicIpAddress.json"
+	url := "../fixtures/azure/publicIpAddress.json"
 	byts, err := swag.LoadFromFileOrHTTP(url)
 	assert.NoError(t, err)
 	swagger := &spec.Swagger{}
@@ -53,7 +53,7 @@ func TestRemoteFlattenAzure_Expand(t *testing.T) {
 	}
 	t.Parallel()
 
-	server := httptest.NewServer(http.FileServer(http.Dir("fixtures/azure")))
+	server := httptest.NewServer(http.FileServer(http.Dir("../fixtures/azure")))
 	defer server.Close()
 
 	basePath := server.URL + "/publicIpAddress.json"
@@ -79,7 +79,7 @@ func TestRemoteFlattenAzure_Flatten(t *testing.T) {
 	}
 	t.Parallel()
 
-	server := httptest.NewServer(http.FileServer(http.Dir("fixtures/azure")))
+	server := httptest.NewServer(http.FileServer(http.Dir("../fixtures/azure")))
 	defer server.Close()
 
 	basePath := server.URL + "/publicIpAddress.json"
