@@ -23,7 +23,7 @@ import (
 
 func ExampleSpec() {
 	// Example with spec file in this repo
-	path := "fixtures/flatten.yml"
+	path := "../fixtures/flatten.yml"
 	doc, err := loads.Spec(path) // Load spec from file
 	if err == nil {
 		an := analysis.New(doc.Spec()) // Analyze spec
@@ -36,7 +36,7 @@ func ExampleSpec() {
 
 func ExampleFlatten() {
 	// Example with spec file in this repo
-	path := "fixtures/flatten.yml"
+	path := "../fixtures/flatten.yml"
 	doc, err := loads.Spec(path) // Load spec from file
 	if err == nil {
 		an := analysis.New(doc.Spec()) // Analyze spec
