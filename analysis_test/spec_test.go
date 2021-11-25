@@ -138,7 +138,7 @@ func makeFileSpec(t testing.TB) (string, func()) {
 
 func fixtureIssue66() []byte {
 	return []byte(`
-	x-google-endpoints:
+x-google-endpoints:
   - name: bravo-api.endpoints.dev-srplatform.cloud.goog
     allowCors: true
 host: bravo-api.endpoints.dev-srplatform.cloud.goog
@@ -232,5 +232,5 @@ securityDefinitions:
     x-google-issuer: "http://okta.example.com"
     x-google-jwks_uri: "http://okta.example.com/v1/keys"
     x-google-audiences: "http://api.example.com"
-	`)
+`)
 }
