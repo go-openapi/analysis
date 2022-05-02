@@ -16,7 +16,6 @@ package analysis
 
 import (
 	"fmt"
-	"log"
 	"path"
 	"sort"
 	"strings"
@@ -26,7 +25,6 @@ import (
 	"github.com/go-openapi/analysis/internal/flatten/replace"
 	"github.com/go-openapi/analysis/internal/flatten/schutils"
 	"github.com/go-openapi/analysis/internal/flatten/sortref"
-	"github.com/go-openapi/jsonpointer"
 	"github.com/go-openapi/spec"
 )
 
@@ -269,22 +267,73 @@ func nameInlinedSchemas(opts *FlattenOpts) error {
 	return nil
 }
 
-func removeUnused(opts *FlattenOpts) {
-	expected := make(map[string]struct{})
-	for k := range opts.Swagger().Definitions {
-		expected[path.Join(definitionsPath, jsonpointer.Escape(k))] = struct{}{}
-	}
-
-	for _, k := range opts.Spec.AllDefinitionReferences() {
-		delete(expected, k)
-	}
-
-	for k := range expected {
-		debugLog("removing unused definition %s", path.Base(k))
-		if opts.Verbose {
-			log.Printf("info: removing unused definition: %s", path.Base(k))
+func addReferences(references []string, definitions spec.Definitions, expected map[string]struct{}) {
+	for _, ref := range references {
+		// check whether ref is already in expected
+		if _, ok := expected[ref]; !ok {
+			debugLog("entering ref %s\n", ref)
+			expected[ref] = struct{}{}
+			// lookup ref in definitions
+			if v, ok := definitions[ref]; ok {
+				var refs []string
+				schemaProperties := v.Properties
+				for _, propSchema := range schemaProperties {
+					if propSchema.Items != nil && propSchema.Items.Schema != nil {
+						r := path.Base(propSchema.Items.Schema.Ref.String())
+						if r != "" {
+							debugLog("ref %s, property %s\n", ref, r)
+							refs = append(refs, r)
+						}
+					}
+					if propSchema.Ref.String() != "" {
+						r := path.Base(propSchema.Ref.String())
+						if r != "" {
+							debugLog("ref %s, property %s\n", ref, r)
+							refs = append(refs, r)
+						}
+					}
+					if propSchema.AdditionalProperties != nil && propSchema.AdditionalProperties.Schema != nil {
+						r := path.Base(propSchema.AdditionalProperties.Schema.Ref.String())
+						if r != "" {
+							debugLog("ref %s, property %s\n", ref, r)
+							refs = append(refs, r)
+						}
+					}
+				}
+				addReferences(refs, definitions, expected)
+			}
+		} else {
+			debugLog("not entering ref %s\n", ref)
 		}
-		delete(opts.Swagger().Definitions, path.Base(k))
+	}
+}
+
+func removeUnused(opts *FlattenOpts) {
+	var references []string
+	// iterate all opts.Spec.operations and save all references to var references
+	for _, op := range opts.Spec.Operations() {
+		for _, operations := range op {
+			for _, param := range operations.Parameters {
+				if param.Schema != nil && param.Schema.Ref.String() != "" {
+					ref := path.Base(param.Schema.Ref.String())
+					debugLog("operation param %s\n", ref)
+					references = append(references, ref)
+				}
+			}
+			// TODO: add responses
+		}
+	}
+
+	definitions := opts.Swagger().Definitions
+	expected := make(map[string]struct{})
+	addReferences(references, definitions, expected)
+
+	for k := range definitions {
+		// if k is not in expected, delete it from definitions
+		if _, ok := expected[k]; !ok {
+			debugLog("removing unused definition %s\n", k)
+			delete(definitions, k)
+		}
 	}
 
 	opts.Spec.reload() // re-analyze
