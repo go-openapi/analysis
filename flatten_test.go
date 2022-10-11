@@ -1333,7 +1333,10 @@ func TestFlatten_2113(t *testing.T) {
 func getDefinition(t testing.TB, sp *spec.Swagger, key string) string {
 	d, ok := sp.Definitions[key]
 	require.Truef(t, ok, "Expected definition for %s", key)
-	res, _ := json.Marshal(d)
+	res, err := json.Marshal(d)
+	if err != nil {
+		panic(err)
+	}
 
 	return string(res)
 }
@@ -1345,7 +1348,10 @@ func getInPath(t testing.TB, sp *spec.Swagger, path, key string) string {
 	d, _, erg := ptr.Get(sp.Paths.Paths[path])
 	require.NoError(t, erg, "at %s no value for %s", path, key)
 
-	res, _ := json.Marshal(d)
+	res, err := json.Marshal(d)
+	if err != nil {
+		panic(err)
+	}
 
 	return string(res)
 }
