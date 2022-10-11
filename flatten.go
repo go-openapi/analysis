@@ -318,18 +318,20 @@ func removeUnused(opts *FlattenOpts) {
 				}
 			}
 			// add responses
-			for _, resp := range operations.Responses.StatusCodeResponses {
-				if resp.Schema != nil && resp.Schema.Ref.String() != "" {
-					ref := path.Base(resp.Schema.Ref.String())
+			if operations.Responses != nil {
+				for _, resp := range operations.Responses.StatusCodeResponses {
+					if resp.Schema != nil && resp.Schema.Ref.String() != "" {
+						ref := path.Base(resp.Schema.Ref.String())
+						debugLog("operation response %s\n", ref)
+						references = append(references, ref)
+					}
+				}
+				// add default response
+				if operations.Responses.Default != nil && operations.Responses.Default.Schema != nil && operations.Responses.Default.Schema.Ref.String() != "" {
+					ref := path.Base(operations.Responses.Default.Schema.Ref.String())
 					debugLog("operation response %s\n", ref)
 					references = append(references, ref)
 				}
-			}
-			// add default response
-			if operations.Responses.Default != nil && operations.Responses.Default.Schema != nil && operations.Responses.Default.Schema.Ref.String() != "" {
-				ref := path.Base(operations.Responses.Default.Schema.Ref.String())
-				debugLog("operation response %s\n", ref)
-				references = append(references, ref)
 			}
 		}
 	}
