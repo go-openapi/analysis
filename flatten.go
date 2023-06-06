@@ -313,7 +313,6 @@ func removeUnused(opts *FlattenOpts) {
 			for _, param := range operations.Parameters {
 				if param.Schema != nil {
 					if param.Schema.Ref.String() != "" {
-						fmt.Printf("param.Schema.Ref.String() %s\n", param.Schema.Ref.String())
 						ref := path.Base(param.Schema.Ref.String())
 						debugLog("operation param %s\n", ref)
 						references = append(references, ref)
