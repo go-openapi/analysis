@@ -311,19 +311,44 @@ func removeUnused(opts *FlattenOpts) {
 	for _, op := range opts.Spec.Operations() {
 		for _, operations := range op {
 			for _, param := range operations.Parameters {
-				if param.Schema != nil && param.Schema.Ref.String() != "" {
-					ref := path.Base(param.Schema.Ref.String())
-					debugLog("operation param %s\n", ref)
-					references = append(references, ref)
+				if param.Schema != nil {
+					if param.Schema.Ref.String() != "" {
+						fmt.Printf("param.Schema.Ref.String() %s\n", param.Schema.Ref.String())
+						ref := path.Base(param.Schema.Ref.String())
+						debugLog("operation param %s\n", ref)
+						references = append(references, ref)
+					}
+					// check properties
+					if param.Schema.Properties != nil {
+						for _, prop := range param.Schema.Properties {
+							if prop.Ref.String() != "" {
+								ref := path.Base(prop.Ref.String())
+								debugLog("operation param %s\n", ref)
+								references = append(references, ref)
+							}
+						}
+					}
 				}
 			}
 			// add responses
 			if operations.Responses != nil {
 				for _, resp := range operations.Responses.StatusCodeResponses {
-					if resp.Schema != nil && resp.Schema.Ref.String() != "" {
-						ref := path.Base(resp.Schema.Ref.String())
-						debugLog("operation response %s\n", ref)
-						references = append(references, ref)
+					if resp.Schema != nil {
+						if resp.Schema.Ref.String() != "" {
+							ref := path.Base(resp.Schema.Ref.String())
+							debugLog("operation response %s\n", ref)
+							references = append(references, ref)
+						}
+						// check properties
+						if resp.Schema.Properties != nil {
+							for _, prop := range resp.Schema.Properties {
+								if prop.Ref.String() != "" {
+									ref := path.Base(prop.Ref.String())
+									debugLog("operation response %s\n", ref)
+									references = append(references, ref)
+								}
+							}
+						}
 					}
 				}
 				// add default response
