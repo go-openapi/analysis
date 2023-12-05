@@ -221,35 +221,35 @@ func TestSchemaAnalys_InvalidSchema(t *testing.T) {
 	// invalid ref not detected (no digging further)
 	def := sp.Definitions["invalidRefInObject"]
 	_, err := Schema(SchemaOpts{Schema: &def, Root: sp, BasePath: bp})
-	assert.NoError(t, err, "did not expect an error here, in spite of the underlying invalid $ref")
+	require.NoError(t, err, "did not expect an error here, in spite of the underlying invalid $ref")
 
 	def = sp.Definitions["invalidRefInTuple"]
 	_, err = Schema(SchemaOpts{Schema: &def, Root: sp, BasePath: bp})
-	assert.NoError(t, err, "did not expect an error here, in spite of the underlying invalid $ref")
+	require.NoError(t, err, "did not expect an error here, in spite of the underlying invalid $ref")
 
 	// invalid ref detected (digging)
 	schema := refSchema(spec.MustCreateRef("#/definitions/noWhere"))
 	_, err = Schema(SchemaOpts{Schema: schema, Root: sp, BasePath: bp})
-	assert.Error(t, err, "expected an error here")
+	require.Error(t, err, "expected an error here")
 
 	def = sp.Definitions["invalidRefInMap"]
 	_, err = Schema(SchemaOpts{Schema: &def, Root: sp, BasePath: bp})
-	assert.Error(t, err, "expected an error here")
+	require.Error(t, err, "expected an error here")
 
 	def = sp.Definitions["invalidRefInArray"]
 	_, err = Schema(SchemaOpts{Schema: &def, Root: sp, BasePath: bp})
-	assert.Error(t, err, "expected an error here")
+	require.Error(t, err, "expected an error here")
 
 	def = sp.Definitions["indirectToInvalidRef"]
 	_, err = Schema(SchemaOpts{Schema: &def, Root: sp, BasePath: bp})
-	assert.Error(t, err, "expected an error here")
+	require.Error(t, err, "expected an error here")
 }
 
 func TestSchemaAnalysis_EdgeCases(t *testing.T) {
 	t.Parallel()
 
 	_, err := Schema(SchemaOpts{Schema: nil})
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 /* helpers for the Schema test suite */

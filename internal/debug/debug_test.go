@@ -15,7 +15,6 @@
 package debug
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -24,7 +23,7 @@ import (
 )
 
 func TestDebug(t *testing.T) {
-	tmpFile, err := ioutil.TempFile("", "debug-test")
+	tmpFile, err := os.CreateTemp("", "debug-test")
 	require.NoError(t, err)
 
 	output = tmpFile
@@ -39,12 +38,12 @@ func TestDebug(t *testing.T) {
 	testLogger("A debug: %s", "a string")
 	tmpFile.Close()
 
-	flushed, err := ioutil.ReadFile(tmpName)
+	flushed, err := os.ReadFile(tmpName)
 	require.NoError(t, err)
 
 	assert.Contains(t, string(flushed), "A debug: a string")
 
-	tmpEmptyFile, err := ioutil.TempFile("", "debug-test")
+	tmpEmptyFile, err := os.CreateTemp("", "debug-test")
 	require.NoError(t, err)
 	tmpEmpty := tmpEmptyFile.Name()
 	defer func() {
@@ -55,7 +54,7 @@ func TestDebug(t *testing.T) {
 	testLogger("A debug: %s", "a string")
 	tmpFile.Close()
 
-	flushed, err = ioutil.ReadFile(tmpEmpty)
+	flushed, err = os.ReadFile(tmpEmpty)
 	require.NoError(t, err)
 
 	assert.Empty(t, flushed)

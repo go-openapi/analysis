@@ -93,6 +93,7 @@ func TestRewriteSchemaRef(t *testing.T) {
 	}
 }
 
+//nolint:dogsled
 func TestReplace_ErrorHandling(t *testing.T) {
 	t.Parallel()
 
