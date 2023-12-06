@@ -11,16 +11,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	definitionA    = "#/definitions/A"
+	definitionABC  = "#/definitions/abc"
+	definitionBase = "#/definitions/base"
+	exampleBase    = "https://example.com/base"
+)
+
 func TestNormalize_Path(t *testing.T) {
 	t.Parallel()
 
 	values := []struct{ Source, Expected string }{
-		{"#/definitions/A", "#/definitions/A"},
+		{definitionA, definitionA},
 		{"http://somewhere.com/definitions/A", "http://somewhere.com/definitions/A"},
 		{wrapWindowsPath("/definitions/A"), wrapWindowsPath("/definitions/A")}, // considered absolute on unix but not on windows
-		{wrapWindowsPath("/definitions/errorModel.json") + "#/definitions/A", wrapWindowsPath("/definitions/errorModel.json") + "#/definitions/A"},
+		{wrapWindowsPath("/definitions/errorModel.json") + definitionA, wrapWindowsPath("/definitions/errorModel.json") + definitionA},
 		{"http://somewhere.com", "http://somewhere.com"},
-		{wrapWindowsPath("./definitions/definitions.yaml") + "#/definitions/A", wrapWindowsPath("/abs/to/spec/definitions/definitions.yaml") + "#/definitions/A"},
+		{wrapWindowsPath("./definitions/definitions.yaml") + definitionA, wrapWindowsPath("/abs/to/spec/definitions/definitions.yaml") + definitionA},
 		{"#", wrapWindowsPath("/abs/to/spec")},
 	}
 
@@ -32,24 +39,24 @@ func TestNormalize_Path(t *testing.T) {
 func TestNormalize_RebaseRef(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, "#/definitions/abc", RebaseRef("#/definitions/base", "#/definitions/abc"))
-	assert.Equal(t, "#/definitions/abc", RebaseRef("", "#/definitions/abc"))
-	assert.Equal(t, "#/definitions/abc", RebaseRef(".", "#/definitions/abc"))
-	assert.Equal(t, "otherfile#/definitions/abc", RebaseRef("file#/definitions/base", "otherfile#/definitions/abc"))
-	assert.Equal(t, wrapWindowsPath("../otherfile")+"#/definitions/abc", RebaseRef(wrapWindowsPath("../file")+"#/definitions/base", wrapWindowsPath("./otherfile")+"#/definitions/abc"))
-	assert.Equal(t, wrapWindowsPath("../otherfile")+"#/definitions/abc", RebaseRef(wrapWindowsPath("../file")+"#/definitions/base", wrapWindowsPath("otherfile")+"#/definitions/abc"))
-	assert.Equal(t, wrapWindowsPath("local/remote/otherfile")+"#/definitions/abc", RebaseRef(wrapWindowsPath("local/file")+"#/definitions/base", wrapWindowsPath("remote/otherfile")+"#/definitions/abc"))
+	assert.Equal(t, definitionABC, RebaseRef(definitionBase, definitionABC))
+	assert.Equal(t, definitionABC, RebaseRef("", definitionABC))
+	assert.Equal(t, definitionABC, RebaseRef(".", definitionABC))
+	assert.Equal(t, "otherfile"+definitionABC, RebaseRef("file"+definitionBase, "otherfile"+definitionABC))
+	assert.Equal(t, wrapWindowsPath("../otherfile")+definitionABC, RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("./otherfile")+definitionABC))
+	assert.Equal(t, wrapWindowsPath("../otherfile")+definitionABC, RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("otherfile")+definitionABC))
+	assert.Equal(t, wrapWindowsPath("local/remote/otherfile")+definitionABC, RebaseRef(wrapWindowsPath("local/file")+definitionBase, wrapWindowsPath("remote/otherfile")+definitionABC))
 	assert.Equal(t, wrapWindowsPath("local/remote/otherfile.yaml"), RebaseRef(wrapWindowsPath("local/file.yaml"), wrapWindowsPath("remote/otherfile.yaml")))
 
-	assert.Equal(t, "file#/definitions/abc", RebaseRef("file#/definitions/base", "#/definitions/abc"))
+	assert.Equal(t, "file#/definitions/abc", RebaseRef("file#/definitions/base", definitionABC))
 
 	// with remote
-	assert.Equal(t, "https://example.com/base#/definitions/abc", RebaseRef("https://example.com/base", "https://example.com/base#/definitions/abc"))
-	assert.Equal(t, "https://example.com/base#/definitions/abc", RebaseRef("https://example.com/base", "#/definitions/abc"))
-	assert.Equal(t, "https://example.com/base#/dir/definitions/abc", RebaseRef("https://example.com/base", "#/dir/definitions/abc"))
-	assert.Equal(t, "https://example.com/base/dir/definitions/abc", RebaseRef("https://example.com/base/spec.yaml", "dir/definitions/abc"))
-	assert.Equal(t, "https://example.com/base/dir/definitions/abc", RebaseRef("https://example.com/base/", "dir/definitions/abc"))
-	assert.Equal(t, "https://example.com/dir/definitions/abc", RebaseRef("https://example.com/base", "dir/definitions/abc"))
+	assert.Equal(t, exampleBase+definitionABC, RebaseRef(exampleBase, exampleBase+definitionABC))
+	assert.Equal(t, exampleBase+definitionABC, RebaseRef(exampleBase, definitionABC))
+	assert.Equal(t, exampleBase+"#/dir/definitions/abc", RebaseRef(exampleBase, "#/dir/definitions/abc"))
+	assert.Equal(t, exampleBase+"/dir/definitions/abc", RebaseRef(exampleBase+"/spec.yaml", "dir/definitions/abc"))
+	assert.Equal(t, exampleBase+"/dir/definitions/abc", RebaseRef(exampleBase+"/", "dir/definitions/abc"))
+	assert.Equal(t, "https://example.com/dir/definitions/abc", RebaseRef(exampleBase, "dir/definitions/abc"))
 }
 
 // wrapWindowsPath adapts path expectations for tests running on windows

@@ -27,6 +27,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	someOperation    = "someOperation"
+	anotherOperation = "anotherOperation"
+)
+
 func TestAnalyzer_All(t *testing.T) {
 	t.Parallel()
 
@@ -48,14 +53,14 @@ func TestAnalyzer_All(t *testing.T) {
 		{"basic": nil},
 	}
 
-	op.ID = "someOperation"
+	op.ID = someOperation
 	op.Parameters = []spec.Parameter{*skipParam}
 	pi.Get = op
 
 	pi2 := spec.PathItem{}
 	pi2.Parameters = []spec.Parameter{*limitParam}
 	op2 := &spec.Operation{}
-	op2.ID = "anotherOperation"
+	op2.ID = anotherOperation
 	op2.Parameters = []spec.Parameter{*skipParam}
 	pi2.Get = op2
 
@@ -163,7 +168,7 @@ func TestAnalyzer_DefinitionAnalysis(t *testing.T) {
 	definitions := analyzer.allSchemas
 	require.NotNil(t, definitions)
 
-	for _, key := range []string{
+	for _, toPin := range []string{
 		"#/parameters/someParam/schema",
 		"#/paths/~1some~1where~1{id}/parameters/1/schema",
 		"#/paths/~1some~1where~1{id}/get/parameters/1/schema",
@@ -197,6 +202,7 @@ func TestAnalyzer_DefinitionAnalysis(t *testing.T) {
 		"#/definitions/withOneOf/oneOf/0",
 		"#/definitions/withOneOf/oneOf/1",
 	} {
+		key := toPin
 		t.Run(fmt.Sprintf("ref %q exists", key), func(t *testing.T) {
 			t.Parallel()
 
@@ -226,7 +232,7 @@ func TestAnalyzer_ReferenceAnalysis(t *testing.T) {
 	require.NotNil(t, definitions.headerItems)
 	require.NotNil(t, definitions.allRefs)
 
-	for _, toPin := range []struct {
+	for _, fixture := range []struct {
 		Input        map[string]spec.Ref
 		ExpectedKeys []string
 	}{
@@ -280,11 +286,12 @@ func TestAnalyzer_ReferenceAnalysis(t *testing.T) {
 			},
 		},
 	} {
-		fixture := toPin
-		for _, key := range fixture.ExpectedKeys {
+		input := fixture.Input
+		for _, toPin := range fixture.ExpectedKeys {
+			key := toPin
 			t.Run(fmt.Sprintf("ref %q exists", key), func(t *testing.T) {
 				t.Parallel()
-				assertRefExists(t, fixture.Input, key)
+				assertRefExists(t, input, key)
 			})
 		}
 	}
@@ -380,7 +387,7 @@ func TestAnalyzer_ParamsAsMap(t *testing.T) {
 	p, ok := m["query#Limit"]
 	require.True(t, ok)
 
-	assert.Equal(t, p.Name, "limit")
+	assert.Equal(t, "limit", p.Name)
 
 	// An invalid spec, but passes this step (errors are figured out at a higher level)
 	s = prepareTestParamsInvalid(t, "fixture-1289-param.yaml")
@@ -397,7 +404,7 @@ func TestAnalyzer_ParamsAsMap(t *testing.T) {
 	p, ok = m["body#DespicableMe"]
 	require.True(t, ok)
 
-	assert.Equal(t, p.Name, "despicableMe")
+	assert.Equal(t, "despicableMe", p.Name)
 }
 
 func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
@@ -413,8 +420,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	require.True(t, ok)
 
 	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
-	s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
-		// pt.Logf("ERROR on %+v : %v", param, err)
+	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
 		return true // Continue
@@ -430,8 +436,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	require.True(t, ok)
 
 	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
-	s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
-		// pt.Logf("ERROR on %+v : %v", param, err)
+	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
 		return false // Bail
@@ -470,7 +475,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	require.True(t, ok)
 
 	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
-	s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
+	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
 		return false // Bail
@@ -482,11 +487,12 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 func TestAnalyzer_ParamsAsMapPanic(t *testing.T) {
 	t.Parallel()
 
-	for _, fixture := range []string{
+	for _, toPin := range []string{
 		"fixture-342.yaml",
 		"fixture-342-2.yaml",
 		"fixture-342-3.yaml",
 	} {
+		fixture := toPin
 		t.Run(fmt.Sprintf("panic_%s", fixture), func(t *testing.T) {
 			t.Parallel()
 
@@ -517,7 +523,7 @@ func TestAnalyzer_SafeParamsFor(t *testing.T) {
 
 	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
 
-	errFunc := func(param spec.Parameter, err error) bool {
+	errFunc := func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
 		return true // Continue
@@ -539,7 +545,7 @@ func TestAnalyzer_ParamsFor(t *testing.T) {
 	require.NotNil(t, s)
 
 	params := s.ParamsFor("Get", "/items")
-	assert.True(t, len(params) > 0)
+	assert.NotEmpty(t, params)
 
 	panickerParamsFor := func() {
 		s := prepareTestParamsInvalid(t, "fixture-342.yaml")
@@ -564,7 +570,7 @@ func TestAnalyzer_SafeParametersFor(t *testing.T) {
 	pi, ok := s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	errFunc := func(param spec.Parameter, err error) bool {
+	errFunc := func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
 		return true // Continue
@@ -585,7 +591,7 @@ func TestAnalyzer_ParametersFor(t *testing.T) {
 	// Valid example
 	s := prepareTestParamsValid()
 	params := s.ParamsFor("Get", "/items")
-	assert.True(t, len(params) > 0)
+	assert.NotEmpty(t, params)
 
 	panickerParametersFor := func() {
 		s := prepareTestParamsInvalid(t, "fixture-342.yaml")
@@ -634,17 +640,17 @@ func TestAnalyzer_SecurityRequirements(t *testing.T) {
 	reqs1 := spec.SecurityRequirementsFor(pi1)
 	require.Len(t, reqs1, 2)
 	require.Len(t, reqs1[0], 1)
-	require.Equal(t, reqs1[0][0].Name, "oauth2")
+	require.Equal(t, "oauth2", reqs1[0][0].Name)
 	require.Equal(t, reqs1[0][0].Scopes, scopes)
 	require.Len(t, reqs1[1], 1)
-	require.Equal(t, reqs1[1][0].Name, "basic")
+	require.Equal(t, "basic", reqs1[1][0].Name)
 	require.Empty(t, reqs1[1][0].Scopes)
 
 	reqs2 := spec.SecurityRequirementsFor(pi2)
 	require.Len(t, reqs2, 3)
 	require.Len(t, reqs2[0], 1)
-	require.Equal(t, reqs2[0][0].Name, "oauth2")
-	require.Equal(t, reqs2[0][0].Scopes, scopes)
+	require.Equal(t, "oauth2", reqs2[0][0].Name)
+	require.Equal(t, scopes, reqs2[0][0].Scopes)
 	require.Len(t, reqs2[1], 1)
 	require.Empty(t, reqs2[1][0].Name)
 	require.Empty(t, reqs2[1][0].Scopes)
@@ -715,7 +721,7 @@ func TestAnalyzer_MoreParamAnalysis(t *testing.T) {
 	assert.Lenf(t, references, 14, "Expected 14 reference usage in this spec")
 
 	references = an.AllItemsReferences()
-	assert.Lenf(t, references, 0, "Expected 0 items reference in this spec")
+	assert.Emptyf(t, references, "Expected 0 items reference in this spec")
 
 	references = an.AllPathItemReferences()
 	assert.Lenf(t, references, 1, "Expected 1 pathItem reference in this spec")
@@ -788,7 +794,7 @@ func TestAnalyzer_EdgeCases(t *testing.T) {
 	}
 	assert.Len(t, sp.references.allRefs, 3)
 	res6 := sp.AllRefs()
-	assert.Len(t, res6, 0)
+	assert.Empty(t, res6)
 
 	// check AllRefs() skips duplicate $refs
 	sp.references.allRefs["refToOne"] = spec.MustCreateRef("#/ref1")
@@ -932,14 +938,14 @@ func prepareTestParamsAuth() *Spec {
 		{"oauth2": {"the-scope"}},
 		{"basic": nil},
 	}
-	op.ID = "someOperation"
+	op.ID = someOperation
 	op.Parameters = []spec.Parameter{*skipParam}
 	pi.Get = op
 
 	pi2 := spec.PathItem{}
 	pi2.Parameters = []spec.Parameter{*limitParam}
 	op2 := &spec.Operation{}
-	op2.ID = "anotherOperation"
+	op2.ID = anotherOperation
 	op2.Security = []map[string][]string{
 		{"oauth2": {"the-scope"}},
 		{},
@@ -997,14 +1003,14 @@ func prepareTestParamsValid() *Spec {
 		{"oauth2": {}},
 		{"basic": nil},
 	}
-	op.ID = "someOperation"
+	op.ID = someOperation
 	op.Parameters = []spec.Parameter{*skipParam}
 	pi.Get = op
 
 	pi2 := spec.PathItem{}
 	pi2.Parameters = []spec.Parameter{*limitParam}
 	op2 := &spec.Operation{}
-	op2.ID = "anotherOperation"
+	op2.ID = anotherOperation
 	op2.Parameters = []spec.Parameter{*skipParam}
 	pi2.Get = op2
 

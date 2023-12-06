@@ -67,7 +67,7 @@ func TestMixin_EmptyPath(t *testing.T) {
 
 	collisions := Mixin(emptyPaths, primary)
 
-	require.Lenf(t, collisions, 0, "TestMixin: Expected 0 collisions, got %v\n%v", len(collisions), collisions)
+	require.Emptyf(t, collisions, "TestMixin: Expected 0 collisions, got %v\n%v", len(collisions), collisions)
 }
 
 func TestMixin_FromNilPath(t *testing.T) {

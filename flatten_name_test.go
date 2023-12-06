@@ -246,16 +246,14 @@ func TestName_NamesFromKey(t *testing.T) {
 		switch tv := vv.(type) {
 		case *spec.Schema:
 			aschema, err := Schema(SchemaOpts{Schema: tv, Root: sp, BasePath: bp})
-			if assert.NoError(t, err) {
-				names := namesFromKey(sortref.KeyParts(v.Key), aschema, operations.AllOpRefsByRef(New(sp), nil))
-				assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
-			}
+			require.NoError(t, err)
+			names := namesFromKey(sortref.KeyParts(v.Key), aschema, operations.AllOpRefsByRef(New(sp), nil))
+			assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
 		case spec.Schema:
 			aschema, err := Schema(SchemaOpts{Schema: &tv, Root: sp, BasePath: bp})
-			if assert.NoError(t, err) {
-				names := namesFromKey(sortref.KeyParts(v.Key), aschema, operations.AllOpRefsByRef(New(sp), nil))
-				assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
-			}
+			require.NoError(t, err)
+			names := namesFromKey(sortref.KeyParts(v.Key), aschema, operations.AllOpRefsByRef(New(sp), nil))
+			assert.Equal(t, v.Names, names, "for %s at %d", v.Key, i)
 		default:
 			assert.Fail(t, "unknown type", "got %T", vv)
 		}
@@ -272,7 +270,7 @@ func TestName_BuildNameWithReservedKeyWord(t *testing.T) {
 	s = sortref.SplitKey([]string{"definitions", "fullview",
 		"properties", "properties", "properties", "properties", "properties", "properties"})
 	newName = s.BuildName(segments, startIdx, partAdder(nil))
-	assert.Equal(t, "fullview properties properties properties", newName)
+	assert.Equal(t, "fullview"+strings.Repeat(" properties", 3), newName)
 }
 
 func TestName_InlinedSchemas(t *testing.T) {

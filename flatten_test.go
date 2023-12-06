@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -67,7 +67,7 @@ func makeRefFixtures() []refFixture {
 }
 
 func TestFlatten_ImportExternalReferences(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	// this fixture is the same as external_definitions.yml, but no more
@@ -126,7 +126,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 	// check the complete result for clarity
 	jazon := antest.AsJSON(t, sp)
 
-	expected, err := ioutil.ReadFile(filepath.Join("fixtures", "expected", "external-references-1.json"))
+	expected, err := os.ReadFile(filepath.Join("fixtures", "expected", "external-references-1.json"))
 	require.NoError(t, err)
 
 	assert.JSONEq(t, string(expected), jazon)
@@ -153,7 +153,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 
 	jazon = antest.AsJSON(t, an.spec)
 
-	expected, err = ioutil.ReadFile(filepath.Join("fixtures", "expected", "external-references-2.json"))
+	expected, err = os.ReadFile(filepath.Join("fixtures", "expected", "external-references-2.json"))
 	require.NoError(t, err)
 
 	assert.JSONEq(t, string(expected), jazon)
@@ -812,7 +812,7 @@ func TestMoreNameInlinedSchemas(t *testing.T) {
 }
 
 func TestRemoveUnused(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "oaigen", "fixture-oaigen.yaml")
@@ -906,11 +906,11 @@ func TestOperationIDs(t *testing.T) {
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("optionsSomeWhereElse"), 1)
 
-	assert.Len(t, an.ParametersFor("outOfThisWorld"), 0)
+	assert.Empty(t, an.ParametersFor("outOfThisWorld"))
 }
 
 func TestFlatten_Pointers(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "pointers", "fixture-pointers.yaml")
@@ -922,13 +922,13 @@ func TestFlatten_Pointers(t *testing.T) {
 	// re-analyse and check all $ref's point to #/definitions
 	bn := New(sp)
 	for _, r := range bn.AllRefs() {
-		assert.True(t, path.Dir(r.String()) == definitionsPath)
+		assert.Equal(t, definitionsPath, path.Dir(r.String()))
 	}
 }
 
 // unit test guards in flatten not easily testable with actual specs
 func TestFlatten_ErrorHandling(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	const wantedFailure = "Expected a failure"
@@ -952,7 +952,7 @@ func TestFlatten_ErrorHandling(t *testing.T) {
 }
 
 func TestFlatten_PointersLoop(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "pointers", "fixture-pointers-loop.yaml")
@@ -963,7 +963,7 @@ func TestFlatten_PointersLoop(t *testing.T) {
 }
 
 func TestFlatten_Bitbucket(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "bugs", "bitbucket.json")
@@ -995,7 +995,7 @@ func TestFlatten_Bitbucket(t *testing.T) {
 }
 
 func TestFlatten_Issue_1602(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	// $ref as schema to #/responses or #/parameters
@@ -1035,7 +1035,7 @@ func TestFlatten_Issue_1602(t *testing.T) {
 }
 
 func TestFlatten_Issue_1602_All(t *testing.T) {
-	for _, fixture := range []string{
+	for _, toPin := range []string{
 		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-full.yaml"),
 		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml"),
 		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-2.yaml"),
@@ -1044,6 +1044,7 @@ func TestFlatten_Issue_1602_All(t *testing.T) {
 		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-5.yaml"),
 		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-6.yaml"),
 	} {
+		fixture := toPin
 		t.Run(fmt.Sprintf("issue_1602_all_%s", fixture), func(t *testing.T) {
 			t.Parallel()
 			sp := antest.LoadOrFail(t, fixture)
@@ -1058,7 +1059,7 @@ func TestFlatten_Issue_1602_All(t *testing.T) {
 }
 
 func TestFlatten_Issue_1614(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	// $ref as schema to #/responses or #/parameters
@@ -1223,7 +1224,7 @@ func TestFlatten_1851(t *testing.T) {
 }
 
 func TestFlatten_RemoteAbsolute(t *testing.T) {
-	for _, fixture := range []string{
+	for _, toPin := range []string{
 		// this one has simple remote ref pattern
 		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-mini.json"),
 		// this has no remote ref
@@ -1233,6 +1234,7 @@ func TestFlatten_RemoteAbsolute(t *testing.T) {
 		// this one has remote ref, no naming conflict (same as previous but with external ref imported)
 		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-remote-only-ref.json"),
 	} {
+		fixture := toPin
 		t.Run(fmt.Sprintf("remote_absolute_%s", fixture), func(t *testing.T) {
 			t.Parallel()
 
@@ -1249,7 +1251,7 @@ func TestFlatten_RemoteAbsolute(t *testing.T) {
 }
 
 func TestFlatten_2092(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "bugs", "2092", "swagger.yaml")
@@ -1300,7 +1302,7 @@ func TestFlatten_2092(t *testing.T) {
 
 func TestFlatten_2113(t *testing.T) {
 	// flatten $ref under path
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
 	bp := filepath.Join("fixtures", "bugs", "2113", "base.yaml")
@@ -1324,7 +1326,7 @@ func TestFlatten_2113(t *testing.T) {
 
 	jazon := antest.AsJSON(t, sp)
 
-	expected, err := ioutil.ReadFile(filepath.Join("fixtures", "expected", "issue-2113.json"))
+	expected, err := os.ReadFile(filepath.Join("fixtures", "expected", "issue-2113.json"))
 	require.NoError(t, err)
 
 	require.JSONEq(t, string(expected), jazon)
