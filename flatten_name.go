@@ -33,7 +33,8 @@ func (isn *InlineSchemaNamer) Name(key string, schema *spec.Schema, aschema *Ana
 		}
 
 		// create unique name
-		newName, isOAIGen := uniqifyName(isn.Spec.Definitions, swag.ToJSONName(name))
+		mangle := mangler(isn.opts)
+		newName, isOAIGen := uniqifyName(isn.Spec.Definitions, mangle(name))
 
 		// clone schema
 		sch := schutils.Clone(schema)
@@ -256,10 +257,20 @@ func partAdder(aschema *AnalyzedSchema) sortref.PartAdder {
 	}
 }
 
-func nameFromRef(ref spec.Ref) string {
+func mangler(o *FlattenOpts) func(string) string {
+	if o.KeepNames {
+		return func(in string) string { return in }
+	}
+
+	return swag.ToJSONName
+}
+
+func nameFromRef(ref spec.Ref, o *FlattenOpts) string {
+	mangle := mangler(o)
+
 	u := ref.GetURL()
 	if u.Fragment != "" {
-		return swag.ToJSONName(path.Base(u.Fragment))
+		return mangle(path.Base(u.Fragment))
 	}
 
 	if u.Path != "" {
@@ -267,14 +278,14 @@ func nameFromRef(ref spec.Ref) string {
 		if bn != "" && bn != "/" {
 			ext := path.Ext(bn)
 			if ext != "" {
-				return swag.ToJSONName(bn[:len(bn)-len(ext)])
+				return mangle(bn[:len(bn)-len(ext)])
 			}
 
-			return swag.ToJSONName(bn)
+			return mangle(bn)
 		}
 	}
 
-	return swag.ToJSONName(strings.ReplaceAll(u.Host, ".", " "))
+	return mangle(strings.ReplaceAll(u.Host, ".", " "))
 }
 
 // GenLocation indicates from which section of the specification (models or operations) a definition has been created.

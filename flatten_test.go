@@ -1332,6 +1332,30 @@ func TestFlatten_2113(t *testing.T) {
 	require.JSONEq(t, string(expected), jazon)
 }
 
+func TestFlatten_2334(t *testing.T) {
+	// flatten $ref without altering case
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
+
+	bp := filepath.Join("fixtures", "bugs", "2334", "swagger.yaml")
+	sp := antest.LoadOrFail(t, bp)
+	an := New(sp)
+
+	require.NoError(t, Flatten(FlattenOpts{
+		Spec: an, BasePath: bp, Verbose: false,
+		Expand:       false,
+		Minimal:      true,
+		RemoveUnused: true,
+		KeepNames:    true,
+	}))
+
+	jazon := antest.AsJSON(t, sp)
+
+	assert.Contains(t, jazon, `"$ref": "#/definitions/Bar"`)
+	assert.Contains(t, jazon, `"Bar":`)
+	assert.Contains(t, jazon, `"Baz":`)
+}
+
 func getDefinition(t testing.TB, sp *spec.Swagger, key string) string {
 	d, ok := sp.Definitions[key]
 	require.Truef(t, ok, "Expected definition for %s", key)
