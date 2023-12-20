@@ -331,7 +331,7 @@ func importNewRef(entry sortref.RefRevIdx, refStr string, opts *FlattenOpts) err
 	}
 
 	// generate a unique name - isOAIGen means that a naming conflict was resolved by changing the name
-	newName, isOAIGen = uniqifyName(opts.Swagger().Definitions, nameFromRef(entry.Ref))
+	newName, isOAIGen = uniqifyName(opts.Swagger().Definitions, nameFromRef(entry.Ref, opts))
 	debugLog("new name for [%s]: %s - with name conflict:%t", strings.Join(entry.Keys, ", "), newName, isOAIGen)
 
 	opts.flattenContext.resolved[refStr] = newName

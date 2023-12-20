@@ -28,7 +28,27 @@ func TestName_FromRef(t *testing.T) {
 	}
 
 	for _, v := range values {
-		assert.Equal(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source)))
+		assert.Equal(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
+	}
+}
+
+func TestName_FromRefMangle(t *testing.T) {
+	t.Parallel()
+
+	values := []struct{ Source, Expected, ExpectedKeepName string }{
+		{"#/definitions/ErrorModel", "errorModel", "ErrorModel"},
+		{"#/definitions/Error_Model", "errorModel", "Error_Model"},
+		{"http://somewhere.com/definitions/errorModel", "errorModel", "errorModel"},
+		{"http://somewhere.com/definitions/ErrorModel.json", "errorModel", "ErrorModel"},
+		{"/definitions/ErrorModel", "errorModel", "ErrorModel"},
+		{"/definitions/ErrorModel.json", "errorModel", "ErrorModel"},
+		{"http://somewhere.com", "somewhereCom", "somewhere com"},
+		{"#", "", ""},
+	}
+
+	for _, v := range values {
+		assert.Equal(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
+		assert.Equal(t, v.ExpectedKeepName, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{KeepNames: true}))
 	}
 }
 
@@ -47,7 +67,7 @@ func TestName_Definition(t *testing.T) {
 	}
 
 	for _, v := range values {
-		u, _ := uniqifyName(v.Definitions, nameFromRef(spec.MustCreateRef(v.Source)))
+		u, _ := uniqifyName(v.Definitions, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
 		assert.Equal(t, v.Expected, u)
 	}
 }
