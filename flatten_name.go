@@ -40,6 +40,7 @@ func (isn *InlineSchemaNamer) Name(key string, schema *spec.Schema, aschema *Ana
 		sch := schutils.Clone(schema)
 
 		// replace values on schema
+		debugLog("rewriting schema to ref: key=%s with new name: %s", key, newName)
 		if err := replace.RewriteSchemaToRef(isn.Spec, key,
 			spec.MustCreateRef(path.Join(definitionsPath, newName))); err != nil {
 			return fmt.Errorf("error while creating definition %q from inline schema: %w", newName, err)
@@ -150,13 +151,15 @@ func namesFromKey(parts sortref.SplitKey, aschema *AnalyzedSchema, operations ma
 		startIndex int
 	)
 
-	if parts.IsOperation() {
+	switch {
+	case parts.IsOperation():
 		baseNames, startIndex = namesForOperation(parts, operations)
-	}
-
-	// definitions
-	if parts.IsDefinition() {
+	case parts.IsDefinition():
 		baseNames, startIndex = namesForDefinition(parts)
+	default:
+		// this a non-standard pointer: build a name by concatenating its parts
+		baseNames = [][]string{parts}
+		startIndex = len(baseNames) + 1
 	}
 
 	result := make([]string, 0, len(baseNames))
@@ -170,6 +173,7 @@ func namesFromKey(parts sortref.SplitKey, aschema *AnalyzedSchema, operations ma
 	}
 	sort.Strings(result)
 
+	debugLog("names from parts: %v => %v", parts, result)
 	return result
 }
 

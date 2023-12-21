@@ -1356,6 +1356,33 @@ func TestFlatten_2334(t *testing.T) {
 	assert.Contains(t, jazon, `"Baz":`)
 }
 
+func TestFlatten_1898(t *testing.T) {
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
+
+	bp := filepath.Join("fixtures", "bugs", "1898", "swagger.json")
+	sp := antest.LoadOrFail(t, bp)
+	an := New(sp)
+
+	require.NoError(t, Flatten(FlattenOpts{
+		Spec: an, BasePath: bp, Verbose: true,
+		Expand:       false,
+		RemoveUnused: false,
+	}))
+	op, ok := an.OperationFor("GET", "/example/v2/GetEvents")
+	require.True(t, ok)
+
+	resp, _, ok := op.SuccessResponse()
+	require.True(t, ok)
+
+	require.Equal(t, "#/definitions/xStreamDefinitionsV2EventMsg", resp.Schema.Ref.String())
+	def, ok := sp.Definitions["xStreamDefinitionsV2EventMsg"]
+	require.True(t, ok)
+	require.Len(t, def.Properties, 2)
+	require.Contains(t, def.Properties, "error")
+	require.Contains(t, def.Properties, "result")
+}
+
 func getDefinition(t testing.TB, sp *spec.Swagger, key string) string {
 	d, ok := sp.Definitions[key]
 	require.Truef(t, ok, "Expected definition for %s", key)
