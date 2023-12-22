@@ -145,7 +145,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 		require.True(t, ref.HasFragmentOnly)
 	}
 
-	// now try complete flatten
+	// now try complete flatten, with unused definitions removed
 	sp = antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1381,6 +1381,23 @@ func TestFlatten_1898(t *testing.T) {
 	require.Len(t, def.Properties, 2)
 	require.Contains(t, def.Properties, "error")
 	require.Contains(t, def.Properties, "result")
+}
+
+func TestFlatten_RemoveUnused_2657(t *testing.T) {
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
+
+	bp := filepath.Join("fixtures", "bugs", "2657", "schema.json")
+	sp := antest.LoadOrFail(t, bp)
+	an := New(sp)
+
+	require.NoError(t, Flatten(FlattenOpts{
+		Spec: an, BasePath: bp, Verbose: true,
+		Minimal:      true,
+		Expand:       false,
+		RemoveUnused: true,
+	}))
+	require.Empty(t, sp.Definitions)
 }
 
 func getDefinition(t testing.TB, sp *spec.Swagger, key string) string {

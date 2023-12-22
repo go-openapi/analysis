@@ -102,9 +102,6 @@
      }
     }
    },
-   "named": {
-    "type": "string"
-   },
    "record": {
     "type": "object",
     "properties": {
