@@ -863,13 +863,13 @@ func TestOperationIDs(t *testing.T) {
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: false, Minimal: false, RemoveUnused: false}))
 
-	res := operations.GatherOperations(New(sp), []string{"getSomeWhere", "getSomeWhereElse"})
-	_, ok := res["getSomeWhere"]
-	assert.Truef(t, ok, "Expected to find operation")
-	_, ok = res["getSomeWhereElse"]
-	assert.Truef(t, ok, "Expected to find operation")
-	_, ok = res["postSomeWhere"]
-	assert.Falsef(t, ok, "Did not expect to find operation")
+	t.Run("should GatherOperations", func(t *testing.T) {
+		res := operations.GatherOperations(New(sp), []string{"getSomeWhere", "getSomeWhereElse"})
+
+		assert.Containsf(t, res, "getSomeWhere", "expected to find operation")
+		assert.Containsf(t, res, "getSomeWhereElse", "expected to find operation")
+		assert.NotContainsf(t, res, "postSomeWhere", "did not expect to find operation")
+	})
 
 	op, ok := an.OperationFor("GET", "/some/where/else")
 	assert.True(t, ok)

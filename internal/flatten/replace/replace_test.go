@@ -93,33 +93,64 @@ func TestRewriteSchemaRef(t *testing.T) {
 	}
 }
 
-//nolint:dogsled
 func TestReplace_ErrorHandling(t *testing.T) {
 	t.Parallel()
 
-	const wantedFailure = "Expected a failure"
+	const wantedFailure = "expected a failure"
 	bp := filepath.Join("..", "..", "..", "fixtures", "errors", "fixture-unexpandable-2.yaml")
-
-	// reload original spec
 	sp := antest.LoadOrFail(t, bp)
 
-	require.Errorf(t, RewriteSchemaToRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
+	t.Run("with invalid $ref", func(t *testing.T) {
+		const ref = "#/invalidPointer/key"
 
-	require.Errorf(t, rewriteParentRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
+		require.Errorf(t, RewriteSchemaToRef(sp, ref, spec.Ref{}), wantedFailure)
+		require.Errorf(t, rewriteParentRef(sp, ref, spec.Ref{}), wantedFailure)
+		require.Errorf(t, UpdateRef(sp, ref, spec.Ref{}), wantedFailure)
+		require.Errorf(t, UpdateRefWithSchema(sp, ref, &spec.Schema{}), wantedFailure)
+		_, _, err := getPointerFromKey(sp, ref)
+		require.Errorf(t, err, wantedFailure)
 
-	require.Errorf(t, UpdateRef(sp, "#/invalidPointer/key", spec.Ref{}), wantedFailure)
+		_, _, _, err = getParentFromKey(sp, ref)
+		require.Errorf(t, err, wantedFailure)
+	})
 
-	require.Errorf(t, UpdateRefWithSchema(sp, "#/invalidPointer/key", &spec.Schema{}), wantedFailure)
+	t.Run("with invalid jsonpointer formatting", func(t *testing.T) {
+		const pointer = "-->#/invalidJsonPointer"
 
-	_, _, err := getPointerFromKey(sp, "#/invalidPointer/key")
-	require.Errorf(t, err, wantedFailure)
+		_, _, err := getPointerFromKey(sp, pointer)
+		require.Errorf(t, err, wantedFailure)
 
-	_, _, err = getPointerFromKey(sp, "--->#/invalidJsonPointer")
-	require.Errorf(t, err, wantedFailure)
+		_, _, _, err = getParentFromKey(sp, pointer)
+		require.Errorf(t, err, wantedFailure)
+	})
 
-	_, _, _, err = getParentFromKey(sp, "#/invalidPointer/key")
-	require.Errorf(t, err, wantedFailure)
+	t.Run("with invalid target", func(t *testing.T) {
+		require.Errorf(t, RewriteSchemaToRef(sp, "#/parameters/someWhere", spec.Ref{}), wantedFailure)
+	})
 
-	_, _, _, err = getParentFromKey(sp, "--->#/invalidJsonPointer")
-	require.Errorf(t, err, wantedFailure)
+	t.Run("with invalid response target", func(t *testing.T) {
+		const ref = "#/paths/~1wrong/get/responses/200"
+		require.Errorf(t, RewriteSchemaToRef(sp, ref, spec.Ref{}), wantedFailure)
+	})
+
+	t.Run("with invalid response code", func(t *testing.T) {
+		const ref = "#/paths/~1wrongcode/get/responses/two-hundred"
+		require.Errorf(t, rewriteParentRef(sp, ref, spec.Ref{}), wantedFailure)
+	})
+
+	t.Run("with panic case", func(t *testing.T) {
+		t.Run("should not call with types other than *Schema or *Swagger", func(t *testing.T) {
+			require.Panics(t, func() {
+				_, _, _ = getPointerFromKey("oops", "#/key")
+			})
+
+			require.Panics(t, func() {
+				_, _, _, _ = getParentFromKey("oops", "#/key")
+			})
+
+			require.Panics(t, func() {
+				_ = UpdateRef("oops", "#/key", spec.Ref{})
+			})
+		})
+	})
 }
