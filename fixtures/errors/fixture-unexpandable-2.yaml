@@ -32,6 +32,22 @@ paths:
           description: OK
           schema:
             $ref: '#/thisIs/anAbitrary/jsonPointer/toNowhere'
+  /wrong:
+    get:
+      operationId: target type mismatch
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/parameters/someWhere'
+  /wrongcode:
+    get:
+      operationId: target type mismatch
+      responses:
+        'two-hundred':
+          description: OK
+          schema:
+            type: string
 definitions:
   somePlace:
     type: string
