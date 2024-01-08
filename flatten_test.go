@@ -1400,6 +1400,35 @@ func TestFlatten_RemoveUnused_2657(t *testing.T) {
 	require.Empty(t, sp.Definitions)
 }
 
+func TestFlatten_Relative_2743(t *testing.T) {
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
+
+	t.Run("used to work, but should NOT", func(t *testing.T) {
+		bp := filepath.Join("fixtures", "bugs", "2743", "working", "spec.yaml")
+		sp := antest.LoadOrFail(t, bp)
+		an := New(sp)
+
+		require.Error(t, Flatten(FlattenOpts{
+			Spec: an, BasePath: bp, Verbose: true,
+			Minimal: true,
+			Expand:  false,
+		}))
+	})
+
+	t.Run("used not to, but should work", func(t *testing.T) {
+		bp := filepath.Join("fixtures", "bugs", "2743", "not-working", "spec.yaml")
+		sp := antest.LoadOrFail(t, bp)
+		an := New(sp)
+
+		require.NoError(t, Flatten(FlattenOpts{
+			Spec: an, BasePath: bp, Verbose: true,
+			Minimal: true,
+			Expand:  false,
+		}))
+	})
+}
+
 func getDefinition(t testing.TB, sp *spec.Swagger, key string) string {
 	d, ok := sp.Definitions[key]
 	require.Truef(t, ok, "Expected definition for %s", key)

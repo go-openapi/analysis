@@ -2,7 +2,7 @@ module github.com/go-openapi/analysis
 
 require (
 	github.com/go-openapi/jsonpointer v0.20.2
-	github.com/go-openapi/spec v0.20.13
+	github.com/go-openapi/spec v0.20.14
 	github.com/go-openapi/strfmt v0.21.10
 	github.com/go-openapi/swag v0.22.6
 	github.com/stretchr/testify v1.8.4
