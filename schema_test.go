@@ -310,7 +310,7 @@ func refSchema(ref spec.Ref) *spec.Schema {
 }
 
 func schemaHandler(schema *spec.Schema) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, schema)
 	})
 }

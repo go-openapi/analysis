@@ -753,7 +753,7 @@ func TestFlatten_OAIGen(t *testing.T) {
 		filepath.Join("fixtures", "oaigen", "test3-bis-swagger.yaml"),
 		filepath.Join("fixtures", "oaigen", "test3-ter-swagger.yaml"),
 	} {
-		t.Run(fmt.Sprintf("flatten_oiagen_1260_%s", fixture), func(t *testing.T) {
+		t.Run("flatten_oiagen_1260_"+fixture, func(t *testing.T) {
 			t.Parallel()
 
 			bp := filepath.Join("fixtures", "oaigen", "test3-swagger.yaml")
@@ -1045,7 +1045,7 @@ func TestFlatten_Issue_1602_All(t *testing.T) {
 		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-6.yaml"),
 	} {
 		fixture := toPin
-		t.Run(fmt.Sprintf("issue_1602_all_%s", fixture), func(t *testing.T) {
+		t.Run("issue_1602_all_"+fixture, func(t *testing.T) {
 			t.Parallel()
 			sp := antest.LoadOrFail(t, fixture)
 
@@ -1235,7 +1235,7 @@ func TestFlatten_RemoteAbsolute(t *testing.T) {
 		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-remote-only-ref.json"),
 	} {
 		fixture := toPin
-		t.Run(fmt.Sprintf("remote_absolute_%s", fixture), func(t *testing.T) {
+		t.Run("remote_absolute_"+fixture, func(t *testing.T) {
 			t.Parallel()
 
 			an := testFlattenWithDefaults(t, fixture)

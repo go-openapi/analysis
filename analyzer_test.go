@@ -456,7 +456,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	require.True(t, ok)
 
 	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
-	s.paramsAsMap(pi.Parameters, m, func(param spec.Parameter, err error) bool {
+	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
 		return false // Bail
@@ -493,7 +493,7 @@ func TestAnalyzer_ParamsAsMapPanic(t *testing.T) {
 		"fixture-342-3.yaml",
 	} {
 		fixture := toPin
-		t.Run(fmt.Sprintf("panic_%s", fixture), func(t *testing.T) {
+		t.Run("panic_"+fixture, func(t *testing.T) {
 			t.Parallel()
 
 			s := prepareTestParamsInvalid(t, fixture)
