@@ -391,7 +391,7 @@ func mergeInfo(primary *spec.Info, m *spec.Info) []string {
 	}
 
 	if primary.Title == "" {
-		primary.Description = m.Description
+		primary.Title = m.Title
 	}
 
 	if primary.TermsOfService == "" {

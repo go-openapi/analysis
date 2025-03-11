@@ -179,7 +179,8 @@ func (s SplitKey) ResponseName() string {
 
 // PathItemRef constructs a $ref object from a split key of the form /{path}/{method}
 func (s SplitKey) PathItemRef() spec.Ref {
-	if len(s) < 3 {
+	const minValidPathItems = 3
+	if len(s) < minValidPathItems {
 		return spec.Ref{}
 	}
 
