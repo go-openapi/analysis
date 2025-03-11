@@ -43,7 +43,7 @@ func (isn *InlineSchemaNamer) Name(key string, schema *spec.Schema, aschema *Ana
 		debugLog("rewriting schema to ref: key=%s with new name: %s", key, newName)
 		if err := replace.RewriteSchemaToRef(isn.Spec, key,
 			spec.MustCreateRef(path.Join(definitionsPath, newName))); err != nil {
-			return fmt.Errorf("error while creating definition %q from inline schema: %w", newName, err)
+			return ErrInlineDefinition(newName, err)
 		}
 
 		// rewrite any dependent $ref pointing to this place,
@@ -54,7 +54,7 @@ func (isn *InlineSchemaNamer) Name(key string, schema *spec.Schema, aschema *Ana
 		for k, v := range an.references.allRefs {
 			r, erd := replace.DeepestRef(isn.opts.Swagger(), isn.opts.ExpandOpts(false), v)
 			if erd != nil {
-				return fmt.Errorf("at %s, %w", k, erd)
+				return ErrAtKey(k, erd)
 			}
 
 			if isn.opts.flattenContext != nil {

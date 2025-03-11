@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/go-openapi/analysis/internal/antest"
@@ -426,8 +427,8 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 		return true // Continue
 	})
 
-	assert.Contains(t, e, `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
-	assert.Contains(t, e, `invalid reference: "#/definitions/sample_info/properties/sids"`)
+	assert.Contains(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
+	assert.Contains(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
 
 	// bail out callback
 	m = make(map[string]spec.Parameter)
@@ -533,8 +534,8 @@ func TestAnalyzer_SafeParamsFor(t *testing.T) {
 		require.Fail(t, "There should be no safe parameter in this testcase")
 	}
 
-	assert.Contains(t, e, `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
-	assert.Contains(t, e, `invalid reference: "#/definitions/sample_info/properties/sids"`)
+	assert.Contains(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
+	assert.Contains(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
 }
 
 func TestAnalyzer_ParamsFor(t *testing.T) {
@@ -581,8 +582,8 @@ func TestAnalyzer_SafeParametersFor(t *testing.T) {
 		require.Fail(t, "There should be no safe parameter in this testcase")
 	}
 
-	assert.Contains(t, e, `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
-	assert.Contains(t, e, `invalid reference: "#/definitions/sample_info/properties/sids"`)
+	assert.Contains(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
+	assert.Contains(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
 }
 
 func TestAnalyzer_ParametersFor(t *testing.T) {

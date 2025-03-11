@@ -681,7 +681,7 @@ func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Para
 
 		obj, _, err := pr.Ref.GetPointer().Get(s.spec)
 		if err != nil {
-			if callmeOnError(param, fmt.Errorf("invalid reference: %q", pr.Ref.String())) {
+			if callmeOnError(param, ErrInvalidRef(pr.Ref.String())) {
 				continue
 			}
 
@@ -690,7 +690,7 @@ func (s *Spec) paramsAsMap(parameters []spec.Parameter, res map[string]spec.Para
 
 		objAsParam, ok := obj.(spec.Parameter)
 		if !ok {
-			if callmeOnError(param, fmt.Errorf("resolved reference is not a parameter: %q", pr.Ref.String())) {
+			if callmeOnError(param, ErrInvalidParameterRef(pr.Ref.String())) {
 				continue
 			}
 
