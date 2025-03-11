@@ -7,6 +7,8 @@ import (
 	"github.com/go-openapi/swag"
 )
 
+const allocLargeMap = 150
+
 // Save registers a schema as an entry in spec #/definitions
 func Save(sp *spec.Swagger, name string, schema *spec.Schema) {
 	if schema == nil {
@@ -14,7 +16,7 @@ func Save(sp *spec.Swagger, name string, schema *spec.Schema) {
 	}
 
 	if sp.Definitions == nil {
-		sp.Definitions = make(map[string]spec.Schema, 150)
+		sp.Definitions = make(map[string]spec.Schema, allocLargeMap)
 	}
 
 	sp.Definitions[name] = *schema

@@ -25,6 +25,12 @@ import (
 	"github.com/go-openapi/swag"
 )
 
+const (
+	allocLargeMap  = 150
+	allocMediumMap = 64
+	allocSmallMap  = 10
+)
+
 type referenceAnalysis struct {
 	schemas        map[string]spec.Ref
 	responses      map[string]spec.Ref
@@ -169,30 +175,30 @@ type Spec struct {
 }
 
 func (s *Spec) reset() {
-	s.consumes = make(map[string]struct{}, 150)
-	s.produces = make(map[string]struct{}, 150)
-	s.authSchemes = make(map[string]struct{}, 150)
-	s.operations = make(map[string]map[string]*spec.Operation, 150)
-	s.allSchemas = make(map[string]SchemaRef, 150)
-	s.allOfs = make(map[string]SchemaRef, 150)
-	s.references.schemas = make(map[string]spec.Ref, 150)
-	s.references.pathItems = make(map[string]spec.Ref, 150)
-	s.references.responses = make(map[string]spec.Ref, 150)
-	s.references.parameters = make(map[string]spec.Ref, 150)
-	s.references.items = make(map[string]spec.Ref, 150)
-	s.references.headerItems = make(map[string]spec.Ref, 150)
-	s.references.parameterItems = make(map[string]spec.Ref, 150)
-	s.references.allRefs = make(map[string]spec.Ref, 150)
-	s.patterns.parameters = make(map[string]string, 150)
-	s.patterns.headers = make(map[string]string, 150)
-	s.patterns.items = make(map[string]string, 150)
-	s.patterns.schemas = make(map[string]string, 150)
-	s.patterns.allPatterns = make(map[string]string, 150)
-	s.enums.parameters = make(map[string][]interface{}, 150)
-	s.enums.headers = make(map[string][]interface{}, 150)
-	s.enums.items = make(map[string][]interface{}, 150)
-	s.enums.schemas = make(map[string][]interface{}, 150)
-	s.enums.allEnums = make(map[string][]interface{}, 150)
+	s.consumes = make(map[string]struct{}, allocLargeMap)
+	s.produces = make(map[string]struct{}, allocLargeMap)
+	s.authSchemes = make(map[string]struct{}, allocLargeMap)
+	s.operations = make(map[string]map[string]*spec.Operation, allocLargeMap)
+	s.allSchemas = make(map[string]SchemaRef, allocLargeMap)
+	s.allOfs = make(map[string]SchemaRef, allocLargeMap)
+	s.references.schemas = make(map[string]spec.Ref, allocLargeMap)
+	s.references.pathItems = make(map[string]spec.Ref, allocLargeMap)
+	s.references.responses = make(map[string]spec.Ref, allocLargeMap)
+	s.references.parameters = make(map[string]spec.Ref, allocLargeMap)
+	s.references.items = make(map[string]spec.Ref, allocLargeMap)
+	s.references.headerItems = make(map[string]spec.Ref, allocLargeMap)
+	s.references.parameterItems = make(map[string]spec.Ref, allocLargeMap)
+	s.references.allRefs = make(map[string]spec.Ref, allocLargeMap)
+	s.patterns.parameters = make(map[string]string, allocLargeMap)
+	s.patterns.headers = make(map[string]string, allocLargeMap)
+	s.patterns.items = make(map[string]string, allocLargeMap)
+	s.patterns.schemas = make(map[string]string, allocLargeMap)
+	s.patterns.allPatterns = make(map[string]string, allocLargeMap)
+	s.enums.parameters = make(map[string][]interface{}, allocLargeMap)
+	s.enums.headers = make(map[string][]interface{}, allocLargeMap)
+	s.enums.items = make(map[string][]interface{}, allocLargeMap)
+	s.enums.schemas = make(map[string][]interface{}, allocLargeMap)
+	s.enums.allEnums = make(map[string][]interface{}, allocLargeMap)
 }
 
 func (s *Spec) reload() {

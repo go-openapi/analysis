@@ -13,7 +13,10 @@ import (
 	"github.com/go-openapi/spec"
 )
 
-const definitionsPath = "#/definitions"
+const (
+	definitionsPath = "#/definitions"
+	allocMediumMap  = 64
+)
 
 var debugLog = debug.GetLogger("analysis/flatten/replace", os.Getenv("SWAGGER_DEBUG") != "")
 
@@ -336,8 +339,8 @@ func DeepestRef(sp *spec.Swagger, opts *spec.ExpandOptions, ref spec.Ref) (*Deep
 	}
 
 	currentRef := ref
-	visited := make(map[string]bool, 64)
-	warnings := make([]string, 0, 2)
+	visited := make(map[string]bool, allocMediumMap)
+	warnings := make([]string, 0)
 
 DOWNREF:
 	for currentRef.String() != "" {

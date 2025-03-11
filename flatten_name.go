@@ -227,10 +227,15 @@ func namesForOperation(parts sortref.SplitKey, operations map[string]operations.
 	return baseNames, startIndex
 }
 
+const (
+	minStartIndex = 2
+	minSegments   = 2
+)
+
 func namesForDefinition(parts sortref.SplitKey) ([][]string, int) {
 	nm := parts.DefinitionName()
 	if nm != "" {
-		return [][]string{{parts.DefinitionName()}}, 2
+		return [][]string{{parts.DefinitionName()}}, minStartIndex
 	}
 
 	return [][]string{}, 0
@@ -239,7 +244,7 @@ func namesForDefinition(parts sortref.SplitKey) ([][]string, int) {
 // partAdder knows how to interpret a schema when it comes to build a name from parts
 func partAdder(aschema *AnalyzedSchema) sortref.PartAdder {
 	return func(part string) []string {
-		segments := make([]string, 0, 2)
+		segments := make([]string, 0, minSegments)
 
 		if part == "items" || part == "additionalItems" {
 			if aschema.IsTuple || aschema.IsTupleWithExtra {
