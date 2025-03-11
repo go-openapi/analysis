@@ -52,9 +52,9 @@ type context struct {
 
 func newContext() *context {
 	return &context{
-		newRefs:  make(map[string]*newRef, 150),
+		newRefs:  make(map[string]*newRef, allocMediumMap),
 		warnings: make([]string, 0),
-		resolved: make(map[string]string, 50),
+		resolved: make(map[string]string, allocMediumMap),
 	}
 }
 
@@ -745,7 +745,7 @@ func flattenAnonPointer(key string, v SchemaRef, refsToReplace map[string]Schema
 	if ers != nil {
 		return fmt.Errorf("schema analysis [%s]: %w", key, ers)
 	}
-	callers := make([]string, 0, 64)
+	callers := make([]string, 0, allocMediumMap)
 
 	debugLog("looking for callers")
 

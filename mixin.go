@@ -474,23 +474,23 @@ func initPrimary(primary *spec.Swagger) {
 	}
 
 	if primary.Security == nil {
-		primary.Security = make([]map[string][]string, 0, 10)
+		primary.Security = make([]map[string][]string, 0, allocSmallMap)
 	}
 
 	if primary.Produces == nil {
-		primary.Produces = make([]string, 0, 10)
+		primary.Produces = make([]string, 0, allocSmallMap)
 	}
 
 	if primary.Consumes == nil {
-		primary.Consumes = make([]string, 0, 10)
+		primary.Consumes = make([]string, 0, allocSmallMap)
 	}
 
 	if primary.Tags == nil {
-		primary.Tags = make([]spec.Tag, 0, 10)
+		primary.Tags = make([]spec.Tag, 0, allocSmallMap)
 	}
 
 	if primary.Schemes == nil {
-		primary.Schemes = make([]string, 0, 10)
+		primary.Schemes = make([]string, 0, allocSmallMap)
 	}
 
 	if primary.Paths == nil {
