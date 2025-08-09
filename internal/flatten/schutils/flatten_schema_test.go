@@ -23,5 +23,5 @@ func TestFlattenSchema_Save(t *testing.T) {
 
 func TestFlattenSchema_Clone(t *testing.T) {
 	sch := spec.RefSchema("#/definitions/x")
-	assert.EqualValues(t, sch, Clone(sch))
+	assert.Equal(t, sch, Clone(sch))
 }

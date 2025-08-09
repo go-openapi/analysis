@@ -86,22 +86,6 @@ func (s SplitKey) DefinitionName() string {
 	return s[1]
 }
 
-func (s SplitKey) isKeyName(i int) bool {
-	if i <= 0 {
-		return false
-	}
-
-	count := 0
-	for idx := i - 1; idx > 0; idx-- {
-		if s[idx] != "properties" {
-			break
-		}
-		count++
-	}
-
-	return count%2 != 0
-}
-
 // PartAdder know how to construct the components of a new name
 type PartAdder func(string) []string
 
@@ -199,4 +183,20 @@ func (s SplitKey) PathRef() spec.Ref {
 	}
 
 	return spec.MustCreateRef("#" + path.Join("/", paths, jsonpointer.Escape(s[1])))
+}
+
+func (s SplitKey) isKeyName(i int) bool {
+	if i <= 0 {
+		return false
+	}
+
+	count := 0
+	for idx := i - 1; idx > 0; idx-- {
+		if s[idx] != "properties" {
+			break
+		}
+		count++
+	}
+
+	return count%2 != 0
 }
