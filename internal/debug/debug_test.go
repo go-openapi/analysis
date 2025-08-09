@@ -5,7 +5,6 @@ package debug
 
 import (
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/go-openapi/testify/v2/assert"
@@ -13,8 +12,17 @@ import (
 )
 
 func TestDebug(t *testing.T) {
-	tmpFile, err := os.CreateTemp(workaroundTempDir(t)(), "debug-test")
+	folder := t.TempDir()
+
+	tmpFile, err := os.CreateTemp(folder, "debug-test")
 	require.NoError(t, err)
+	tmpFileClosed := false
+	defer func() {
+		if tmpFileClosed {
+			return
+		}
+		_ = tmpFile.Close()
+	}()
 
 	output = tmpFile
 	tmpName := tmpFile.Name()
@@ -22,35 +30,31 @@ func TestDebug(t *testing.T) {
 
 	testLogger("A debug: %s", "a string")
 	tmpFile.Close()
+	tmpFileClosed = true
 
 	flushed, err := os.ReadFile(tmpName)
 	require.NoError(t, err)
 
 	assert.Contains(t, string(flushed), "A debug: a string")
 
-	tmpEmptyFile, err := os.CreateTemp(workaroundTempDir(t)(), "debug-test")
+	tmpEmptyFile, err := os.CreateTemp(folder, "debug-empty-test")
 	require.NoError(t, err)
+	tmpEmptyFileClosed := false
+	defer func() {
+		if tmpEmptyFileClosed {
+			return
+		}
+		_ = tmpEmptyFile.Close()
+	}()
 	tmpEmpty := tmpEmptyFile.Name()
 	testLogger = GetLogger("test", false)
 
 	testLogger("A debug: %s", "a string")
-	tmpFile.Close()
+	tmpEmptyFile.Close()
+	tmpEmptyFileClosed = true
 
 	flushed, err = os.ReadFile(tmpEmpty)
 	require.NoError(t, err)
 
 	assert.Empty(t, flushed)
-}
-
-func workaroundTempDir(t testing.TB) func() string {
-	// Workaround for go testing bug on Windows: https://github.com/golang/go/issues/71544
-	// On windows, t.TempDir() doesn't properly release file handles yet,
-	// se we just leave it unchecked (no cleanup would take place).
-	if runtime.GOOS == "windows" {
-		return func() string {
-			return ""
-		}
-	}
-
-	return t.TempDir
 }
