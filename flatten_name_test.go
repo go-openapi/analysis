@@ -491,7 +491,7 @@ func TestFlattenSchema_UnitGuards(t *testing.T) {
 
 	parts := sortref.KeyParts("#/nowhere/arbitrary/pointer")
 	res := GenLocation(parts)
-	assert.Equal(t, "", res)
+	assert.Empty(t, res)
 }
 
 func definitionPtr(key string) string {

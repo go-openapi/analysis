@@ -398,7 +398,7 @@ func TestAnalyzer_ParamsAsMap(t *testing.T) {
 	pi, ok = s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, nil)
 	assert.Len(t, m, 1)
 
@@ -420,7 +420,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	pi, ok := s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
@@ -436,7 +436,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	pi, ok = s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
@@ -456,7 +456,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	pi, ok = s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
@@ -475,7 +475,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	pi, ok = s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
 
@@ -503,7 +503,7 @@ func TestAnalyzer_ParamsAsMapPanic(t *testing.T) {
 			panickerParamsAsMap := func() {
 				m := make(map[string]spec.Parameter)
 				if pi, ok := s.spec.Paths.Paths["/fixture"]; ok {
-					pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+					pi.Parameters = pi.Get.Parameters
 					s.paramsAsMap(pi.Parameters, m, nil)
 				}
 			}
@@ -522,7 +522,7 @@ func TestAnalyzer_SafeParamsFor(t *testing.T) {
 	pi, ok := s.spec.Paths.Paths["/fixture"]
 	require.True(t, ok)
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 
 	errFunc := func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
@@ -552,7 +552,7 @@ func TestAnalyzer_ParamsFor(t *testing.T) {
 		s := prepareTestParamsInvalid(t, "fixture-342.yaml")
 		pi, ok := s.spec.Paths.Paths["/fixture"]
 		if ok {
-			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+			pi.Parameters = pi.Get.Parameters
 			s.ParamsFor("Get", "/fixture")
 		}
 	}
@@ -577,7 +577,7 @@ func TestAnalyzer_SafeParametersFor(t *testing.T) {
 		return true // Continue
 	}
 
-	pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+	pi.Parameters = pi.Get.Parameters
 	for range s.SafeParametersFor("fixtureOp", errFunc) {
 		require.Fail(t, "There should be no safe parameter in this testcase")
 	}
@@ -602,7 +602,7 @@ func TestAnalyzer_ParametersFor(t *testing.T) {
 
 		pi, ok := s.spec.Paths.Paths["/fixture"]
 		if ok {
-			pi.Parameters = pi.PathItemProps.Get.OperationProps.Parameters
+			pi.Parameters = pi.Get.Parameters
 			// func (s *Spec) ParametersFor(operationID string) []spec.Parameter {
 			s.ParametersFor("fixtureOp")
 		}
@@ -753,8 +753,8 @@ func TestAnalyzer_MoreParamAnalysis(t *testing.T) {
 	assert.Lenf(t, bag, 6, "Expected 6 parameters for this operation")
 
 	method, path, op, found = an.OperationForName("notFound")
-	assert.Equal(t, "", method)
-	assert.Equal(t, "", path)
+	assert.Empty(t, method)
+	assert.Empty(t, path)
 	assert.Nil(t, op)
 	assert.False(t, found)
 

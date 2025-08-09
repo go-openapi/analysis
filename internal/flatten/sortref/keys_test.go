@@ -12,10 +12,10 @@ func TestName_UnitGuards(t *testing.T) {
 	parts := KeyParts("#/nowhere/arbitrary/pointer")
 
 	res := parts.DefinitionName()
-	assert.Equal(t, "", res)
+	assert.Empty(t, res)
 
 	res = parts.ResponseName()
-	assert.Equal(t, "", res)
+	assert.Empty(t, res)
 
 	b := parts.isKeyName(-1)
 	assert.False(t, b)
