@@ -2,7 +2,6 @@ package antest
 
 import (
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -55,7 +54,7 @@ func prepareBadDoc(t testing.TB, kind string, invalidFormat bool) (string, func(
 
 	switch kind {
 	case "yaml", "yml":
-		f, err := os.CreateTemp(workaroundTempDir(t)(), "*.yaml")
+		f, err := os.CreateTemp(t.TempDir(), "*.yaml")
 		require.NoError(t, err)
 		file = f.Name()
 
@@ -73,7 +72,7 @@ info:
 		}
 
 	case "json":
-		f, err := os.CreateTemp(workaroundTempDir(t)(), "*.json")
+		f, err := os.CreateTemp(t.TempDir(), "*.json")
 		require.NoError(t, err)
 		file = f.Name()
 
@@ -100,17 +99,4 @@ info:
 	)
 
 	return file, func() {}
-}
-
-func workaroundTempDir(t testing.TB) func() string {
-	// Workaround for go testing bug on Windows: https://github.com/golang/go/issues/71544
-	// On windows, t.TempDir() doesn't properly release file handles yet,
-	// se we just leave it unchecked (no cleanup would take place).
-	if runtime.GOOS == "windows" {
-		return func() string {
-			return ""
-		}
-	}
-
-	return t.TempDir
 }
