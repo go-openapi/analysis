@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/go-openapi/spec"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/loading"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,10 +33,10 @@ func initPathLoader() {
 	spec.PathLoader = func(path string) (json.RawMessage, error) {
 		ext := filepath.Ext(path)
 		if ext == ".yml" || ext == ".yaml" {
-			return swag.YAMLDoc(path)
+			return loading.YAMLDoc(path)
 		}
 
-		data, err := swag.LoadFromFileOrHTTP(path)
+		data, err := loading.LoadFromFileOrHTTP(path)
 		if err != nil {
 			return nil, err
 		}

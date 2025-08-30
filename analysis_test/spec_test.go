@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/loading"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +29,7 @@ func Test_FlattenAzure(t *testing.T) {
 
 	// Local copy of https://raw.githubusercontent.com/Azure/azure-rest-api-specs/master/specification/network/resource-manager/Microsoft.Network/stable/2020-04-01/publicIpAddress.json
 	url := "../fixtures/azure/publicIpAddress.json"
-	byts, err := swag.LoadFromFileOrHTTP(url)
+	byts, err := loading.LoadFromFileOrHTTP(url)
 	assert.NoError(t, err)
 	swagger := &spec.Swagger{}
 	require.NoError(t, swagger.UnmarshalJSON(byts))

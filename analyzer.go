@@ -22,7 +22,7 @@ import (
 
 	"github.com/go-openapi/jsonpointer"
 	"github.com/go-openapi/spec"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/mangling"
 )
 
 const (
@@ -307,8 +307,9 @@ func fieldNameFromParam(param *spec.Parameter) string {
 	if nm, ok := param.Extensions.GetString("go-name"); ok {
 		return nm
 	}
+	mangler := mangling.NewNameMangler()
 
-	return swag.ToGoName(param.Name)
+	return mangler.ToGoName(param.Name)
 }
 
 // ErrorOnParamFunc is a callback function to be invoked

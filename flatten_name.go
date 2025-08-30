@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/analysis/internal/flatten/schutils"
 	"github.com/go-openapi/analysis/internal/flatten/sortref"
 	"github.com/go-openapi/spec"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/mangling"
 )
 
 // InlineSchemaNamer finds a new name for an inlined type
@@ -270,8 +270,9 @@ func mangler(o *FlattenOpts) func(string) string {
 	if o.KeepNames {
 		return func(in string) string { return in }
 	}
+	mangler := mangling.NewNameMangler()
 
-	return swag.ToJSONName
+	return mangler.ToJSONName
 }
 
 func nameFromRef(ref spec.Ref, o *FlattenOpts) string {
