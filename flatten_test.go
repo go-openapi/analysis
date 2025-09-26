@@ -1274,7 +1274,7 @@ func TestFlatten_2092(t *testing.T) {
 	// verify we don't have dangling oaigen refs
 	require.Falsef(t, rexOAIGen.MatchString(firstJSONFull), "unmatched regexp for: %s", firstJSONFull)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		t.Run(fmt.Sprintf("issue_2092_%d", i), func(t *testing.T) {
 			t.Parallel()
 

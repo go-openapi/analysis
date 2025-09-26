@@ -790,7 +790,7 @@ func TestAnalyzer_EdgeCases(t *testing.T) {
 
 	// check AllRefs() skips empty $refs
 	sp.references.allRefs = make(map[string]spec.Ref, 3)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		sp.references.allRefs["ref"+strconv.Itoa(i)] = spec.Ref{}
 	}
 	assert.Len(t, sp.references.allRefs, 3)
