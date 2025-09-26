@@ -985,17 +985,14 @@ func (s *Spec) analyzeSchema(name string, schema *spec.Schema, prefix string) {
 	}
 
 	for k, v := range schema.Definitions {
-		v := v
 		s.analyzeSchema(k, &v, slashpath.Join(refURI, "definitions"))
 	}
 
 	for k, v := range schema.Properties {
-		v := v
 		s.analyzeSchema(k, &v, slashpath.Join(refURI, "properties"))
 	}
 
 	for k, v := range schema.PatternProperties {
-		v := v
 		// NOTE: swagger 2.0 does not support PatternProperties.
 		// However it is possible to analyze this in a schema
 		s.analyzeSchema(k, &v, slashpath.Join(refURI, "patternProperties"))
