@@ -14,8 +14,8 @@ import (
 
 	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-openapi/testify/v2/assert"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 var knownSchemas = []*spec.Schema{
@@ -318,7 +318,7 @@ func schemaHandler(schema *spec.Schema) http.Handler {
 	})
 }
 
-func writeJSON(w http.ResponseWriter, data interface{}) {
+func writeJSON(w http.ResponseWriter, data any) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	enc := json.NewEncoder(w)

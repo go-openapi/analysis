@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag/loading"
-	"github.com/stretchr/testify/require"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 var (
@@ -75,7 +75,7 @@ func LoadOrFail(t testing.TB, relative string) *spec.Swagger {
 }
 
 // AsJSON unmarshals anything as JSON or dies
-func AsJSON(t testing.TB, in interface{}) string {
+func AsJSON(t testing.TB, in any) string {
 	bbb, err := json.MarshalIndent(in, "", " ")
 	require.NoError(t, err)
 

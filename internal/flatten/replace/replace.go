@@ -48,7 +48,7 @@ func RewriteSchemaToRef(sp *spec.Swagger, key string, ref spec.Ref) error {
 		if refable.Schema != nil {
 			refable.Schema = &spec.Schema{SchemaProps: spec.SchemaProps{Ref: ref}}
 		}
-	case map[string]interface{}: // this happens e.g. if a schema points to an extension unmarshaled as map[string]interface{}
+	case map[string]any: // this happens e.g. if a schema points to an extension unmarshaled as map[string]interface{}
 		return rewriteParentRef(sp, key, ref)
 	default:
 		return ErrNoSchemaWithRef(key, value)
@@ -130,7 +130,7 @@ func rewriteParentRef(sp *spec.Swagger, key string, ref spec.Ref) error {
 	case spec.SchemaProperties:
 		container[entry] = spec.Schema{SchemaProps: spec.SchemaProps{Ref: ref}}
 
-	case *interface{}:
+	case *any:
 		*container = spec.Schema{SchemaProps: spec.SchemaProps{Ref: ref}}
 
 	// NOTE: can't have case *spec.SchemaOrBool = parent in this case is *Schema
@@ -143,7 +143,7 @@ func rewriteParentRef(sp *spec.Swagger, key string, ref spec.Ref) error {
 }
 
 // getPointerFromKey retrieves the content of the JSON pointer "key"
-func getPointerFromKey(sp interface{}, key string) (string, interface{}, error) {
+func getPointerFromKey(sp any, key string) (string, any, error) {
 	switch sp.(type) {
 	case *spec.Schema:
 	case *spec.Swagger:
@@ -171,7 +171,7 @@ func getPointerFromKey(sp interface{}, key string) (string, interface{}, error) 
 }
 
 // getParentFromKey retrieves the container of the JSON pointer "key"
-func getParentFromKey(sp interface{}, key string) (string, string, interface{}, error) {
+func getParentFromKey(sp any, key string) (string, string, any, error) {
 	switch sp.(type) {
 	case *spec.Schema:
 	case *spec.Swagger:
@@ -197,7 +197,7 @@ func getParentFromKey(sp interface{}, key string) (string, string, interface{}, 
 }
 
 // UpdateRef replaces a ref by another one
-func UpdateRef(sp interface{}, key string, ref spec.Ref) error {
+func UpdateRef(sp any, key string, ref spec.Ref) error {
 	switch sp.(type) {
 	case *spec.Schema:
 	case *spec.Swagger:

@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 func TestLongTestEnabled(t *testing.T) {

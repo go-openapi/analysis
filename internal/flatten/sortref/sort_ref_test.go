@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	_ "github.com/go-openapi/analysis/internal/antest"
-	"github.com/stretchr/testify/assert"
+	"github.com/go-openapi/testify/v2/assert"
 )
 
 func TestSortRef_DepthFirstSort(t *testing.T) {

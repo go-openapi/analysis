@@ -63,7 +63,7 @@ func (k Keys) Less(i, j int) bool {
 // KeyParts construct a SplitKey with all its /-separated segments decomposed. It is sortable.
 func KeyParts(key string) SplitKey {
 	var res []string
-	for _, part := range strings.Split(key[1:], "/") {
+	for part := range strings.SplitSeq(key[1:], "/") {
 		if part != "" {
 			res = append(res, jsonpointer.Unescape(part))
 		}

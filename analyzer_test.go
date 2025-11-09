@@ -13,8 +13,8 @@ import (
 
 	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-openapi/testify/v2/assert"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 const (
@@ -28,7 +28,7 @@ func TestAnalyzer_All(t *testing.T) {
 	formatParam := spec.QueryParam("format").Typed("string", "")
 
 	limitParam := spec.QueryParam("limit").Typed("integer", "int32")
-	limitParam.Extensions = spec.Extensions(map[string]interface{}{})
+	limitParam.Extensions = spec.Extensions(map[string]any{})
 	limitParam.Extensions.Add("go-name", "Limit")
 
 	skipParam := spec.QueryParam("skip").Typed("integer", "int32")
@@ -803,33 +803,33 @@ func TestAnalyzer_EnumAnalysis(t *testing.T) {
 	en := an.enums
 
 	// parameters
-	assertEnum(t, en.parameters, "#/parameters/idParam", []interface{}{"aA", "b9", "c3"})
-	assertEnum(t, en.parameters, "#/paths/~1some~1where~1{id}/parameters/1", []interface{}{"bA", "ba", "b9"})
-	assertEnum(t, en.parameters, "#/paths/~1some~1where~1{id}/get/parameters/0", []interface{}{"a0", "b1", "c2"})
+	assertEnum(t, en.parameters, "#/parameters/idParam", []any{"aA", "b9", "c3"})
+	assertEnum(t, en.parameters, "#/paths/~1some~1where~1{id}/parameters/1", []any{"bA", "ba", "b9"})
+	assertEnum(t, en.parameters, "#/paths/~1some~1where~1{id}/get/parameters/0", []any{"a0", "b1", "c2"})
 
 	// responses
-	assertEnum(t, en.headers, "#/responses/notFound/headers/ContentLength", []interface{}{"1234", "123"})
+	assertEnum(t, en.headers, "#/responses/notFound/headers/ContentLength", []any{"1234", "123"})
 	assertEnum(t, en.headers,
-		"#/paths/~1some~1where~1{id}/get/responses/200/headers/X-Request-Id", []interface{}{"dA", "d9"})
+		"#/paths/~1some~1where~1{id}/get/responses/200/headers/X-Request-Id", []any{"dA", "d9"})
 
 	// definitions
 	assertEnum(t, en.schemas,
-		"#/paths/~1other~1place/post/parameters/0/schema/properties/value", []interface{}{"eA", "e9"})
+		"#/paths/~1other~1place/post/parameters/0/schema/properties/value", []any{"eA", "e9"})
 	assertEnum(t, en.schemas, "#/paths/~1other~1place/post/responses/200/schema/properties/data",
-		[]interface{}{"123a", "123b", "123d"})
-	assertEnum(t, en.schemas, "#/definitions/named", []interface{}{"fA", "f9"})
-	assertEnum(t, en.schemas, "#/definitions/tag/properties/value", []interface{}{"gA", "ga", "g9"})
+		[]any{"123a", "123b", "123d"})
+	assertEnum(t, en.schemas, "#/definitions/named", []any{"fA", "f9"})
+	assertEnum(t, en.schemas, "#/definitions/tag/properties/value", []any{"gA", "ga", "g9"})
 	assertEnum(t, en.schemas, "#/definitions/record",
-		[]interface{}{`{"createdAt": "2018-08-31"}`, `{"createdAt": "2018-09-30"}`})
+		[]any{`{"createdAt": "2018-08-31"}`, `{"createdAt": "2018-09-30"}`})
 
 	// array enum
 	assertEnum(t, en.parameters, "#/paths/~1some~1where~1{id}/get/parameters/1",
-		[]interface{}{[]interface{}{"cA", "cz", "c9"}, []interface{}{"cA", "cz"}, []interface{}{"cz", "c9"}})
+		[]any{[]any{"cA", "cz", "c9"}, []any{"cA", "cz"}, []any{"cz", "c9"}})
 
 	// items
-	assertEnum(t, en.items, "#/paths/~1some~1where~1{id}/get/parameters/1/items", []interface{}{"cA", "cz", "c9"})
+	assertEnum(t, en.items, "#/paths/~1some~1where~1{id}/get/parameters/1/items", []any{"cA", "cz", "c9"})
 	assertEnum(t, en.items, "#/paths/~1other~1place/post/responses/default/headers/Via/items",
-		[]interface{}{"AA", "Ab"})
+		[]any{"AA", "Ab"})
 
 	res := an.AllEnums()
 	assert.Lenf(t, res, 14, "Expected 14 enums in this spec, but got %d", len(res))
@@ -885,7 +885,7 @@ func makeFixturepec(pi, pi2 spec.PathItem, formatParam *spec.Parameter) *spec.Sw
 	}
 }
 
-func assertEnum(t testing.TB, data map[string][]interface{}, key string, enum []interface{}) {
+func assertEnum(t testing.TB, data map[string][]any, key string, enum []any) {
 	require.Contains(t, data, key)
 	assert.Equal(t, enum, data[key])
 }
@@ -914,7 +914,7 @@ func prepareTestParamsAuth() *Spec {
 	formatParam := spec.QueryParam("format").Typed("string", "")
 
 	limitParam := spec.QueryParam("limit").Typed("integer", "int32")
-	limitParam.Extensions = spec.Extensions(map[string]interface{}{})
+	limitParam.Extensions = spec.Extensions(map[string]any{})
 	limitParam.Extensions.Add("go-name", "Limit")
 
 	skipParam := spec.QueryParam("skip").Typed("integer", "int32")
@@ -979,7 +979,7 @@ func prepareTestParamsValid() *Spec {
 	formatParam := spec.QueryParam("format").Typed("string", "")
 
 	limitParam := spec.QueryParam("limit").Typed("integer", "int32")
-	limitParam.Extensions = spec.Extensions(map[string]interface{}{})
+	limitParam.Extensions = spec.Extensions(map[string]any{})
 	limitParam.Extensions.Add("go-name", "Limit")
 
 	skipParam := spec.QueryParam("skip").Typed("integer", "int32")
