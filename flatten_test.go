@@ -20,8 +20,8 @@ import (
 	"github.com/go-openapi/analysis/internal/flatten/operations"
 	"github.com/go-openapi/jsonpointer"
 	"github.com/go-openapi/spec"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-openapi/testify/v2/assert"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 var (
@@ -33,7 +33,7 @@ type refFixture struct {
 	Key      string
 	Ref      spec.Ref
 	Location string
-	Expected interface{}
+	Expected any
 }
 
 func makeRefFixtures() []refFixture {

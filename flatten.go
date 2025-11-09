@@ -6,6 +6,7 @@ package analysis
 import (
 	"log"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
@@ -530,14 +531,7 @@ func updateRefParents(allRefs map[string]spec.Ref, r *newRef) {
 			continue
 		}
 
-		found := false
-		for _, p := range r.parents {
-			if p == k {
-				found = true
-
-				break
-			}
-		}
+		found := slices.Contains(r.parents, k)
 		if !found {
 			r.parents = append(r.parents, k)
 		}

@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
-	"github.com/stretchr/testify/require"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 var _ Provider = mockOperationsProvider{}

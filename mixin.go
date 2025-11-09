@@ -6,6 +6,7 @@ package analysis
 import (
 	"fmt"
 	"reflect"
+	"slices"
 
 	"github.com/go-openapi/spec"
 )
@@ -237,14 +238,7 @@ func mergeResponses(primary *spec.Swagger, m *spec.Swagger) (skipped []string) {
 
 func mergeConsumes(primary *spec.Swagger, m *spec.Swagger) []string {
 	for _, v := range m.Consumes {
-		found := false
-		for _, vv := range primary.Consumes {
-			if v == vv {
-				found = true
-
-				break
-			}
-		}
+		found := slices.Contains(primary.Consumes, v)
 
 		if found {
 			// no warning here: we just skip it
@@ -258,14 +252,7 @@ func mergeConsumes(primary *spec.Swagger, m *spec.Swagger) []string {
 
 func mergeProduces(primary *spec.Swagger, m *spec.Swagger) []string {
 	for _, v := range m.Produces {
-		found := false
-		for _, vv := range primary.Produces {
-			if v == vv {
-				found = true
-
-				break
-			}
-		}
+		found := slices.Contains(primary.Produces, v)
 
 		if found {
 			// no warning here: we just skip it
@@ -306,14 +293,7 @@ func mergeTags(primary *spec.Swagger, m *spec.Swagger) (skipped []string) {
 
 func mergeSchemes(primary *spec.Swagger, m *spec.Swagger) []string {
 	for _, v := range m.Schemes {
-		found := false
-		for _, vv := range primary.Schemes {
-			if v == vv {
-				found = true
-
-				break
-			}
-		}
+		found := slices.Contains(primary.Schemes, v)
 
 		if found {
 			// no warning here: we just skip it
