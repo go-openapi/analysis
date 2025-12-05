@@ -26,9 +26,11 @@ linters:
       min-len: 2
       min-occurrences: 3
     cyclop:
-      max-complexity: 20
+      max-complexity: 25
     gocyclo:
-      min-complexity: 20
+      min-complexity: 25
+    gocognit:
+      min-complexity: 35
     exhaustive:
       default-signifies-exhaustive: true
       default-case-required: true

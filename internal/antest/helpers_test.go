@@ -101,7 +101,7 @@ info:
 	}
 
 	require.NoError(t,
-		os.WriteFile(file, data, 0600),
+		os.WriteFile(file, data, 0o600),
 	)
 
 	return file, func() {}

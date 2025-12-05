@@ -915,7 +915,7 @@ func TestFlatten_Pointers(t *testing.T) {
 	}
 }
 
-// unit test guards in flatten not easily testable with actual specs
+// unit test guards in flatten not easily testable with actual specs.
 func TestFlatten_ErrorHandling(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
@@ -1057,8 +1057,10 @@ func TestFlatten_Issue_1614(t *testing.T) {
 	bp := filepath.Join("fixtures", "bugs", "1614", "gitea.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
-	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
-		RemoveUnused: false}))
+	require.NoError(t, Flatten(FlattenOpts{
+		Spec: an, BasePath: bp, Verbose: true, Minimal: true, Expand: false,
+		RemoveUnused: false,
+	}))
 
 	// check that responses subject to warning have been expanded
 	jazon := antest.AsJSON(t, sp)
