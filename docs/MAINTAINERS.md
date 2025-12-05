@@ -6,7 +6,7 @@ Single go module.
 
 > **NOTE**
 >
-> Some `{{ .Owner }}` repos are mono-repos with multiple modules,
+> Some `go-openapi` repos are mono-repos with multiple modules,
 > with adapted CI workflows.
 
 ## Repo configuration
@@ -37,16 +37,16 @@ Single go module.
 >
 > codefactor inherits roles from github. There is no need to create a dedicated account.
 >
-> The codefactor app is installed at the organization level (`github.com/{{ .Owner }}`).
+> The codefactor app is installed at the organization level (`github.com/go-openapi`).
 >
 > There is no special token to setup in github for CI usage.
 
 ### Testing
 
 * Test reports
-  * Uploaded to codecov: <https://app.codecov.io/analytics/gh/{{ .Owner }}>
+  * Uploaded to codecov: <https://app.codecov.io/analytics/gh/go-openapi>
 * Test coverage reports
-  * Uploaded to codecov: <https://app.codecov.io/gh/{{ .Owner }}>
+  * Uploaded to codecov: <https://app.codecov.io/gh/go-openapi>
 
 * Fuzz testing
   * Fuzz tests are handled separately by CI and may reuse a cached version of the fuzzing corpus.
@@ -58,7 +58,7 @@ Coverage threshold status is informative and not blocking.
 This is because the thresholds are difficult to tune and codecov oftentimes reports false negatives
 or may fail to upload coverage.
 
-All tests use our fork of `stretchr/testify`: `github.com/{{ .Owner }}/testify`.
+All tests use our fork of `stretchr/testify`: `github.com/go-openapi/testify`.
 This allows for minimal test dependencies.
 
 > **NOTES**
@@ -67,7 +67,7 @@ This allows for minimal test dependencies.
 > However, there is only 1 maintainer allowed to be the admin of the organization on codecov
 > with their free plan.
 >
-> The codecov app is installed at the organization level (`github.com/{{ .Owner }}`).
+> The codecov app is installed at the organization level (`github.com/go-openapi`).
 >
 > There is no special token to setup in github for CI usage.
 > A organization-level token used to upload coverage and test reports is managed at codecov:
@@ -81,7 +81,7 @@ This allows for minimal test dependencies.
   Principle:
 
   * codecov applies updates and security patches to the github-actions and golang ecosystems.
-  * all updates from "trusted" dependencies (github actions, golang.org packages, {{ .Owner }} packages
+  * all updates from "trusted" dependencies (github actions, golang.org packages, go-openapi packages
     are auto-merged if they successfully pass CI.
 
 * go version udpates
@@ -138,20 +138,22 @@ Standard documentation:
 * [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md)
 * [`SECURIY.md`](../SECURITY.md) policy: how to report vulnerabilities privately
 * [`LICENSE`](../LICENSE) terms
+<!--
 * [`NOTICE`](../NOTICE) on supplementary license terms (original authors, copied code etc)
+-->
 
 Reference documentation (released):
 
-* [godoc](https://pkg.go/dev/{{ .Owner }}/{{ .Repo }})
+* [godoc](https://pkg.go/dev/go-openapi/analysis)
 
 ## TODOs & other ideas
 
 A few things remain ahead to ease a bit a maintainer's job:
 
-* [ ] reuse CI workflows (e.g. in `github.com/{{ .Owner }}/workflows`)
-* [ ] reusable actions with custom tools pinned  (e.g. in `github.com/{{ .Owner }}/gh-actions`)
+* [x] reuse CI workflows (e.g. in `github.com/go-openapi/workflows`)
+* [x] reusable actions with custom tools pinned  (e.g. in `github.com/go-openapi/gh-actions`)
 * [ ] open-source license checks
-* [ ] auto-merge for CONTRIBUTORS.md (requires a github app to produce tokens)
+* [x] auto-merge for CONTRIBUTORS.md (requires a github app to produce tokens)
 * [ ] more automated code renovation / relinting work (possibly built with CLAUDE)
 * [ ] organization-level documentation web site
 * ...
