@@ -20,7 +20,6 @@ require (
 	github.com/go-openapi/swag/yamlutils v0.25.4 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.17.6 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
