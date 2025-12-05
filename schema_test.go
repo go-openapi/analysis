@@ -18,31 +18,14 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
-var knownSchemas = []*spec.Schema{
-	spec.BoolProperty(),                  // 0
-	spec.StringProperty(),                // 1
-	spec.Int8Property(),                  // 2
-	spec.Int16Property(),                 // 3
-	spec.Int32Property(),                 // 4
-	spec.Int64Property(),                 // 5
-	spec.Float32Property(),               // 6
-	spec.Float64Property(),               // 7
-	spec.DateProperty(),                  // 8
-	spec.DateTimeProperty(),              // 9
-	(&spec.Schema{}),                     // 10
-	(&spec.Schema{}).Typed("object", ""), // 11
-	(&spec.Schema{}).Typed("", ""),       // 12
-	(&spec.Schema{}).Typed("", "uuid"),   // 13
-}
-
 func TestSchemaAnalysis_KnownTypes(t *testing.T) {
-	for i, v := range knownSchemas {
+	for i, v := range knownSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Truef(t, sch.IsKnownType, "item at %d should be a known type", i)
 	}
 
-	for i, v := range complexSchemas {
+	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Falsef(t, sch.IsKnownType, "item at %d should not be a known type", i)
@@ -65,14 +48,14 @@ func TestSchemaAnalysis_KnownTypes(t *testing.T) {
 }
 
 func TestSchemaAnalysis_Array(t *testing.T) {
-	for i, v := range append(knownSchemas, (&spec.Schema{}).Typed("array", "")) {
+	for i, v := range append(knownSchemas(), (&spec.Schema{}).Typed("array", "")) {
 		sch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Truef(t, sch.IsArray, "item at %d should be an array type", i)
 		assert.Truef(t, sch.IsSimpleArray, "item at %d should be a simple array type", i)
 	}
 
-	for i, v := range complexSchemas {
+	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Truef(t, sch.IsArray, "item at %d should be an array type", i)
@@ -119,14 +102,14 @@ func TestSchemaAnalysis_Array(t *testing.T) {
 }
 
 func TestSchemaAnalysis_Map(t *testing.T) {
-	for i, v := range append(knownSchemas, spec.MapProperty(nil)) {
+	for i, v := range append(knownSchemas(), spec.MapProperty(nil)) {
 		sch, err := Schema(SchemaOpts{Schema: spec.MapProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Truef(t, sch.IsMap, "item at %d should be a map type", i)
 		assert.Truef(t, sch.IsSimpleMap, "item at %d should be a simple map type", i)
 	}
 
-	for i, v := range complexSchemas {
+	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: spec.MapProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Truef(t, sch.IsMap, "item at %d should be a map type", i)
@@ -135,7 +118,7 @@ func TestSchemaAnalysis_Map(t *testing.T) {
 }
 
 func TestSchemaAnalysis_ExtendedObject(t *testing.T) {
-	for i, v := range knownSchemas {
+	for i, v := range knownSchemas() {
 		wex := spec.MapProperty(v).SetProperty("name", *spec.StringProperty())
 		sch, err := Schema(SchemaOpts{Schema: wex})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
@@ -194,7 +177,7 @@ func TestSchemaAnalysis_BaseType(t *testing.T) {
 }
 
 func TestSchemaAnalysis_SimpleSchema(t *testing.T) {
-	for i, v := range append(knownSchemas, spec.ArrayProperty(nil), spec.MapProperty(nil)) {
+	for i, v := range append(knownSchemas(), spec.ArrayProperty(nil), spec.MapProperty(nil)) {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Truef(t, sch.IsSimpleSchema, "item at %d should be a simple schema", i)
@@ -208,7 +191,7 @@ func TestSchemaAnalysis_SimpleSchema(t *testing.T) {
 		assert.Truef(t, msch.IsSimpleSchema, "map item at %d should be a simple schema", i)
 	}
 
-	for i, v := range complexSchemas {
+	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
 		assert.Falsef(t, sch.IsSimpleSchema, "item at %d should not be a simple schema", i)
@@ -261,12 +244,35 @@ func newCObj() *spec.Schema {
 	return (&spec.Schema{}).Typed("object", "").SetProperty("id", *spec.Int64Property())
 }
 
-var complexObject = newCObj()
+func complexObject() *spec.Schema {
+	return newCObj()
+}
 
-var complexSchemas = []*spec.Schema{
-	complexObject,
-	spec.ArrayProperty(complexObject),
-	spec.MapProperty(complexObject),
+func complexSchemas() []*spec.Schema {
+	return []*spec.Schema{
+		complexObject(),
+		spec.ArrayProperty(complexObject()),
+		spec.MapProperty(complexObject()),
+	}
+}
+
+func knownSchemas() []*spec.Schema {
+	return []*spec.Schema{
+		spec.BoolProperty(),                  // 0
+		spec.StringProperty(),                // 1
+		spec.Int8Property(),                  // 2
+		spec.Int16Property(),                 // 3
+		spec.Int32Property(),                 // 4
+		spec.Int64Property(),                 // 5
+		spec.Float32Property(),               // 6
+		spec.Float64Property(),               // 7
+		spec.DateProperty(),                  // 8
+		spec.DateTimeProperty(),              // 9
+		(&spec.Schema{}),                     // 10
+		(&spec.Schema{}).Typed("object", ""), // 11
+		(&spec.Schema{}).Typed("", ""),       // 12
+		(&spec.Schema{}).Typed("", "uuid"),   // 13
+	}
 }
 
 func knownRefs(base string) []spec.Ref {
@@ -293,17 +299,17 @@ func complexRefs(base string) []spec.Ref {
 
 func refServer() *httptest.Server {
 	mux := http.NewServeMux()
-	mux.Handle("/known/bool", schemaHandler(knownSchemas[0]))
-	mux.Handle("/known/string", schemaHandler(knownSchemas[1]))
-	mux.Handle("/known/integer", schemaHandler(knownSchemas[5]))
-	mux.Handle("/known/float", schemaHandler(knownSchemas[6]))
-	mux.Handle("/known/date", schemaHandler(knownSchemas[8]))
-	mux.Handle("/known/object", schemaHandler(knownSchemas[11]))
-	mux.Handle("/known/format", schemaHandler(knownSchemas[13]))
+	mux.Handle("/known/bool", schemaHandler(knownSchemas()[0]))
+	mux.Handle("/known/string", schemaHandler(knownSchemas()[1]))
+	mux.Handle("/known/integer", schemaHandler(knownSchemas()[5]))
+	mux.Handle("/known/float", schemaHandler(knownSchemas()[6]))
+	mux.Handle("/known/date", schemaHandler(knownSchemas()[8]))
+	mux.Handle("/known/object", schemaHandler(knownSchemas()[11]))
+	mux.Handle("/known/format", schemaHandler(knownSchemas()[13]))
 
-	mux.Handle("/complex/object", schemaHandler(complexSchemas[0]))
-	mux.Handle("/complex/array", schemaHandler(complexSchemas[1]))
-	mux.Handle("/complex/map", schemaHandler(complexSchemas[2]))
+	mux.Handle("/complex/object", schemaHandler(complexSchemas()[0]))
+	mux.Handle("/complex/array", schemaHandler(complexSchemas()[1]))
+	mux.Handle("/complex/map", schemaHandler(complexSchemas()[2]))
 
 	return httptest.NewServer(mux)
 }

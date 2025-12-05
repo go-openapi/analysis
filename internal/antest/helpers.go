@@ -17,17 +17,17 @@ import (
 )
 
 var (
-	oncePathLoader  sync.Once
-	enableLongTests bool
+	oncePathLoader  sync.Once //nolint:gochecknoglobals // it's okay to use sync.Once as a global
+	enableLongTests bool      //nolint:gochecknoglobals // it's okay to store test flags as a global
 )
 
-func init() {
+func init() { //nolint:gochecknoinits // it's okay to call init() to register go test extra flags
 	if flag.Lookup("enable-long") == nil {
 		flag.BoolVar(&enableLongTests, "enable-long", false, "enable long runnning tests")
 	}
 }
 
-// LongTestsEnabled returns the CLI flag
+// LongTestsEnabled returns the CLI flag.
 func LongTestsEnabled() bool {
 	return enableLongTests
 }
@@ -48,7 +48,7 @@ func initPathLoader() {
 	}
 }
 
-// LoadSpec loads a json or a yaml spec
+// LoadSpec loads a json or a yaml spec.
 func LoadSpec(path string) (*spec.Swagger, error) {
 	oncePathLoader.Do(initPathLoader)
 
@@ -65,7 +65,7 @@ func LoadSpec(path string) (*spec.Swagger, error) {
 	return &sw, nil
 }
 
-// LoadOrFail fetches a spec from a relative path or dies if the spec cannot be loaded properly
+// LoadOrFail fetches a spec from a relative path or dies if the spec cannot be loaded properly.
 func LoadOrFail(t testing.TB, relative string) *spec.Swagger {
 	cwd, _ := os.Getwd()
 	sp, err := LoadSpec(filepath.Join(cwd, relative))
@@ -74,7 +74,7 @@ func LoadOrFail(t testing.TB, relative string) *spec.Swagger {
 	return sp
 }
 
-// AsJSON unmarshals anything as JSON or dies
+// AsJSON unmarshals anything as JSON or dies.
 func AsJSON(t testing.TB, in any) string {
 	bbb, err := json.MarshalIndent(in, "", " ")
 	require.NoError(t, err)

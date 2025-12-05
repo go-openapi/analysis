@@ -46,10 +46,22 @@ func TestNormalize_RebaseRef(t *testing.T) {
 	assert.Equal(t, definitionABC, RebaseRef("", definitionABC))
 	assert.Equal(t, definitionABC, RebaseRef(".", definitionABC))
 	assert.Equal(t, "otherfile"+definitionABC, RebaseRef("file"+definitionBase, "otherfile"+definitionABC))
-	assert.Equal(t, wrapWindowsPath("../otherfile")+definitionABC, RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("./otherfile")+definitionABC))
-	assert.Equal(t, wrapWindowsPath("../otherfile")+definitionABC, RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("otherfile")+definitionABC))
-	assert.Equal(t, wrapWindowsPath("local/remote/otherfile")+definitionABC, RebaseRef(wrapWindowsPath("local/file")+definitionBase, wrapWindowsPath("remote/otherfile")+definitionABC))
-	assert.Equal(t, wrapWindowsPath("local/remote/otherfile.yaml"), RebaseRef(wrapWindowsPath("local/file.yaml"), wrapWindowsPath("remote/otherfile.yaml")))
+	assert.Equal(t,
+		wrapWindowsPath("../otherfile")+definitionABC,
+		RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("./otherfile")+definitionABC),
+	)
+	assert.Equal(t,
+		wrapWindowsPath("../otherfile")+definitionABC,
+		RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("otherfile")+definitionABC),
+	)
+	assert.Equal(t,
+		wrapWindowsPath("local/remote/otherfile")+definitionABC,
+		RebaseRef(wrapWindowsPath("local/file")+definitionBase, wrapWindowsPath("remote/otherfile")+definitionABC),
+	)
+	assert.Equal(t,
+		wrapWindowsPath("local/remote/otherfile.yaml"),
+		RebaseRef(wrapWindowsPath("local/file.yaml"), wrapWindowsPath("remote/otherfile.yaml")),
+	)
 
 	assert.Equal(t, "file#/definitions/abc", RebaseRef("file#/definitions/base", definitionABC))
 
@@ -62,7 +74,7 @@ func TestNormalize_RebaseRef(t *testing.T) {
 	assert.Equal(t, "https://example.com/dir/definitions/abc", RebaseRef(exampleBase, "dir/definitions/abc"))
 }
 
-// wrapWindowsPath adapts path expectations for tests running on windows
+// wrapWindowsPath adapts path expectations for tests running on windows.
 func wrapWindowsPath(p string) string {
 	if runtime.GOOS != "windows" {
 		return p

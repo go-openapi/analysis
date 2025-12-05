@@ -14,33 +14,13 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
-var refFixtures = []struct {
-	Key string
-	Ref spec.Ref
-}{
-	{"#/parameters/someParam/schema", spec.MustCreateRef("#/definitions/record")},
-	{"#/paths/~1some~1where~1{id}/parameters/1/schema", spec.MustCreateRef("#/definitions/record")},
-	{"#/paths/~1some~1where~1{id}/get/parameters/2/schema", spec.MustCreateRef("#/definitions/record")},
-	{"#/responses/someResponse/schema", spec.MustCreateRef("#/definitions/record")},
-	{"#/paths/~1some~1where~1{id}/get/responses/default/schema", spec.MustCreateRef("#/definitions/record")},
-	{"#/paths/~1some~1where~1{id}/get/responses/200/schema", spec.MustCreateRef("#/definitions/record")},
-	{"#/definitions/namedAgain", spec.MustCreateRef("#/definitions/named")},
-	{"#/definitions/datedTag/allOf/1", spec.MustCreateRef("#/definitions/tag")},
-	{"#/definitions/datedRecords/items/1", spec.MustCreateRef("#/definitions/record")},
-	{"#/definitions/datedTaggedRecords/items/1", spec.MustCreateRef("#/definitions/record")},
-	{"#/definitions/datedTaggedRecords/additionalItems", spec.MustCreateRef("#/definitions/tag")},
-	{"#/definitions/otherRecords/items", spec.MustCreateRef("#/definitions/record")},
-	{"#/definitions/tags/additionalProperties", spec.MustCreateRef("#/definitions/tag")},
-	{"#/definitions/namedThing/properties/name", spec.MustCreateRef("#/definitions/named")},
-}
-
 func TestUpdateRef(t *testing.T) {
 	t.Parallel()
 
 	bp := filepath.Join("..", "..", "..", "fixtures", "external_definitions.yml")
 	sp := antest.LoadOrFail(t, bp)
 
-	for _, v := range refFixtures {
+	for _, v := range refFixtures() {
 		err := UpdateRef(sp, v.Key, v.Ref)
 		require.NoError(t, err)
 
@@ -71,7 +51,7 @@ func TestRewriteSchemaRef(t *testing.T) {
 	bp := filepath.Join("..", "..", "..", "fixtures", "inline_schemas.yml")
 	sp := antest.LoadOrFail(t, bp)
 
-	for i, v := range refFixtures {
+	for i, v := range refFixtures() {
 		err := RewriteSchemaToRef(sp, v.Key, v.Ref)
 		require.NoError(t, err)
 
@@ -156,4 +136,28 @@ func TestReplace_ErrorHandling(t *testing.T) {
 			})
 		})
 	})
+}
+
+type refFixture struct {
+	Key string
+	Ref spec.Ref
+}
+
+func refFixtures() []refFixture {
+	return []refFixture{
+		{"#/parameters/someParam/schema", spec.MustCreateRef("#/definitions/record")},
+		{"#/paths/~1some~1where~1{id}/parameters/1/schema", spec.MustCreateRef("#/definitions/record")},
+		{"#/paths/~1some~1where~1{id}/get/parameters/2/schema", spec.MustCreateRef("#/definitions/record")},
+		{"#/responses/someResponse/schema", spec.MustCreateRef("#/definitions/record")},
+		{"#/paths/~1some~1where~1{id}/get/responses/default/schema", spec.MustCreateRef("#/definitions/record")},
+		{"#/paths/~1some~1where~1{id}/get/responses/200/schema", spec.MustCreateRef("#/definitions/record")},
+		{"#/definitions/namedAgain", spec.MustCreateRef("#/definitions/named")},
+		{"#/definitions/datedTag/allOf/1", spec.MustCreateRef("#/definitions/tag")},
+		{"#/definitions/datedRecords/items/1", spec.MustCreateRef("#/definitions/record")},
+		{"#/definitions/datedTaggedRecords/items/1", spec.MustCreateRef("#/definitions/record")},
+		{"#/definitions/datedTaggedRecords/additionalItems", spec.MustCreateRef("#/definitions/tag")},
+		{"#/definitions/otherRecords/items", spec.MustCreateRef("#/definitions/record")},
+		{"#/definitions/tags/additionalProperties", spec.MustCreateRef("#/definitions/tag")},
+		{"#/definitions/namedThing/properties/name", spec.MustCreateRef("#/definitions/named")},
+	}
 }
