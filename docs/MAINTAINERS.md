@@ -144,7 +144,7 @@ Standard documentation:
 
 Reference documentation (released):
 
-* [godoc](https://pkg.go/dev/go-openapi/analysis)
+* [godoc](https://pkg.go.dev/github.com/go-openapi/analysis)
 
 ## TODOs & other ideas
 
