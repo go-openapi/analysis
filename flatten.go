@@ -491,14 +491,25 @@ func stripPointersAndOAIGen(opts *FlattenOpts) error {
 // pointer and name resolution again.
 func stripOAIGen(opts *FlattenOpts) (bool, error) {
 	debugLog("stripOAIGen")
+	// Ensure the spec analysis is fresh, as previous steps (namePointers, etc.) might have modified refs.
+	opts.Spec.reload()
+
 	replacedWithComplex := false
 
 	// figure out referers of OAIGen definitions (doing it before the ref start mutating)
-	for _, r := range opts.flattenContext.newRefs {
+	// Sort keys to ensure deterministic processing order
+	sortedKeys := make([]string, 0, len(opts.flattenContext.newRefs))
+	for k := range opts.flattenContext.newRefs {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	for _, k := range sortedKeys {
+		r := opts.flattenContext.newRefs[k]
 		updateRefParents(opts.Spec.references.allRefs, r)
 	}
 
-	for k := range opts.flattenContext.newRefs {
+	for _, k := range sortedKeys {
 		r := opts.flattenContext.newRefs[k]
 		debugLog("newRefs[%s]: isOAIGen: %t, resolved: %t, name: %s, path:%s, #parents: %d, parents: %v,  ref: %s",
 			k, r.isOAIGen, r.resolved, r.newName, r.path, len(r.parents), r.parents, r.schema.Ref.String())
@@ -580,6 +591,19 @@ func stripOAIGenForRef(opts *FlattenOpts, k string, r *newRef) (bool, error) {
 				replacedWithComplex = true
 			}
 		}
+
+		// update parents of the target ref (pr[0]) if it is also a newRef (OAIGen)
+		// This ensures that if the target is later deleted/merged, it knows about these new referers.
+		for _, nr := range opts.flattenContext.newRefs {
+			if nr.path == pr[0] && nr.isOAIGen && !nr.resolved {
+				for _, p := range pr[1:] {
+					if !slices.Contains(nr.parents, p) {
+						nr.parents = append(nr.parents, p)
+					}
+				}
+				break
+			}
+		}
 	}
 
 	// remove OAIGen definition
@@ -587,7 +611,15 @@ func stripOAIGenForRef(opts *FlattenOpts, k string, r *newRef) (bool, error) {
 	delete(opts.Swagger().Definitions, path.Base(r.path))
 
 	// propagate changes in ref index for keys which have this one as a parent
-	for kk, value := range opts.flattenContext.newRefs {
+	// Sort keys to ensure deterministic update order
+	propagateKeys := make([]string, 0, len(opts.flattenContext.newRefs))
+	for k := range opts.flattenContext.newRefs {
+		propagateKeys = append(propagateKeys, k)
+	}
+	sort.Strings(propagateKeys)
+
+	for _, kk := range propagateKeys {
+		value := opts.flattenContext.newRefs[kk]
 		if kk == k || !value.isOAIGen || value.resolved {
 			continue
 		}
