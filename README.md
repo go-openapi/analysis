@@ -34,7 +34,7 @@ API is stable.
 go get github.com/go-openapi/analysis
 ```
 
-## What's inside?
+## What's inside
 
 * An analyzer providing methods to walk the functional content of a specification
 * A spec flattener producing a self-contained document bundle, while preserving `$ref`s
@@ -44,6 +44,7 @@ go get github.com/go-openapi/analysis
 ## FAQ
 
 * Does this library support OpenAPI 3?
+
 > No.
 > This package currently only supports OpenAPI 2.0 (aka Swagger 2.0).
 > There is no plan to make it evolve toward supporting OpenAPI 3.x.
@@ -54,7 +55,9 @@ go get github.com/go-openapi/analysis
 See <https://github.com/go-openapi/analysis/releases>
 
 <!--
+
 ## References
+
 -->
 
 ## Licensing
@@ -62,12 +65,14 @@ See <https://github.com/go-openapi/analysis/releases>
 This library ships under the [SPDX-License-Identifier: Apache-2.0](./LICENSE).
 
 <!--
-See the license [NOTICE](./NOTICE), which recalls the licensing terms of all the pieces of software
+See the license NOTICE, which recalls the licensing terms of all the pieces of software
 on top of which it has been built.
 -->
 
 <!--
+
 ## Limitations
+
 -->
 
 ## Other documentation
@@ -98,16 +103,12 @@ Maintainers can cut a new release by either:
 <!-- Badges: release & docker images  -->
 [release-badge]: https://badge.fury.io/gh/go-openapi%2Fanalysis.svg
 [release-url]: https://badge.fury.io/gh/go-openapi%2Fanalysis
-[gomod-badge]: https://badge.fury.io/go/github.com%2Fgo-openapi%2Fanalysis.svg
-[gomod-url]: https://badge.fury.io/go/github.com%2Fgo-openapi%2Fanalysis
 <!-- Badges: code quality  -->
 [gocard-badge]: https://goreportcard.com/badge/github.com/go-openapi/analysis
 [gocard-url]: https://goreportcard.com/report/github.com/go-openapi/analysis
 [codefactor-badge]: https://img.shields.io/codefactor/grade/github/go-openapi/analysis
 [codefactor-url]: https://www.codefactor.io/repository/github/go-openapi/analysis
 <!-- Badges: documentation & support -->
-[doc-badge]: https://img.shields.io/badge/doc-site-blue?link=https%3A%2F%2Fgoswagger.io%2Fgo-openapi%2F
-[doc-url]: https://goswagger.io/go-openapi
 [godoc-badge]: https://pkg.go.dev/badge/github.com/go-openapi/analysis
 [godoc-url]: http://pkg.go.dev/github.com/go-openapi/analysis
 [slack-logo]: https://a.slack-edge.com/e6a93c1/img/icons/favicon-32.png
