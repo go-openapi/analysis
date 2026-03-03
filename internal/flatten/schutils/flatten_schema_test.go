@@ -16,7 +16,7 @@ func TestFlattenSchema_Save(t *testing.T) {
 
 	sp := &spec.Swagger{}
 	Save(sp, "theName", spec.StringProperty())
-	assert.Contains(t, sp.Definitions, "theName")
+	assert.MapContainsT(t, sp.Definitions, "theName")
 
 	saveNilSchema := func() {
 		Save(sp, "ThisNilSchema", nil)

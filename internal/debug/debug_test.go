@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers
 // SPDX-License-Identifier: Apache-2.0
 
-package debug
+package debug //nolint:revive // this package is called debug and there is no confusion with the standard library for that.
 
 import (
 	"os"
@@ -32,10 +32,10 @@ func TestDebug(t *testing.T) {
 	tmpFile.Close()
 	tmpFileClosed = true
 
-	flushed, err := os.ReadFile(tmpName)
+	flushed, err := os.ReadFile(tmpName) //nolint:gosec // false positive on temp test dir: G703: Path traversal via taint analysis.
 	require.NoError(t, err)
 
-	assert.Contains(t, string(flushed), "A debug: a string")
+	assert.StringContainsT(t, string(flushed), "A debug: a string")
 
 	tmpEmptyFile, err := os.CreateTemp(folder, "debug-empty-test")
 	require.NoError(t, err)
@@ -53,7 +53,7 @@ func TestDebug(t *testing.T) {
 	tmpEmptyFile.Close()
 	tmpEmptyFileClosed = true
 
-	flushed, err = os.ReadFile(tmpEmpty)
+	flushed, err = os.ReadFile(tmpEmpty) //nolint:gosec // false positive on temp test dir: G703: Path traversal via taint analysis.
 	require.NoError(t, err)
 
 	assert.Empty(t, flushed)

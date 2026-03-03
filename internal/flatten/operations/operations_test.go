@@ -37,7 +37,7 @@ func TestGatherOperations(t *testing.T) {
 		}
 
 		res := GatherOperations(m, nil)
-		require.Contains(t, res, "GetPth1")
+		require.MapContainsT(t, res, "GetPth1")
 	})
 
 	t.Run("should handle duplicate operation IDs (when spec validation is skipped)", func(_ *testing.T) {
@@ -63,8 +63,8 @@ func TestGatherOperations(t *testing.T) {
 		}
 
 		res := GatherOperations(m, nil)
-		require.Contains(t, res, "id1")
-		require.NotContains(t, res, "GetPth1")
-		require.Contains(t, res, "PostPth2")
+		require.MapContainsT(t, res, "id1")
+		require.MapNotContainsT(t, res, "GetPth1")
+		require.MapContainsT(t, res, "PostPth2")
 	})
 }

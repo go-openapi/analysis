@@ -4,14 +4,15 @@
 package analysis_test
 
 import (
-	"io/ioutil"
+	"embed"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/go-openapi/analysis"
-	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag/loading"
@@ -19,45 +20,35 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
-func skipNotify(t *testing.T) {
-	t.Log("To enable this long running test, use -args -enable-long in your go test command line")
-}
+//go:embed all:fixtures
+var fixtureAssets embed.FS
 
 func Test_FlattenAzure(t *testing.T) {
-	if !antest.LongTestsEnabled() {
-		skipNotify(t)
-		t.SkipNow()
-	}
 	t.Parallel()
 
-	// Local copy of https://raw.githubusercontent.com/Azure/azure-rest-api-specs/master/specification/network/resource-manager/Microsoft.Network/stable/2020-04-01/publicIpAddress.json
-	url := "../fixtures/azure/publicIpAddress.json"
-	byts, err := loading.LoadFromFileOrHTTP(url)
+	file, err := filepath.Abs(filepath.Join("fixtures", "azure", "publicIpAddress.json"))
+	require.NoError(t, err)
+	b, err := loading.LoadFromFileOrHTTP(file)
 	assert.NoError(t, err)
 	swagger := &spec.Swagger{}
-	require.NoError(t, swagger.UnmarshalJSON(byts))
+	require.NoError(t, swagger.UnmarshalJSON(b))
 
 	analyzed := analysis.New(swagger)
-	require.NoError(t, analysis.Flatten(analysis.FlattenOpts{Spec: analyzed, Expand: true, BasePath: url}))
+	require.NoError(t, analysis.Flatten(analysis.FlattenOpts{Spec: analyzed, Expand: true, BasePath: file}))
 
 	jazon := asJSON(t, swagger)
 
 	assertRefInJSONRegexp(t, jazon, `^(#/definitions/)|(\./example)`)
 
 	t.Run("resolve local $ref azure", func(t *testing.T) {
-		assertRefResolve(t, jazon, `\./example`, swagger, &spec.ExpandOptions{RelativeBase: url})
+		assertRefResolve(t, jazon, `\./example`, swagger, &spec.ExpandOptions{RelativeBase: file})
 	})
 }
 
 func TestRemoteFlattenAzure_Expand(t *testing.T) {
-	if !antest.LongTestsEnabled() {
-		skipNotify(t)
-		t.SkipNow()
-	}
 	t.Parallel()
 
-	server := httptest.NewServer(http.FileServer(http.Dir("../fixtures/azure")))
-	defer server.Close()
+	server := fixtureServer(t, "fixtures/azure")
 
 	basePath := server.URL + "/publicIpAddress.json"
 
@@ -76,15 +67,9 @@ func TestRemoteFlattenAzure_Expand(t *testing.T) {
 }
 
 func TestRemoteFlattenAzure_Flatten(t *testing.T) {
-	if !antest.LongTestsEnabled() {
-		skipNotify(t)
-		t.SkipNow()
-	}
 	t.Parallel()
 
-	server := httptest.NewServer(http.FileServer(http.Dir("../fixtures/azure")))
-	defer server.Close()
-
+	server := fixtureServer(t, "fixtures/azure")
 	basePath := server.URL + "/publicIpAddress.json"
 
 	swagger, err := loads.Spec(basePath)
@@ -130,9 +115,21 @@ func TestIssue66(t *testing.T) {
 	})
 }
 
+func fixtureServer(t testing.TB, dir string) *httptest.Server {
+	t.Helper()
+
+	sub, err := fs.Sub(fixtureAssets, filepath.ToSlash(dir))
+	require.NoError(t, err)
+
+	server := httptest.NewServer(http.FileServerFS(sub))
+	t.Cleanup(server.Close)
+
+	return server
+}
+
 func makeFileSpec(t testing.TB) (string, func()) {
-	file := "./openapi.yaml"
-	require.NoError(t, ioutil.WriteFile(file, fixtureIssue66(), 0600))
+	file := filepath.Join(".", "openapi.yaml")
+	require.NoError(t, os.WriteFile(file, fixtureIssue66(), 0o600))
 
 	return file, func() {
 		_ = os.Remove(file)

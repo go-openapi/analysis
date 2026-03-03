@@ -21,5 +21,5 @@ func TestName_UnitGuards(t *testing.T) {
 	assert.Empty(t, res)
 
 	b := parts.isKeyName(-1)
-	assert.False(t, b)
+	assert.FalseT(t, b)
 }
