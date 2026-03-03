@@ -52,13 +52,15 @@ func newContext() *context {
 // There is a minimal and a full flattening mode.
 //
 // Minimally flattening a spec means:
+//
 //   - Expanding parameters, responses, path items, parameter items and header items (references to schemas are left
 //     unscathed)
-//   - Importing external (http, file) references so they become internal to the document
+//   - Importing external ([http], file) references so they become internal to the document
 //   - Moving every JSON pointer to a $ref to a named definition (i.e. the reworked spec does not contain pointers
 //     like "$ref": "#/definitions/myObject/allOfs/1")
 //
 // A minimally flattened spec thus guarantees the following properties:
+//
 //   - all $refs point to a local definition (i.e. '#/definitions/...')
 //   - definitions are unique
 //
@@ -70,6 +72,7 @@ func newContext() *context {
 // Minimal flattening is necessary and sufficient for codegen rendering using go-swagger.
 //
 // Fully flattening a spec means:
+//
 //   - Moving every complex inline schema to be a definition with an auto-generated name in a depth-first fashion.
 //
 // By complex, we mean every JSON object with some properties.
@@ -80,6 +83,7 @@ func newContext() *context {
 // have been created.
 //
 // Available flattening options:
+//
 //   - Minimal: stops flattening after minimal $ref processing, leaving schema constructs untouched
 //   - Expand: expand all $ref's in the document (inoperant if Minimal set to true)
 //   - Verbose: croaks about name conflicts detected
@@ -87,8 +91,9 @@ func newContext() *context {
 //
 // NOTE: expansion removes all $ref save circular $ref, which remain in place
 //
-// TODO: additional options
-//   - ProgagateNameExtensions: ensure that created entries properly follow naming rules when their parent have set a
+// Desirable future additions: additional options.
+//
+//   - PropagateNameExtensions: ensure that created entries properly follow naming rules when their parent have set a
 //     x-go-name extension
 //   - LiftAllOfs:
 //   - limit the flattening of allOf members when simple objects

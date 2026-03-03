@@ -32,13 +32,13 @@ func TestUpdateRef(t *testing.T) {
 
 		switch tv := vv.(type) {
 		case *spec.Schema:
-			assert.Equal(t, v.Ref.String(), tv.Ref.String())
+			assert.EqualT(t, v.Ref.String(), tv.Ref.String())
 		case spec.Schema:
-			assert.Equal(t, v.Ref.String(), tv.Ref.String())
+			assert.EqualT(t, v.Ref.String(), tv.Ref.String())
 		case *spec.SchemaOrBool:
-			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String())
+			assert.EqualT(t, v.Ref.String(), tv.Schema.Ref.String())
 		case *spec.SchemaOrArray:
-			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String())
+			assert.EqualT(t, v.Ref.String(), tv.Schema.Ref.String())
 		default:
 			assert.Fail(t, "unknown type", "got %T", vv)
 		}
@@ -63,13 +63,13 @@ func TestRewriteSchemaRef(t *testing.T) {
 
 		switch tv := vv.(type) {
 		case *spec.Schema:
-			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
 		case spec.Schema:
-			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
 		case *spec.SchemaOrBool:
-			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
 		case *spec.SchemaOrArray:
-			assert.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), tv.Schema.Ref.String(), "at %d for %s", i, v.Key)
 		default:
 			assert.Fail(t, "unknown type", "got %T", vv)
 		}

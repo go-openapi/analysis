@@ -4,21 +4,19 @@
 package analysis_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/go-openapi/testify/v2/require"
 )
 
-var (
-	rex = regexp.MustCompile(`"\$ref":\s*"(.*?)"`)
-)
+var rex = regexp.MustCompile(`"\$ref":\s*"(.*?)"`)
 
-func assertRefResolve(t *testing.T, jazon, exclude string, root interface{}, opts ...*spec.ExpandOptions) {
+func assertRefResolve(t *testing.T, jazon, exclude string, root any, opts ...*spec.ExpandOptions) {
 	assertRefWithFunc(t, "resolve", jazon, exclude, func(t *testing.T, match string) {
 		ref := spec.MustCreateRef(match)
 		var (
@@ -37,7 +35,7 @@ func assertRefResolve(t *testing.T, jazon, exclude string, root interface{}, opt
 	})
 }
 
-// assertNoRef ensures that no $ref is remaining in json doc
+// assertNoRef ensures that no $ref is remaining in json doc.
 func assertNoRef(t testing.TB, jazon string) {
 	m := rex.FindAllStringSubmatch(jazon, -1)
 	require.Nil(t, m)
@@ -88,9 +86,6 @@ func assertRefWithFunc(t *testing.T, name, jazon, exclude string, asserter func(
 	}
 }
 
-func asJSON(t testing.TB, sp interface{}) string {
-	bbb, err := json.MarshalIndent(sp, "", " ")
-	require.NoError(t, err)
-
-	return string(bbb)
+func asJSON(t testing.TB, sp any) string {
+	return antest.AsJSON(t, sp)
 }

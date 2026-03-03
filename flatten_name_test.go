@@ -31,7 +31,7 @@ func TestName_FromRef(t *testing.T) {
 	}
 
 	for _, v := range values {
-		assert.Equal(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
+		assert.EqualT(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
 	}
 }
 
@@ -50,8 +50,8 @@ func TestName_FromRefMangle(t *testing.T) {
 	}
 
 	for _, v := range values {
-		assert.Equal(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
-		assert.Equal(t, v.ExpectedKeepName, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{KeepNames: true}))
+		assert.EqualT(t, v.Expected, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
+		assert.EqualT(t, v.ExpectedKeepName, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{KeepNames: true}))
 	}
 }
 
@@ -73,7 +73,7 @@ func TestName_Definition(t *testing.T) {
 
 	for _, v := range values {
 		u, _ := uniqifyName(v.Definitions, nameFromRef(spec.MustCreateRef(v.Source), &FlattenOpts{}))
-		assert.Equal(t, v.Expected, u)
+		assert.EqualT(t, v.Expected, u)
 	}
 }
 
@@ -187,53 +187,53 @@ func TestName_SplitKey(t *testing.T) {
 		parts := sortref.KeyParts(v.Key)
 		pref := parts.PathRef()
 		piref := parts.PathItemRef()
-		assert.Equal(t, v.PathRef.String(), pref.String(), "pathRef: %s at %d", v.Key, i)
-		assert.Equal(t, v.PathItemRef.String(), piref.String(), "pathItemRef: %s at %d", v.Key, i)
+		assert.EqualT(t, v.PathRef.String(), pref.String(), "pathRef: %s at %d", v.Key, i)
+		assert.EqualT(t, v.PathItemRef.String(), piref.String(), "pathItemRef: %s at %d", v.Key, i)
 
 		if v.Flags&isOperation != 0 {
-			assert.True(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsOperation(), "isOperation: %s at %d", v.Key, i)
 		}
 
 		if v.Flags&isDefinition != 0 {
-			assert.True(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
-			assert.Equal(t, v.Name, parts.DefinitionName(), "definition name: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
+			assert.EqualT(t, v.Name, parts.DefinitionName(), "definition name: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsDefinition(), "isDefinition: %s at %d", v.Key, i)
 			if v.Name != "" {
-				assert.Equal(t, v.Name, parts.ResponseName(), "response name: %s at %d", v.Key, i)
+				assert.EqualT(t, v.Name, parts.ResponseName(), "response name: %s at %d", v.Key, i)
 			}
 		}
 
 		if v.Flags&isOperationParam != 0 {
-			assert.True(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsOperationParam(), "isOperationParam: %s at %d", v.Key, i)
 		}
 
 		if v.Flags&isSharedOperationParam != 0 {
-			assert.True(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsSharedOperationParam(), "isSharedOperationParam: %s at %d", v.Key, i)
 		}
 
 		if v.Flags&isOperationResponse != 0 {
-			assert.True(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsOperationResponse(), "isOperationResponse: %s at %d", v.Key, i)
 		}
 
 		if v.Flags&isDefaultResponse != 0 {
-			assert.True(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsDefaultResponse(), "isDefaultResponse: %s at %d", v.Key, i)
 		}
 
 		if v.Flags&isStatusCodeResponse != 0 {
-			assert.True(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
+			assert.TrueT(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
 		} else {
-			assert.False(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
+			assert.FalseT(t, parts.IsStatusCodeResponse(), "isStatusCodeResponse: %s at %d", v.Key, i)
 		}
 	}
 }
@@ -292,14 +292,14 @@ func TestName_BuildNameWithReservedKeyWord(t *testing.T) {
 	startIdx := 2
 	segments := []string{"fullview"}
 	newName := s.BuildName(segments, startIdx, partAdder(nil))
-	assert.Equal(t, "fullview properties", newName)
+	assert.EqualT(t, "fullview properties", newName)
 
 	s = sortref.SplitKey([]string{
 		"definitions", "fullview",
 		"properties", "properties", "properties", "properties", "properties", "properties",
 	})
 	newName = s.BuildName(segments, startIdx, partAdder(nil))
-	assert.Equal(t, "fullview"+strings.Repeat(" properties", 3), newName)
+	assert.EqualT(t, "fullview"+strings.Repeat(" properties", 3), newName)
 }
 
 func TestName_InlinedSchemas(t *testing.T) {
@@ -483,21 +483,21 @@ func TestName_InlinedSchemas(t *testing.T) {
 
 		switch tv := vv.(type) {
 		case *spec.Schema:
-			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
 		case spec.Schema:
-			assert.Equal(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), tv.Ref.String(), "at %d for %s", i, v.Key)
 		case *spec.SchemaOrBool:
 			var sRef spec.Ref
 			if tv != nil && tv.Schema != nil {
 				sRef = tv.Schema.Ref
 			}
-			assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
 		case *spec.SchemaOrArray:
 			var sRef spec.Ref
 			if tv != nil && tv.Schema != nil {
 				sRef = tv.Schema.Ref
 			}
-			assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+			assert.EqualT(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
 		default:
 			assert.Fail(t, "unknown type", "got %T", vv)
 		}

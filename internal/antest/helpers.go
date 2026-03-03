@@ -48,7 +48,7 @@ func initPathLoader() {
 	}
 }
 
-// LoadSpec loads a json or a yaml spec.
+// LoadSpec loads a [json] or a yaml spec.
 func LoadSpec(path string) (*spec.Swagger, error) {
 	oncePathLoader.Do(initPathLoader)
 

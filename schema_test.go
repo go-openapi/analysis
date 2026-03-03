@@ -22,13 +22,13 @@ func TestSchemaAnalysis_KnownTypes(t *testing.T) {
 	for i, v := range knownSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsKnownType, "item at %d should be a known type", i)
+		assert.TrueTf(t, sch.IsKnownType, "item at %d should be a known type", i)
 	}
 
 	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Falsef(t, sch.IsKnownType, "item at %d should not be a known type", i)
+		assert.FalseTf(t, sch.IsKnownType, "item at %d should not be a known type", i)
 	}
 
 	serv := refServer()
@@ -37,13 +37,13 @@ func TestSchemaAnalysis_KnownTypes(t *testing.T) {
 	for i, ref := range knownRefs(serv.URL) {
 		sch, err := Schema(SchemaOpts{Schema: refSchema(ref)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsKnownType, "item at %d should be a known type", i)
+		assert.TrueTf(t, sch.IsKnownType, "item at %d should be a known type", i)
 	}
 
 	for i, ref := range complexRefs(serv.URL) {
 		sch, err := Schema(SchemaOpts{Schema: refSchema(ref)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Falsef(t, sch.IsKnownType, "item at %d should not be a known type", i)
+		assert.FalseTf(t, sch.IsKnownType, "item at %d should not be a known type", i)
 	}
 }
 
@@ -51,15 +51,15 @@ func TestSchemaAnalysis_Array(t *testing.T) {
 	for i, v := range append(knownSchemas(), (&spec.Schema{}).Typed("array", "")) {
 		sch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsArray, "item at %d should be an array type", i)
-		assert.Truef(t, sch.IsSimpleArray, "item at %d should be a simple array type", i)
+		assert.TrueTf(t, sch.IsArray, "item at %d should be an array type", i)
+		assert.TrueTf(t, sch.IsSimpleArray, "item at %d should be a simple array type", i)
 	}
 
 	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsArray, "item at %d should be an array type", i)
-		assert.Falsef(t, sch.IsSimpleArray, "item at %d should not be a simple array type", i)
+		assert.TrueTf(t, sch.IsArray, "item at %d should be an array type", i)
+		assert.FalseTf(t, sch.IsSimpleArray, "item at %d should not be a simple array type", i)
 	}
 
 	serv := refServer()
@@ -68,16 +68,16 @@ func TestSchemaAnalysis_Array(t *testing.T) {
 	for i, ref := range knownRefs(serv.URL) {
 		sch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(refSchema(ref))})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsArray, "item at %d should be an array type", i)
-		assert.Truef(t, sch.IsSimpleArray, "item at %d should be a simple array type", i)
+		assert.TrueTf(t, sch.IsArray, "item at %d should be an array type", i)
+		assert.TrueTf(t, sch.IsSimpleArray, "item at %d should be a simple array type", i)
 	}
 
 	for i, ref := range complexRefs(serv.URL) {
 		sch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(refSchema(ref))})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Falsef(t, sch.IsKnownType, "item at %d should not be a known type", i)
-		assert.Truef(t, sch.IsArray, "item at %d should be an array type", i)
-		assert.Falsef(t, sch.IsSimpleArray, "item at %d should not be a simple array type", i)
+		assert.FalseTf(t, sch.IsKnownType, "item at %d should not be a known type", i)
+		assert.TrueTf(t, sch.IsArray, "item at %d should be an array type", i)
+		assert.FalseTf(t, sch.IsSimpleArray, "item at %d should not be a simple array type", i)
 	}
 
 	// edge case: unrestricted array (beyond Swagger)
@@ -85,35 +85,35 @@ func TestSchemaAnalysis_Array(t *testing.T) {
 	at.Items = nil
 	sch, err := Schema(SchemaOpts{Schema: at})
 	require.NoError(t, err)
-	assert.True(t, sch.IsArray)
-	assert.False(t, sch.IsTuple)
-	assert.False(t, sch.IsKnownType)
-	assert.True(t, sch.IsSimpleSchema)
+	assert.TrueT(t, sch.IsArray)
+	assert.FalseT(t, sch.IsTuple)
+	assert.FalseT(t, sch.IsKnownType)
+	assert.TrueT(t, sch.IsSimpleSchema)
 
 	// unrestricted array with explicit empty schema
 	at = spec.ArrayProperty(nil)
 	at.Items = &spec.SchemaOrArray{}
 	sch, err = Schema(SchemaOpts{Schema: at})
 	require.NoError(t, err)
-	assert.True(t, sch.IsArray)
-	assert.False(t, sch.IsTuple)
-	assert.False(t, sch.IsKnownType)
-	assert.True(t, sch.IsSimpleSchema)
+	assert.TrueT(t, sch.IsArray)
+	assert.FalseT(t, sch.IsTuple)
+	assert.FalseT(t, sch.IsKnownType)
+	assert.TrueT(t, sch.IsSimpleSchema)
 }
 
 func TestSchemaAnalysis_Map(t *testing.T) {
 	for i, v := range append(knownSchemas(), spec.MapProperty(nil)) {
 		sch, err := Schema(SchemaOpts{Schema: spec.MapProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsMap, "item at %d should be a map type", i)
-		assert.Truef(t, sch.IsSimpleMap, "item at %d should be a simple map type", i)
+		assert.TrueTf(t, sch.IsMap, "item at %d should be a map type", i)
+		assert.TrueTf(t, sch.IsSimpleMap, "item at %d should be a simple map type", i)
 	}
 
 	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: spec.MapProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsMap, "item at %d should be a map type", i)
-		assert.Falsef(t, sch.IsSimpleMap, "item at %d should not be a simple map type", i)
+		assert.TrueTf(t, sch.IsMap, "item at %d should be a map type", i)
+		assert.FalseTf(t, sch.IsSimpleMap, "item at %d should not be a simple map type", i)
 	}
 }
 
@@ -122,9 +122,9 @@ func TestSchemaAnalysis_ExtendedObject(t *testing.T) {
 		wex := spec.MapProperty(v).SetProperty("name", *spec.StringProperty())
 		sch, err := Schema(SchemaOpts{Schema: wex})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsExtendedObject, "item at %d should be an extended map object type", i)
-		assert.Falsef(t, sch.IsMap, "item at %d should not be a map type", i)
-		assert.Falsef(t, sch.IsSimpleMap, "item at %d should not be a simple map type", i)
+		assert.TrueTf(t, sch.IsExtendedObject, "item at %d should be an extended map object type", i)
+		assert.FalseTf(t, sch.IsMap, "item at %d should not be a map type", i)
+		assert.FalseTf(t, sch.IsSimpleMap, "item at %d should not be a simple map type", i)
 	}
 }
 
@@ -135,20 +135,20 @@ func TestSchemaAnalysis_Tuple(t *testing.T) {
 
 	sch, err := Schema(SchemaOpts{Schema: at})
 	require.NoError(t, err)
-	assert.True(t, sch.IsTuple)
-	assert.False(t, sch.IsTupleWithExtra)
-	assert.False(t, sch.IsKnownType)
-	assert.False(t, sch.IsSimpleSchema)
+	assert.TrueT(t, sch.IsTuple)
+	assert.FalseT(t, sch.IsTupleWithExtra)
+	assert.FalseT(t, sch.IsKnownType)
+	assert.FalseT(t, sch.IsSimpleSchema)
 
 	// edge case: tuple with a single element
 	at.Items = &spec.SchemaOrArray{}
 	at.Items.Schemas = append(at.Items.Schemas, *spec.StringProperty())
 	sch, err = Schema(SchemaOpts{Schema: at})
 	require.NoError(t, err)
-	assert.True(t, sch.IsTuple)
-	assert.False(t, sch.IsTupleWithExtra)
-	assert.False(t, sch.IsKnownType)
-	assert.False(t, sch.IsSimpleSchema)
+	assert.TrueT(t, sch.IsTuple)
+	assert.FalseT(t, sch.IsTupleWithExtra)
+	assert.FalseT(t, sch.IsKnownType)
+	assert.FalseT(t, sch.IsSimpleSchema)
 }
 
 func TestSchemaAnalysis_TupleWithExtra(t *testing.T) {
@@ -160,10 +160,10 @@ func TestSchemaAnalysis_TupleWithExtra(t *testing.T) {
 
 	sch, err := Schema(SchemaOpts{Schema: at})
 	require.NoError(t, err)
-	assert.False(t, sch.IsTuple)
-	assert.True(t, sch.IsTupleWithExtra)
-	assert.False(t, sch.IsKnownType)
-	assert.False(t, sch.IsSimpleSchema)
+	assert.FalseT(t, sch.IsTuple)
+	assert.TrueT(t, sch.IsTupleWithExtra)
+	assert.FalseT(t, sch.IsKnownType)
+	assert.FalseT(t, sch.IsSimpleSchema)
 }
 
 func TestSchemaAnalysis_BaseType(t *testing.T) {
@@ -171,30 +171,30 @@ func TestSchemaAnalysis_BaseType(t *testing.T) {
 
 	sch, err := Schema(SchemaOpts{Schema: cl})
 	require.NoError(t, err)
-	assert.True(t, sch.IsBaseType)
-	assert.False(t, sch.IsKnownType)
-	assert.False(t, sch.IsSimpleSchema)
+	assert.TrueT(t, sch.IsBaseType)
+	assert.FalseT(t, sch.IsKnownType)
+	assert.FalseT(t, sch.IsSimpleSchema)
 }
 
 func TestSchemaAnalysis_SimpleSchema(t *testing.T) {
 	for i, v := range append(knownSchemas(), spec.ArrayProperty(nil), spec.MapProperty(nil)) {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Truef(t, sch.IsSimpleSchema, "item at %d should be a simple schema", i)
+		assert.TrueTf(t, sch.IsSimpleSchema, "item at %d should be a simple schema", i)
 
 		asch, err := Schema(SchemaOpts{Schema: spec.ArrayProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze array schema at %d: %v", i, err)
-		assert.Truef(t, asch.IsSimpleSchema, "array item at %d should be a simple schema", i)
+		assert.TrueTf(t, asch.IsSimpleSchema, "array item at %d should be a simple schema", i)
 
 		msch, err := Schema(SchemaOpts{Schema: spec.MapProperty(v)})
 		require.NoErrorf(t, err, "failed to analyze map schema at %d: %v", i, err)
-		assert.Truef(t, msch.IsSimpleSchema, "map item at %d should be a simple schema", i)
+		assert.TrueTf(t, msch.IsSimpleSchema, "map item at %d should be a simple schema", i)
 	}
 
 	for i, v := range complexSchemas() {
 		sch, err := Schema(SchemaOpts{Schema: v})
 		require.NoErrorf(t, err, "failed to analyze schema at %d: %v", i, err)
-		assert.Falsef(t, sch.IsSimpleSchema, "item at %d should not be a simple schema", i)
+		assert.FalseTf(t, sch.IsSimpleSchema, "item at %d should not be a simple schema", i)
 	}
 }
 

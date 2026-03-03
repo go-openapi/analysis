@@ -5,6 +5,7 @@ package analysis_test
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/go-openapi/analysis" // This package
 	"github.com/go-openapi/loads"    // Spec loading
@@ -12,7 +13,7 @@ import (
 
 func ExampleSpec() {
 	// Example with spec file in this repo
-	path := "../fixtures/flatten.yml"
+	path := filepath.Join("..", "..", "fixtures", "flatten.yml")
 	doc, err := loads.Spec(path) // Load spec from file
 	if err == nil {
 		an := analysis.New(doc.Spec()) // Analyze spec
@@ -25,7 +26,7 @@ func ExampleSpec() {
 
 func ExampleFlatten() {
 	// Example with spec file in this repo
-	path := "../fixtures/flatten.yml"
+	path := filepath.Join("..", "..", "fixtures", "flatten.yml")
 	doc, err := loads.Spec(path) // Load spec from file
 	if err == nil {
 		an := analysis.New(doc.Spec()) // Analyze spec

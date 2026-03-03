@@ -75,9 +75,9 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 	require.NoError(t, erx)
 
 	require.Len(t, sp.Definitions, 11)
-	require.Contains(t, sp.Definitions, "tag")
-	require.Contains(t, sp.Definitions, "named")
-	require.Contains(t, sp.Definitions, "record")
+	require.MapContainsT(t, sp.Definitions, "tag")
+	require.MapContainsT(t, sp.Definitions, "named")
+	require.MapContainsT(t, sp.Definitions, "record")
 
 	for idx, toPin := range makeRefFixtures() {
 		i := idx
@@ -95,16 +95,16 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 
 			switch tv := vv.(type) {
 			case *spec.Schema:
-				require.Equal(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
+				require.EqualT(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
 
 			case spec.Schema:
-				require.Equal(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
+				require.EqualT(t, v.Ref.String(), tv.Ref.String(), "for %s", v.Key)
 
 			case *spec.SchemaOrBool:
-				require.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
+				require.EqualT(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
 
 			case *spec.SchemaOrArray:
-				require.Equal(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
+				require.EqualT(t, v.Ref.String(), tv.Schema.Ref.String(), "for %s", v.Key)
 
 			default:
 				require.Fail(t, "unknown type", "got %T", vv)
@@ -113,12 +113,10 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 	}
 
 	// check the complete result for clarity
-	jazon := antest.AsJSON(t, sp)
-
 	expected, err := os.ReadFile(filepath.Join("fixtures", "expected", "external-references-1.json"))
 	require.NoError(t, err)
 
-	assert.JSONEq(t, string(expected), jazon)
+	assert.JSONMarshalAsT(t, string(expected), sp)
 
 	// iterate again: this time all external schema $ref's should be reinlined
 	opts.Spec.reload()
@@ -131,7 +129,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 
 	opts.Spec.reload()
 	for _, ref := range opts.Spec.references.schemas {
-		require.True(t, ref.HasFragmentOnly)
+		require.TrueT(t, ref.HasFragmentOnly)
 	}
 
 	// now try complete flatten, with unused definitions removed
@@ -140,12 +138,10 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: true}))
 
-	jazon = antest.AsJSON(t, an.spec)
-
 	expected, err = os.ReadFile(filepath.Join("fixtures", "expected", "external-references-2.json"))
 	require.NoError(t, err)
 
-	assert.JSONEq(t, string(expected), jazon)
+	assert.JSONMarshalAsT(t, string(expected), an.spec)
 }
 
 func makeFlattenFixtures() []refFixture {
@@ -352,24 +348,24 @@ func TestFlatten_CheckRef(t *testing.T) {
 
 			switch s := d.(type) {
 			case *spec.Schema:
-				assert.Equal(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
+				assert.EqualT(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
 
 			case spec.Schema:
-				assert.Equal(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
+				assert.EqualT(t, v.Ref.String(), s.Ref.String(), "at %d for %s", i, v.Key)
 
 			case *spec.SchemaOrArray:
 				var sRef spec.Ref
 				if s != nil && s.Schema != nil {
 					sRef = s.Schema.Ref
 				}
-				assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+				assert.EqualT(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
 
 			case *spec.SchemaOrBool:
 				var sRef spec.Ref
 				if s != nil && s.Schema != nil {
 					sRef = s.Schema.Ref
 				}
-				assert.Equal(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
+				assert.EqualT(t, v.Ref.String(), sRef.String(), "at %d for %s", i, v.Key)
 
 			default:
 				assert.Fail(t, "unknown type", "got %T at %d for %s", d, i, v.Key)
@@ -388,37 +384,37 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 	}))
 
 	res := getInPath(t, sp, "/some/where", "/get/responses/204/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/uniqueName1"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/uniqueName1"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/post/responses/204/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/d"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/d"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/get/responses/206/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/a"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/a"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/get/responses/304/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/transitive11"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/transitive11"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/get/responses/205/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/b"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/b"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/post/responses/200/schema")
-	assert.JSONEqf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/post/responses/default/schema")
 	// pointer expanded
-	assert.JSONEqf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "a")
-	assert.JSONEqf(t,
+	assert.JSONEqTf(t,
 		`{"type": "object", "properties": { "a": { "$ref": "#/definitions/aAOAIGen" }}}`,
 		res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "aA")
-	assert.JSONEqf(t, `{"type": "string", "format": "date"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "string", "format": "date"}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "aAOAIGen")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "object",
 	  "properties": {
@@ -431,13 +427,13 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 	`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "bB")
-	assert.JSONEqf(t, `{"type": "string", "format": "date-time"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "string", "format": "date-time"}`, res, "Expected a simple schema for response")
 
 	_, ok := sp.Definitions["bItems"]
-	assert.Falsef(t, ok, "Did not expect a definition for %s", "bItems")
+	assert.FalseTf(t, ok, "Did not expect a definition for %s", "bItems")
 
 	res = getDefinition(t, sp, "d")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "object",
 	  "properties": {
@@ -449,7 +445,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
    `, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "b")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "array",
 	  "items": {
@@ -459,7 +455,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 	`, res, "Expected a ref in response")
 
 	res = getDefinition(t, sp, "myBody")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "object",
 	  "properties": {
@@ -474,10 +470,10 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 	`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "uniqueName2")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/notUniqueName2"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/notUniqueName2"}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "notUniqueName2")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "object",
 	  "properties": {
@@ -489,7 +485,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 	`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "uniqueName1")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "prop5": {
@@ -498,7 +494,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 
 	// allOf container: []spec.Schema
 	res = getDefinition(t, sp, "getWithSliceContainerDefaultBody")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		"allOf": [
 		    {
 		     "$ref": "#/definitions/uniqueName3"
@@ -511,7 +507,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 		    }`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "getWithSliceContainerDefaultBodyAllOf1")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		"type": "object",
 		   "properties": {
 		    "prop8": {
@@ -522,7 +518,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 		    }`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "getWithTupleContainerDefaultBody")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "array",
 		   "items": [
 		    {
@@ -537,7 +533,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 
 	// with container SchemaOrArray
 	res = getDefinition(t, sp, "getWithTupleConflictDefaultBody")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "array",
 		   "items": [
 		    {
@@ -551,7 +547,7 @@ func TestFlatten_FullWithOAIGen(t *testing.T) {
 	}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "getWithTupleConflictDefaultBodyItems1")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "prop10": {
@@ -580,41 +576,41 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 
 	msg := logCapture.String()
-	if !assert.NotContainsf(t, msg,
+	if !assert.StringNotContainsTf(t, msg,
 		"warning: duplicate flattened definition name resolved as aAOAIGen", "Expected log message") {
 		t.Logf("Captured log: %s", msg)
 	}
-	if !assert.NotContainsf(t, msg,
+	if !assert.StringNotContainsTf(t, msg,
 		"warning: duplicate flattened definition name resolved as uniqueName2OAIGen", "Expected log message") {
 		t.Logf("Captured log: %s", msg)
 	}
 	res := getInPath(t, sp, "/some/where", "/get/responses/204/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/uniqueName1"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/uniqueName1"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/post/responses/204/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/d"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/d"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/get/responses/206/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/a"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/a"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/get/responses/304/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/transitive11"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/transitive11"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/get/responses/205/schema")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/b"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/b"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/post/responses/200/schema")
-	assert.JSONEqf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where", "/post/responses/default/schema")
 	// This JSON pointer is expanded
-	assert.JSONEqf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "integer"}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "aA")
-	assert.JSONEqf(t, `{"type": "string", "format": "date"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "string", "format": "date"}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "a")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "a": {
@@ -629,13 +625,13 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 		  }`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "bB")
-	assert.JSONEqf(t, `{"type": "string", "format": "date-time"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"type": "string", "format": "date-time"}`, res, "Expected a simple schema for response")
 
 	_, ok := sp.Definitions["bItems"]
-	assert.Falsef(t, ok, "Did not expect a definition for %s", "bItems")
+	assert.FalseTf(t, ok, "Did not expect a definition for %s", "bItems")
 
 	res = getDefinition(t, sp, "d")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "c": {
@@ -645,7 +641,7 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 	}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "b")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "array",
 		   "items": {
 			   "$ref": "#/definitions/d"
@@ -653,7 +649,7 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 	}`, res, "Expected a ref in response")
 
 	res = getDefinition(t, sp, "myBody")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		   "type": "object",
 		   "properties": {
 		    "aA": {
@@ -666,11 +662,11 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 	}`, res, "Expected a simple schema for response")
 
 	res = getDefinition(t, sp, "uniqueName2")
-	assert.JSONEqf(t, `{"$ref": "#/definitions/notUniqueName2"}`, res, "Expected a simple schema for response")
+	assert.JSONEqTf(t, `{"$ref": "#/definitions/notUniqueName2"}`, res, "Expected a simple schema for response")
 
 	// with allOf container: []spec.Schema
 	res = getInPath(t, sp, "/with/slice/container", "/get/responses/default/schema")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
  			"allOf": [
 		        {
 		         "$ref": "#/definitions/uniqueName3"
@@ -683,7 +679,7 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 
 	// with tuple container
 	res = getInPath(t, sp, "/with/tuple/container", "/get/responses/default/schema")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		       "type": "array",
 		       "items": [
 		        {
@@ -697,7 +693,7 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 
 	// with SchemaOrArray container
 	res = getInPath(t, sp, "/with/tuple/conflict", "/get/responses/default/schema")
-	assert.JSONEqf(t, `{
+	assert.JSONEqTf(t, `{
 		       "type": "array",
 		       "items": [
 		        {
@@ -727,10 +723,10 @@ func assertNoOAIGen(t *testing.T, bp string, sp *spec.Swagger) (success bool) {
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
 
 	msg := logCapture.String()
-	assert.NotContains(t, msg, "warning")
+	assert.StringNotContainsT(t, msg, "warning")
 
 	for k := range sp.Definitions {
-		require.NotContains(t, k, "OAIGen")
+		require.StringNotContainsT(t, k, "OAIGen")
 	}
 
 	return
@@ -748,7 +744,7 @@ func TestFlatten_OAIGen(t *testing.T) {
 			bp := filepath.Join("fixtures", "oaigen", "test3-swagger.yaml")
 			sp := antest.LoadOrFail(t, bp)
 
-			require.Truef(t, assertNoOAIGen(t, bp, sp), "did not expect an OAIGen definition here")
+			require.TrueTf(t, assertNoOAIGen(t, bp, sp), "did not expect an OAIGen definition here")
 		})
 	}
 }
@@ -760,7 +756,7 @@ func TestMoreNameInlinedSchemas(t *testing.T) {
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
 
 	res := getInPath(t, sp, "/some/where/{id}", "/post/responses/200/schema")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "object",
 	  "additionalProperties": {
@@ -775,7 +771,7 @@ func TestMoreNameInlinedSchemas(t *testing.T) {
 		res, "Expected a simple schema for response")
 
 	res = getInPath(t, sp, "/some/where/{id}", "/post/responses/204/schema")
-	assert.JSONEqf(t, `
+	assert.JSONEqTf(t, `
 	{
 	  "type": "object",
 	  "additionalProperties": {
@@ -822,17 +818,17 @@ func TestRemoveUnused(t *testing.T) {
 	assert.Nil(t, sp.Responses)
 
 	op, ok := an.OperationFor("GET", "/some/where")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.Lenf(t, op.Parameters, 4, "Expected 4 parameters expanded for this operation")
 	assert.Lenf(t, an.ParamsFor("GET", "/some/where"), 7, "Expected 7 parameters (with default) expanded for this operation")
 
 	op, ok = an.OperationFor("PATCH", "/some/remote")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.Lenf(t, op.Parameters, 1, "Expected 1 parameter expanded for this operation")
 	assert.Lenf(t, an.ParamsFor("PATCH", "/some/remote"), 2, "Expected 2 parameters (with default) expanded for this operation")
 
 	_, ok = sp.Definitions["unused"]
-	assert.False(t, ok, "Did not expect to find #/definitions/unused")
+	assert.FalseT(t, ok, "Did not expect to find #/definitions/unused")
 
 	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
 	sp = antest.LoadOrFail(t, bp)
@@ -842,7 +838,7 @@ func TestRemoveUnused(t *testing.T) {
 	assert.Nil(t, sp.Parameters)
 	assert.Nil(t, sp.Responses)
 	_, ok = sp.Definitions["unused"]
-	assert.Falsef(t, ok, "Did not expect to find #/definitions/unused")
+	assert.FalseTf(t, ok, "Did not expect to find #/definitions/unused")
 }
 
 func TestOperationIDs(t *testing.T) {
@@ -855,43 +851,43 @@ func TestOperationIDs(t *testing.T) {
 	t.Run("should GatherOperations", func(t *testing.T) {
 		res := operations.GatherOperations(New(sp), []string{"getSomeWhere", "getSomeWhereElse"})
 
-		assert.Containsf(t, res, "getSomeWhere", "expected to find operation")
-		assert.Containsf(t, res, "getSomeWhereElse", "expected to find operation")
-		assert.NotContainsf(t, res, "postSomeWhere", "did not expect to find operation")
+		assert.MapContainsTf(t, res, "getSomeWhere", "expected to find operation")
+		assert.MapContainsTf(t, res, "getSomeWhereElse", "expected to find operation")
+		assert.MapNotContainsTf(t, res, "postSomeWhere", "did not expect to find operation")
 	})
 
 	op, ok := an.OperationFor("GET", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("getSomeWhereElse"), 2)
 
 	op, ok = an.OperationFor("POST", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("postSomeWhereElse"), 1)
 
 	op, ok = an.OperationFor("PUT", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("putSomeWhereElse"), 1)
 
 	op, ok = an.OperationFor("PATCH", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("patchSomeWhereElse"), 1)
 
 	op, ok = an.OperationFor("DELETE", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("deleteSomeWhereElse"), 1)
 
 	op, ok = an.OperationFor("HEAD", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("headSomeWhereElse"), 1)
 
 	op, ok = an.OperationFor("OPTIONS", "/some/where/else")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 	assert.Len(t, an.ParametersFor("optionsSomeWhereElse"), 1)
 
@@ -911,7 +907,7 @@ func TestFlatten_Pointers(t *testing.T) {
 	// re-analyse and check all $ref's point to #/definitions
 	bn := New(sp)
 	for _, r := range bn.AllRefs() {
-		assert.Equal(t, definitionsPath, path.Dir(r.String()))
+		assert.EqualT(t, definitionsPath, path.Dir(r.String()))
 	}
 }
 
@@ -978,9 +974,9 @@ func TestFlatten_Bitbucket(t *testing.T) {
 
 	assert.Len(t, sp.Definitions, 2) // only 2 remaining refs after expansion: circular $ref
 	_, ok := sp.Definitions["base_commit"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	_, ok = sp.Definitions["repository"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 }
 
 func TestFlatten_Issue_1602(t *testing.T) {
@@ -1064,8 +1060,8 @@ func TestFlatten_Issue_1614(t *testing.T) {
 
 	// check that responses subject to warning have been expanded
 	jazon := antest.AsJSON(t, sp)
-	assert.NotContains(t, jazon, `#/responses/forbidden`)
-	assert.NotContains(t, jazon, `#/responses/empty`)
+	assert.StringNotContainsT(t, jazon, `#/responses/forbidden`)
+	assert.StringNotContainsT(t, jazon, `#/responses/empty`)
 }
 
 func TestFlatten_Issue_1621(t *testing.T) {
@@ -1083,16 +1079,13 @@ func TestFlatten_Issue_1621(t *testing.T) {
 	}))
 
 	sch1 := sp.Paths.Paths["/v4/users/"].Get.Responses.StatusCodeResponses[200].Schema
-	jazon := antest.AsJSON(t, sch1)
-	assert.JSONEq(t, `{"type": "array", "items": {"$ref": "#/definitions/v4UserListItem" }}`, jazon)
+	assert.JSONMarshalAsT(t, `{"type": "array", "items": {"$ref": "#/definitions/v4UserListItem" }}`, sch1)
 
 	sch2 := sp.Paths.Paths["/v4/user/"].Get.Responses.StatusCodeResponses[200].Schema
-	jazon = antest.AsJSON(t, sch2)
-	assert.JSONEq(t, `{"$ref": "#/definitions/v4UserListItem"}`, jazon)
+	assert.JSONMarshalAsT(t, `{"$ref": "#/definitions/v4UserListItem"}`, sch2)
 
 	sch3 := sp.Paths.Paths["/v4/users/{email}/"].Get.Responses.StatusCodeResponses[200].Schema
-	jazon = antest.AsJSON(t, sch3)
-	assert.JSONEq(t, `{"$ref": "#/definitions/v4UserListItem"}`, jazon)
+	assert.JSONMarshalAsT(t, `{"$ref": "#/definitions/v4UserListItem"}`, sch3)
 }
 
 func TestFlatten_Issue_1796(t *testing.T) {
@@ -1109,7 +1102,7 @@ func TestFlatten_Issue_1796(t *testing.T) {
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
-		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
+		assert.TrueT(t, strings.HasPrefix(ref, "#/definitions"))
 	}
 }
 
@@ -1126,7 +1119,7 @@ func TestFlatten_Issue_1767(t *testing.T) {
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
-		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
+		assert.TrueT(t, strings.HasPrefix(ref, "#/definitions"))
 	}
 }
 
@@ -1145,7 +1138,7 @@ func TestFlatten_Issue_1774(t *testing.T) {
 
 	// assert all $ref match  "$ref": "#/definitions/something"
 	for _, ref := range an.AllReferences() {
-		assert.True(t, strings.HasPrefix(ref, "#/definitions"))
+		assert.TrueT(t, strings.HasPrefix(ref, "#/definitions"))
 	}
 }
 
@@ -1177,19 +1170,16 @@ func TestFlatten_1851(t *testing.T) {
 	}))
 
 	serverDefinition, ok := an.spec.Definitions["server"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
 	serverStatusDefinition, ok := an.spec.Definitions["serverStatus"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
 	serverStatusProperty, ok := serverDefinition.Properties["Status"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
-	jazon := antest.AsJSON(t, serverStatusProperty)
-	assert.JSONEq(t, `{"$ref": "#/definitions/serverStatus"}`, jazon)
-
-	jazon = antest.AsJSON(t, serverStatusDefinition)
-	assert.JSONEq(t, `{"type": "string", "enum": [ "OK", "Not OK" ]}`, jazon)
+	assert.JSONMarshalAsT(t, `{"$ref": "#/definitions/serverStatus"}`, serverStatusProperty)
+	assert.JSONMarshalAsT(t, `{"type": "string", "enum": [ "OK", "Not OK" ]}`, serverStatusDefinition)
 
 	// additional test case: this one used to work
 	bp = filepath.Join("fixtures", "bugs", "1851", "fixture-1851-2.yaml")
@@ -1199,19 +1189,16 @@ func TestFlatten_1851(t *testing.T) {
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 
 	serverDefinition, ok = an.spec.Definitions["Server"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
 	serverStatusDefinition, ok = an.spec.Definitions["ServerStatus"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
 	serverStatusProperty, ok = serverDefinition.Properties["Status"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
-	jazon = antest.AsJSON(t, serverStatusProperty)
-	assert.JSONEq(t, `{"$ref": "#/definitions/ServerStatus"}`, jazon)
-
-	jazon = antest.AsJSON(t, serverStatusDefinition)
-	assert.JSONEq(t, `{"type": "string", "enum": [ "OK", "Not OK" ]}`, jazon)
+	assert.JSONMarshalAsT(t, `{"$ref": "#/definitions/ServerStatus"}`, serverStatusProperty)
+	assert.JSONMarshalAsT(t, `{"type": "string", "enum": [ "OK", "Not OK" ]}`, serverStatusDefinition)
 }
 
 func TestFlatten_RemoteAbsolute(t *testing.T) {
@@ -1255,7 +1242,7 @@ func TestFlatten_2092(t *testing.T) {
 	firstJSONMinimal := antest.AsJSON(t, an.spec)
 
 	// verify we don't have dangling oaigen refs
-	require.Falsef(t, rexOAIGen.MatchString(firstJSONMinimal), "unmatched regexp for: %s", firstJSONMinimal)
+	require.FalseTf(t, rexOAIGen.MatchString(firstJSONMinimal), "unmatched regexp for: %s", firstJSONMinimal)
 
 	sp = antest.LoadOrFail(t, bp)
 	an = New(sp)
@@ -1263,7 +1250,7 @@ func TestFlatten_2092(t *testing.T) {
 	firstJSONFull := antest.AsJSON(t, an.spec)
 
 	// verify we don't have dangling oaigen refs
-	require.Falsef(t, rexOAIGen.MatchString(firstJSONFull), "unmatched regexp for: %s", firstJSONFull)
+	require.FalseTf(t, rexOAIGen.MatchString(firstJSONFull), "unmatched regexp for: %s", firstJSONFull)
 
 	for i := range 10 {
 		t.Run(fmt.Sprintf("issue_2092_%d", i), func(t *testing.T) {
@@ -1276,7 +1263,7 @@ func TestFlatten_2092(t *testing.T) {
 			require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: false}))
 
 			jazon := antest.AsJSON(t, an.spec)
-			assert.JSONEq(t, firstJSONMinimal, jazon)
+			assert.JSONEqT(t, firstJSONMinimal, jazon)
 
 			require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: true}))
 
@@ -1286,7 +1273,7 @@ func TestFlatten_2092(t *testing.T) {
 			require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
 
 			jazon = antest.AsJSON(t, an.spec)
-			assert.JSONEq(t, firstJSONFull, jazon)
+			assert.JSONEqT(t, firstJSONFull, jazon)
 		})
 	}
 }
@@ -1315,12 +1302,10 @@ func TestFlatten_2113(t *testing.T) {
 		RemoveUnused: false,
 	}))
 
-	jazon := antest.AsJSON(t, sp)
-
 	expected, err := os.ReadFile(filepath.Join("fixtures", "expected", "issue-2113.json"))
 	require.NoError(t, err)
 
-	require.JSONEq(t, string(expected), jazon)
+	assert.JSONMarshalAsT(t, string(expected), sp)
 }
 
 func TestFlatten_2334(t *testing.T) {
@@ -1342,9 +1327,9 @@ func TestFlatten_2334(t *testing.T) {
 
 	jazon := antest.AsJSON(t, sp)
 
-	assert.Contains(t, jazon, `"$ref": "#/definitions/Bar"`)
-	assert.Contains(t, jazon, `"Bar":`)
-	assert.Contains(t, jazon, `"Baz":`)
+	assert.StringContainsT(t, jazon, `"$ref": "#/definitions/Bar"`)
+	assert.StringContainsT(t, jazon, `"Bar":`)
+	assert.StringContainsT(t, jazon, `"Baz":`)
 }
 
 func TestFlatten_1898(t *testing.T) {
@@ -1361,17 +1346,17 @@ func TestFlatten_1898(t *testing.T) {
 		RemoveUnused: false,
 	}))
 	op, ok := an.OperationFor("GET", "/example/v2/GetEvents")
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	resp, _, ok := op.SuccessResponse()
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
-	require.Equal(t, "#/definitions/xStreamDefinitionsV2EventMsg", resp.Schema.Ref.String())
+	require.EqualT(t, "#/definitions/xStreamDefinitionsV2EventMsg", resp.Schema.Ref.String())
 	def, ok := sp.Definitions["xStreamDefinitionsV2EventMsg"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 	require.Len(t, def.Properties, 2)
-	require.Contains(t, def.Properties, "error")
-	require.Contains(t, def.Properties, "result")
+	require.MapContainsT(t, def.Properties, "error")
+	require.MapContainsT(t, def.Properties, "result")
 }
 
 func TestFlatten_RemoveUnused_2657(t *testing.T) {
@@ -1422,7 +1407,7 @@ func TestFlatten_Relative_2743(t *testing.T) {
 
 func getDefinition(t testing.TB, sp *spec.Swagger, key string) string {
 	d, ok := sp.Definitions[key]
-	require.Truef(t, ok, "Expected definition for %s", key)
+	require.TrueTf(t, ok, "Expected definition for %s", key)
 	res, err := json.Marshal(d)
 	if err != nil {
 		panic(err)
@@ -1454,7 +1439,7 @@ func checkRefs(t testing.TB, spec *spec.Swagger, expectNoConflict bool) {
 
 	for _, matched := range m {
 		subMatch := matched[1]
-		assert.True(t, strings.HasPrefix(subMatch, "#/definitions/"),
+		assert.TrueT(t, strings.HasPrefix(subMatch, "#/definitions/"),
 			"expected $ref to be inlined, got: %s", matched[0])
 	}
 

@@ -113,11 +113,11 @@ func TestAnalyzer_All(t *testing.T) {
 	assert.Len(t, ops["GET"], 2)
 
 	op, ok := analyzer.OperationFor("get", "/")
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 	assert.NotNil(t, op)
 
 	op, ok = analyzer.OperationFor("delete", "/")
-	assert.False(t, ok)
+	assert.FalseT(t, ok)
 	assert.Nil(t, op)
 
 	// check for duplicates in sec. requirements for operation
@@ -202,7 +202,7 @@ func TestAnalyzer_DefinitionAnalysis(t *testing.T) {
 
 	allOfs := analyzer.allOfs
 	assert.Len(t, allOfs, 1)
-	assert.Contains(t, allOfs, "#/definitions/withAllOf")
+	assert.MapContainsT(t, allOfs, "#/definitions/withAllOf")
 }
 
 func TestAnalyzer_ReferenceAnalysis(t *testing.T) {
@@ -355,10 +355,10 @@ func TestAnalyzer_PatternAnalysis(t *testing.T) {
 
 	// patternProperties (beyond Swagger 2.0)
 	_, ok := an.spec.Definitions["withPatternProperties"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 
 	_, ok = an.allSchemas["#/definitions/withPatternProperties/patternProperties/^prop[0-9]+$"]
-	assert.True(t, ok)
+	assert.TrueT(t, ok)
 }
 
 func TestAnalyzer_ParamsAsMap(t *testing.T) {
@@ -369,15 +369,15 @@ func TestAnalyzer_ParamsAsMap(t *testing.T) {
 
 	m := make(map[string]spec.Parameter)
 	pi, ok := s.spec.Paths.Paths["/items"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	s.paramsAsMap(pi.Parameters, m, nil)
 	assert.Len(t, m, 1)
 
 	p, ok := m["query#Limit"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
-	assert.Equal(t, "limit", p.Name)
+	assert.EqualT(t, "limit", p.Name)
 
 	// An invalid spec, but passes this step (errors are figured out at a higher level)
 	s = prepareTestParamsInvalid(t, "fixture-1289-param.yaml")
@@ -385,16 +385,16 @@ func TestAnalyzer_ParamsAsMap(t *testing.T) {
 
 	m = make(map[string]spec.Parameter)
 	pi, ok = s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, nil)
 	assert.Len(t, m, 1)
 
 	p, ok = m["body#DespicableMe"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
-	assert.Equal(t, "despicableMe", p.Name)
+	assert.EqualT(t, "despicableMe", p.Name)
 }
 
 func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
@@ -407,7 +407,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	m := make(map[string]spec.Parameter)
 	e := []string{}
 	pi, ok := s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
@@ -416,14 +416,14 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 		return true // Continue
 	})
 
-	assert.Contains(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
-	assert.Contains(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
+	assert.StringContainsT(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
+	assert.StringContainsT(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
 
 	// bail out callback
 	m = make(map[string]spec.Parameter)
 	e = []string{}
 	pi, ok = s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
@@ -443,7 +443,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	m = make(map[string]spec.Parameter)
 	e = []string{}
 	pi, ok = s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
@@ -462,7 +462,7 @@ func TestAnalyzer_ParamsAsMapWithCallback(t *testing.T) {
 	m = make(map[string]spec.Parameter)
 	e = []string{}
 	pi, ok = s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	pi.Parameters = pi.Get.Parameters
 	s.paramsAsMap(pi.Parameters, m, func(_ spec.Parameter, err error) bool {
@@ -509,7 +509,7 @@ func TestAnalyzer_SafeParamsFor(t *testing.T) {
 
 	e := []string{}
 	pi, ok := s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	pi.Parameters = pi.Get.Parameters
 
@@ -523,8 +523,8 @@ func TestAnalyzer_SafeParamsFor(t *testing.T) {
 		require.Fail(t, "There should be no safe parameter in this testcase")
 	}
 
-	assert.Contains(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
-	assert.Contains(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
+	assert.StringContainsT(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
+	assert.StringContainsT(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
 }
 
 func TestAnalyzer_ParamsFor(t *testing.T) {
@@ -558,7 +558,7 @@ func TestAnalyzer_SafeParametersFor(t *testing.T) {
 
 	e := []string{}
 	pi, ok := s.spec.Paths.Paths["/fixture"]
-	require.True(t, ok)
+	require.TrueT(t, ok)
 
 	errFunc := func(_ spec.Parameter, err error) bool {
 		e = append(e, err.Error())
@@ -571,8 +571,8 @@ func TestAnalyzer_SafeParametersFor(t *testing.T) {
 		require.Fail(t, "There should be no safe parameter in this testcase")
 	}
 
-	assert.Contains(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
-	assert.Contains(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
+	assert.StringContainsT(t, strings.Join(e, ","), `resolved reference is not a parameter: "#/definitions/sample_info/properties/sid"`)
+	assert.StringContainsT(t, strings.Join(e, ","), `invalid reference: "#/definitions/sample_info/properties/sids"`)
 }
 
 func TestAnalyzer_ParametersFor(t *testing.T) {
@@ -609,14 +609,14 @@ func TestAnalyzer_SecurityDefinitionsFor(t *testing.T) {
 	pi2 := spec.spec.Paths.Paths["/items"].Get
 
 	defs1 := spec.SecurityDefinitionsFor(pi1)
-	require.Contains(t, defs1, "oauth2")
-	require.Contains(t, defs1, "basic")
-	require.NotContains(t, defs1, "apiKey")
+	require.MapContainsT(t, defs1, "oauth2")
+	require.MapContainsT(t, defs1, "basic")
+	require.MapNotContainsT(t, defs1, "apiKey")
 
 	defs2 := spec.SecurityDefinitionsFor(pi2)
-	require.Contains(t, defs2, "oauth2")
-	require.Contains(t, defs2, "basic")
-	require.Contains(t, defs2, "apiKey")
+	require.MapContainsT(t, defs2, "oauth2")
+	require.MapContainsT(t, defs2, "basic")
+	require.MapContainsT(t, defs2, "apiKey")
 }
 
 func TestAnalyzer_SecurityRequirements(t *testing.T) {
@@ -630,16 +630,16 @@ func TestAnalyzer_SecurityRequirements(t *testing.T) {
 	reqs1 := spec.SecurityRequirementsFor(pi1)
 	require.Len(t, reqs1, 2)
 	require.Len(t, reqs1[0], 1)
-	require.Equal(t, "oauth2", reqs1[0][0].Name)
+	require.EqualT(t, "oauth2", reqs1[0][0].Name)
 	require.Equal(t, reqs1[0][0].Scopes, scopes)
 	require.Len(t, reqs1[1], 1)
-	require.Equal(t, "basic", reqs1[1][0].Name)
+	require.EqualT(t, "basic", reqs1[1][0].Name)
 	require.Empty(t, reqs1[1][0].Scopes)
 
 	reqs2 := spec.SecurityRequirementsFor(pi2)
 	require.Len(t, reqs2, 3)
 	require.Len(t, reqs2[0], 1)
-	require.Equal(t, "oauth2", reqs2[0][0].Name)
+	require.EqualT(t, "oauth2", reqs2[0][0].Name)
 	require.Equal(t, scopes, reqs2[0][0].Scopes)
 	require.Len(t, reqs2[1], 1)
 	require.Empty(t, reqs2[1][0].Name)
@@ -660,25 +660,25 @@ func TestAnalyzer_SecurityRequirementsDefinitions(t *testing.T) {
 
 	reqs1 := spec.SecurityRequirementsFor(pi1)
 	defs11 := spec.SecurityDefinitionsForRequirements(reqs1[0])
-	require.Contains(t, defs11, "oauth2")
+	require.MapContainsT(t, defs11, "oauth2")
 	defs12 := spec.SecurityDefinitionsForRequirements(reqs1[1])
-	require.Contains(t, defs12, "basic")
-	require.NotContains(t, defs12, "apiKey")
+	require.MapContainsT(t, defs12, "basic")
+	require.MapNotContainsT(t, defs12, "apiKey")
 
 	reqs2 := spec.SecurityRequirementsFor(pi2)
 	defs21 := spec.SecurityDefinitionsForRequirements(reqs2[0])
 	require.Len(t, defs21, 1)
-	require.Contains(t, defs21, "oauth2")
-	require.NotContains(t, defs21, "basic")
-	require.NotContains(t, defs21, "apiKey")
+	require.MapContainsT(t, defs21, "oauth2")
+	require.MapNotContainsT(t, defs21, "basic")
+	require.MapNotContainsT(t, defs21, "apiKey")
 	defs22 := spec.SecurityDefinitionsForRequirements(reqs2[1])
 	require.NotNil(t, defs22)
 	require.Empty(t, defs22)
 	defs23 := spec.SecurityDefinitionsForRequirements(reqs2[2])
 	require.Len(t, defs23, 2)
-	require.NotContains(t, defs23, "oauth2")
-	require.Contains(t, defs23, "basic")
-	require.Contains(t, defs23, "apiKey")
+	require.MapNotContainsT(t, defs23, "oauth2")
+	require.MapContainsT(t, defs23, "basic")
+	require.MapContainsT(t, defs23, "apiKey")
 }
 
 func TestAnalyzer_MoreParamAnalysis(t *testing.T) {
@@ -728,10 +728,10 @@ func TestAnalyzer_MoreParamAnalysis(t *testing.T) {
 	assert.Lenf(t, schemaRefs, 1, "Expected 1 schema with AllOf definition in this spec")
 
 	method, path, op, found := an.OperationForName("postSomeWhere")
-	assert.Equal(t, "POST", method)
-	assert.Equal(t, "/some/where", path)
+	assert.EqualT(t, "POST", method)
+	assert.EqualT(t, "/some/where", path)
 	require.NotNil(t, op)
-	require.True(t, found)
+	require.TrueT(t, found)
 
 	sec := an.SecurityRequirementsFor(op)
 	assert.Nil(t, sec)
@@ -745,16 +745,16 @@ func TestAnalyzer_MoreParamAnalysis(t *testing.T) {
 	assert.Empty(t, method)
 	assert.Empty(t, path)
 	assert.Nil(t, op)
-	assert.False(t, found)
+	assert.FalseT(t, found)
 
 	// does not take ops under pathItem $ref
 	ops := an.OperationMethodPaths()
 	assert.Lenf(t, ops, 3, "Expected 3 ops")
 	ops = an.OperationIDs()
 	assert.Lenf(t, ops, 3, "Expected 3 ops")
-	assert.Contains(t, ops, "postSomeWhere")
-	assert.Contains(t, ops, "GET /some/where/else")
-	assert.Contains(t, ops, "GET /some/where")
+	assert.SliceContainsT(t, ops, "postSomeWhere")
+	assert.SliceContainsT(t, ops, "GET /some/where/else")
+	assert.SliceContainsT(t, ops, "GET /some/where")
 }
 
 func TestAnalyzer_EdgeCases(t *testing.T) {
@@ -886,25 +886,25 @@ func makeFixturepec(pi, pi2 spec.PathItem, formatParam *spec.Parameter) *spec.Sw
 }
 
 func assertEnum(t testing.TB, data map[string][]any, key string, enum []any) {
-	require.Contains(t, data, key)
+	require.MapContainsT(t, data, key)
 	assert.Equal(t, enum, data[key])
 }
 
 func assertRefExists(t testing.TB, data map[string]spec.Ref, key string) bool {
 	_, ok := data[key]
 
-	return assert.Truef(t, ok, "expected %q to exist in the ref bag", key)
+	return assert.TrueTf(t, ok, "expected %q to exist in the ref bag", key)
 }
 
 func assertSchemaRefExists(t testing.TB, data map[string]SchemaRef, key string) bool {
 	_, ok := data[key]
 
-	return assert.Truef(t, ok, "expected %q to exist in schema ref bag", key)
+	return assert.TrueTf(t, ok, "expected %q to exist in schema ref bag", key)
 }
 
 func assertPattern(t testing.TB, data map[string]string, key, pattern string) bool {
-	if assert.Contains(t, data, key) {
-		return assert.Equal(t, pattern, data[key])
+	if assert.MapContainsT(t, data, key) {
+		return assert.EqualT(t, pattern, data[key])
 	}
 
 	return false
