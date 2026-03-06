@@ -1,0 +1,53 @@
+name: integration test
+
+permissions:
+  pull-requests: read
+  contents: read
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+jobs:
+  test:
+    name: integration (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: stable
+          check-latest: true
+          cache: true
+          cache-dependency-path: '**/go.sum'
+
+      - name: Run integration tests
+        working-directory: internal/testintegration
+        run: >
+          go test
+          -v
+          -tags testintegration
+          -count 1
+          -timeout 30m
+          -coverprofile='integration.coverage.${{ matrix.os }}.out'
+          -covermode=atomic
+          -coverpkg=github.com/go-openapi/analysis/...
+          ./...
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          path: 'internal/testintegration/*.coverage.*.out'
+          name: 'integration.coverage.${{ matrix.os }}'
+          retention-days: 1
