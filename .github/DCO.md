@@ -1,4 +1,4 @@
- # Developer's Certificate of Origin
+# Developer's Certificate of Origin
 
 ```
 Developer Certificate of Origin
@@ -10,7 +10,6 @@ San Francisco, CA 94110 USA
 
 Everyone is permitted to copy and distribute verbatim copies of this
 license document, but changing it is not allowed.
-
 
 Developer's Certificate of Origin 1.1
 
