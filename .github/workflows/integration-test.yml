@@ -65,3 +65,9 @@ jobs:
             echo "Matrix jobs failed or were cancelled"
             exit 1
           fi
+
+  collect-coverage:
+    needs: [integration-test]
+    if: ${{ !cancelled() && needs.integration-test.result == 'success' }}
+    uses: go-openapi/ci-workflows/.github/workflows/collect-coverage.yml@435746a4b72b06b6b6989c309fd2ad8150dbae5a # v0.2.11
+    secrets: inherit
