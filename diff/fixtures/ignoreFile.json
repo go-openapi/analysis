@@ -1,0 +1,116 @@
+[
+  {
+    "location": {
+      "url": "/a/{id}",
+      "method": "get",
+      "response": 200,
+      "node": {
+        "name": "Body",
+        "type": "A1",
+        "is_array": true,
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "AddedEnumValue",
+    "compatibility": "Breaking",
+    "info": "sane"
+  },
+  {
+    "location": {
+      "url": "/a/{id}",
+      "method": "get",
+      "response": 200,
+      "node": {
+        "name": "Body",
+        "type": "A1",
+        "is_array": true,
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "DeletedEnumValue",
+    "compatibility": "NonBreaking",
+    "info": "crazy"
+  },
+  {
+    "location": {
+      "url": "/b/",
+      "method": "get",
+      "response": 200,
+      "node": {
+        "name": "Body",
+        "type": "A1",
+        "is_array": true,
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "AddedEnumValue",
+    "compatibility": "Breaking",
+    "info": "sane"
+  },
+  {
+    "location": {
+      "url": "/b/",
+      "method": "get",
+      "response": 200,
+      "node": {
+        "name": "Body",
+        "type": "A1",
+        "is_array": true,
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "DeletedEnumValue",
+    "compatibility": "NonBreaking",
+    "info": "crazy"
+  },
+  {
+    "location": {
+      "url": "/a/",
+      "method": "get",
+      "response": 200,
+      "node": {
+        "name": "Body",
+        "type": "A1",
+        "is_array": true,
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "AddedEnumValue",
+    "compatibility": "Breaking",
+    "info": "sane"
+  },
+  {
+    "location": {
+      "url": "/a/",
+      "method": "get",
+      "response": 200,
+      "node": {
+        "name": "Body",
+        "type": "A1",
+        "is_array": true,
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "DeletedEnumValue",
+    "compatibility": "NonBreaking",
+    "info": "crazy"
+  }
+]

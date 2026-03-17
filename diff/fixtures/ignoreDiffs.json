@@ -1,0 +1,35 @@
+[
+  {
+    "location": {
+      "url": "/a/",
+      "method": "get",
+      "node": {
+        "name": "Query",
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "AddedEnumValue",
+    "compatibility": "NonBreaking",
+    "info": "extrovert"
+  },
+  {
+    "location": {
+      "url": "/a/",
+      "method": "get",
+      "node": {
+        "name": "Query",
+        "child": {
+          "name": "personality",
+          "type": "string"
+        }
+      }
+    },
+    "code": "DeletedEnumValue",
+    "compatibility": "Breaking",
+    "info": "saucy"
+  }
+
+]
