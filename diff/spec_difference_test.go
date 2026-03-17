@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-openapi/testify/v2/require"
 
-	"github.com/go-swagger/go-swagger/cmd/swagger/commands/diff"
+	"github.com/go-openapi/analysis/diff"
 )
 
 func TestMatches(t *testing.T) {

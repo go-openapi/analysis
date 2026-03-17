@@ -12,11 +12,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-openapi/analysis/internal/antest"
+
+	"github.com/go-openapi/testify/v2/assert"
 	"github.com/go-openapi/testify/v2/require"
-
-	"github.com/go-openapi/loads"
-
-	"github.com/go-swagger/go-swagger/cmd/swagger/commands/internal/cmdtest"
 )
 
 // TestDiffForVariousCombinations - computes the diffs for a number
@@ -48,7 +47,7 @@ func TestDiffForVariousCombinations(t *testing.T) {
 					out, err, warn := diffs.ReportAllDiffs(false)
 					require.NoError(t, err)
 
-					if !cmdtest.AssertReadersContent(t, true, tc.expectedLines, out) {
+					if !assertReadersContent(t, true, tc.expectedLines, out) {
 						t.Logf("unexpected content for fixture %q[%d] (file: %s)", tc.name, i, tc.expectedFile)
 					}
 
@@ -66,19 +65,17 @@ func TestDiffForVariousCombinations(t *testing.T) {
 }
 
 func getDiffs(oldSpecPath, newSpecPath string) (SpecDifferences, error) {
-	swaggerDoc1 := oldSpecPath
-	specDoc1, err := loads.Spec(swaggerDoc1)
+	spec1, err := antest.LoadSpec(oldSpecPath)
 	if err != nil {
 		return nil, err
 	}
 
-	swaggerDoc2 := newSpecPath
-	specDoc2, err := loads.Spec(swaggerDoc2)
+	spec2, err := antest.LoadSpec(newSpecPath)
 	if err != nil {
 		return nil, err
 	}
 
-	return Compare(specDoc1.Spec(), specDoc2.Spec())
+	return Compare(spec1, spec2)
 }
 
 func makeTestCases(t testing.TB, matches []string) []testCaseData {
@@ -113,8 +110,8 @@ func makeTestCases(t testing.TB, matches []string) []testCaseData {
 }
 
 func TestIssue2962(t *testing.T) {
-	oldSpec := filepath.Join("..", "..", "..", "..", "fixtures", "bugs", "2962", "old.json")
-	newSpec := filepath.Join("..", "..", "..", "..", "fixtures", "bugs", "2962", "new.json")
+	oldSpec := filepath.Join("fixtures", "bugs", "2962", "old.json")
+	newSpec := filepath.Join("fixtures", "bugs", "2962", "new.json")
 
 	t.Run("should diff", func(t *testing.T) {
 		diffs, err := getDiffs(oldSpec, newSpec)
@@ -133,7 +130,7 @@ func TestIssue2962(t *testing.T) {
 }
 
 func fixturePath(file string, parts ...string) string {
-	return filepath.Join("..", "..", "..", "..", "fixtures", "diff", strings.Join(append([]string{file}, parts...), ""))
+	return filepath.Join("fixtures", strings.Join(append([]string{file}, parts...), ""))
 }
 
 type testCaseData struct {
@@ -158,4 +155,25 @@ func linesInFile(t testing.TB, fileName string) io.Reader {
 
 	// consumes a bit of extra memory, but no longer leaks open files
 	return bytes.NewBuffer(file)
+}
+
+func assertReadersContent(t testing.TB, noBlanks bool, expected, actual io.Reader) bool {
+	t.Helper()
+
+	e, err := io.ReadAll(expected)
+	require.NoError(t, err)
+
+	a, err := io.ReadAll(actual)
+	require.NoError(t, err)
+
+	var wants, got strings.Builder
+	_, _ = wants.Write(e)
+	_, _ = got.Write(a)
+
+	if noBlanks {
+		r := strings.NewReplacer(" ", "", "\t", "", "\n", "", "\r", "")
+		return assert.EqualTf(t, r.Replace(wants.String()), r.Replace(got.String()), "expected:\n%s\ngot:\n%s", wants.String(), got.String())
+	}
+
+	return assert.EqualT(t, wants.String(), got.String())
 }
