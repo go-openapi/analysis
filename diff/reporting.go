@@ -13,10 +13,10 @@ import (
 )
 
 // ArrayType const for array.
-var ArrayType = "array"
+var ArrayType = "array" //nolint:gochecknoglobals // quasi-constant used across package
 
 // ObjectType const for object.
-var ObjectType = "object"
+var ObjectType = "object" //nolint:gochecknoglobals // quasi-constant used across package
 
 // Compare returns the result of analysing breaking and non breaking changes
 // between to Swagger specs.
@@ -100,7 +100,7 @@ const (
 )
 
 // didn't use 'width' so as not to confuse with bit width.
-var numberWideness = map[string]int{
+var numberWideness = map[string]int{ //nolint:gochecknoglobals // type wideness lookup table
 	"number":        numberMappedAsFloat64,
 	"number.double": numberMappedAsFloat64,
 	"double":        numberMappedAsFloat64,
@@ -119,7 +119,7 @@ func prettyprint(b []byte) (io.ReadWriter, error) {
 }
 
 // JSONMarshal allows the item to be correctly rendered to json.
-func JSONMarshal(t interface{}) ([]byte, error) {
+func JSONMarshal(t any) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)

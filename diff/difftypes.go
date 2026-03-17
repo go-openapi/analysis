@@ -124,7 +124,7 @@ const (
 	ChangedExtensionValue
 )
 
-var toLongStringSpecChangeCode = map[SpecChangeCode]string{
+var toLongStringSpecChangeCode = map[SpecChangeCode]string{ //nolint:gochecknoglobals // enum lookup table
 	NoChangeDetected:          "No Change detected",
 	AddedEndpoint:             "Added endpoint",
 	DeletedEndpoint:           "Deleted endpoint",
@@ -181,7 +181,7 @@ var toLongStringSpecChangeCode = map[SpecChangeCode]string{
 	ChangedExtensionValue:     "Changed Extension Value",
 }
 
-var toStringSpecChangeCode = map[SpecChangeCode]string{
+var toStringSpecChangeCode = map[SpecChangeCode]string{ //nolint:gochecknoglobals // enum lookup table
 	AddedEndpoint:             "AddedEndpoint",
 	NoChangeDetected:          "NoChangeDetected",
 	DeletedEndpoint:           "DeletedEndpoint",
@@ -238,7 +238,7 @@ var toStringSpecChangeCode = map[SpecChangeCode]string{
 	ChangedExtensionValue:     "ChangedExtensionValue",
 }
 
-var toIDSpecChangeCode = map[string]SpecChangeCode{}
+var toIDSpecChangeCode = map[string]SpecChangeCode{} //nolint:gochecknoglobals // reverse enum lookup table
 
 // Description returns an english version of this error.
 func (s SpecChangeCode) Description() (result string) {
@@ -263,12 +263,12 @@ func (s *SpecChangeCode) UnmarshalJSON(b []byte) error {
 	}
 	// Note that if the string cannot be found then it will return an error to the caller.
 	val, ok := toIDSpecChangeCode[str]
-
-	if ok {
-		*s = val
-	} else {
-		return fmt.Errorf("unknown enum value. cannot unmarshal '%s'", str)
+	if !ok {
+		return fmt.Errorf("unknown enum value. cannot unmarshal '%s': %w", str, ErrDiff)
 	}
+
+	*s = val
+
 	return nil
 }
 
@@ -288,13 +288,13 @@ func (s Compatibility) String() string {
 	return toStringCompatibility[s]
 }
 
-var toStringCompatibility = map[Compatibility]string{
+var toStringCompatibility = map[Compatibility]string{ //nolint:gochecknoglobals // enum lookup table
 	Breaking:    "Breaking",
 	NonBreaking: "NonBreaking",
 	Warning:     "Warning",
 }
 
-var toIDCompatibility = map[string]Compatibility{}
+var toIDCompatibility = map[string]Compatibility{} //nolint:gochecknoglobals // reverse enum lookup table
 
 // MarshalJSON marshals the enum as a quoted json string.
 func (s Compatibility) MarshalJSON() ([]byte, error) {
@@ -309,12 +309,12 @@ func (s *Compatibility) UnmarshalJSON(b []byte) error {
 	}
 	// Note that if the string cannot be found then it will return an error to the caller.
 	val, ok := toIDCompatibility[str]
-
-	if ok {
-		*s = val
-	} else {
-		return fmt.Errorf("unknown enum value. cannot unmarshal '%s'", str)
+	if !ok {
+		return fmt.Errorf("unknown enum value. cannot unmarshal '%s': %w", str, ErrDiff)
 	}
+
+	*s = val
+
 	return nil
 }
 
@@ -334,7 +334,7 @@ func readStringFromByteStream(b []byte) (string, error) {
 	return j, nil
 }
 
-func init() {
+func init() { //nolint:gochecknoinits // populates reverse lookup tables from forward tables
 	for key, val := range toStringSpecChangeCode {
 		toIDSpecChangeCode[val] = key
 	}

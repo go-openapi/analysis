@@ -55,12 +55,12 @@ func getTypeFromSchemaProps(schema *spec.SchemaProps) (typeName string, isArray 
 	return typeName, false
 }
 
-func getSchemaTypeStr(item interface{}) string {
+func getSchemaTypeStr(item any) string {
 	typeStr, isArray := getSchemaType(item)
 	return formatTypeString(typeStr, isArray)
 }
 
-func getSchemaType(item interface{}) (typeName string, isArray bool) {
+func getSchemaType(item any) (typeName string, isArray bool) {
 	switch s := item.(type) {
 	case *spec.Schema:
 		typeName, isArray = getTypeFromSchema(s)
@@ -97,7 +97,7 @@ func definitionFromRef(ref spec.Ref) string {
 	return fragmentParts[numParts-1]
 }
 
-func isArray(item interface{}) bool {
+func isArray(item any) bool {
 	switch s := item.(type) {
 	case *spec.Schema:
 		return isArrayType(s.Type)
@@ -110,7 +110,7 @@ func isArray(item interface{}) bool {
 	}
 }
 
-func isPrimitive(item interface{}) bool {
+func isPrimitive(item any) bool {
 	switch s := item.(type) {
 	case *spec.Schema:
 		return isPrimitiveType(s.Type)

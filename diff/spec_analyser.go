@@ -936,7 +936,12 @@ func (sd *SpecAnalyser) findDeletedEndpoints() {
 func (sd *SpecAnalyser) analyseMetaDataProperty(item1, item2 string, codeIfDiff SpecChangeCode, compatIfDiff Compatibility) {
 	if item1 != item2 {
 		diffSpec := fmt.Sprintf("%s -> %s", item1, item2)
-		sd.Diffs = sd.Diffs.addDiff(SpecDifference{DifferenceLocation: DifferenceLocation{Node: &Node{Field: "Spec Metadata"}}, Code: codeIfDiff, Compatibility: compatIfDiff, DiffInfo: diffSpec})
+		sd.Diffs = sd.Diffs.addDiff(SpecDifference{
+			DifferenceLocation: DifferenceLocation{Node: &Node{Field: "Spec Metadata"}},
+			Code:               codeIfDiff,
+			Compatibility:      compatIfDiff,
+			DiffInfo:           diffSpec,
+		})
 	}
 }
 

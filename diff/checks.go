@@ -11,11 +11,11 @@ import (
 )
 
 // CompareEnums returns added, deleted enum values.
-func CompareEnums(left, right []interface{}) []TypeDiff {
+func CompareEnums(left, right []any) []TypeDiff {
 	diffs := []TypeDiff{}
 
-	leftStrs := []string{}
-	rightStrs := []string{}
+	leftStrs := make([]string, 0, len(left))
+	rightStrs := make([]string, 0, len(right))
 	for _, eachLeft := range left {
 		leftStrs = append(leftStrs, fmt.Sprintf("%v", eachLeft))
 	}
@@ -36,7 +36,12 @@ func CompareEnums(left, right []interface{}) []TypeDiff {
 }
 
 // CompareProperties recursive property comparison.
-func CompareProperties(location DifferenceLocation, schema1 *spec.Schema, schema2 *spec.Schema, getRefFn1 SchemaFromRefFn, getRefFn2 SchemaFromRefFn, cmp CompareSchemaFn) []SpecDifference {
+func CompareProperties(
+	location DifferenceLocation,
+	schema1, schema2 *spec.Schema,
+	getRefFn1, getRefFn2 SchemaFromRefFn,
+	cmp CompareSchemaFn,
+) []SpecDifference {
 	propDiffs := []SpecDifference{}
 
 	if schema1.Properties == nil && schema2.Properties == nil {
@@ -82,47 +87,67 @@ func CompareProperties(location DifferenceLocation, schema1 *spec.Schema, schema
 // CompareFloatValues compares a float data item.
 func CompareFloatValues(fieldName string, val1 *float64, val2 *float64, ifGreaterCode SpecChangeCode, ifLessCode SpecChangeCode) []TypeDiff {
 	diffs := []TypeDiff{}
+
 	if val1 != nil && val2 != nil {
-		if *val2 > *val1 {
+		switch {
+		case *val2 > *val1:
 			diffs = append(diffs, TypeDiff{Change: ifGreaterCode, Description: fmt.Sprintf("%s %f->%f", fieldName, *val1, *val2)})
-		} else if *val2 < *val1 {
+		case *val2 < *val1:
 			diffs = append(diffs, TypeDiff{Change: ifLessCode, Description: fmt.Sprintf("%s %f->%f", fieldName, *val1, *val2)})
 		}
-	} else {
-		if val1 != val2 {
-			if val1 != nil {
-				diffs = append(diffs, TypeDiff{Change: DeletedConstraint, Description: fmt.Sprintf("%s(%f)", fieldName, *val1)})
-			} else {
-				diffs = append(diffs, TypeDiff{Change: AddedConstraint, Description: fmt.Sprintf("%s(%f)", fieldName, *val2)})
-			}
-		}
+
+		return diffs
 	}
+
+	if val1 == val2 {
+		return diffs
+	}
+
+	if val1 != nil { // thus val2 = nil
+		diffs = append(diffs, TypeDiff{Change: DeletedConstraint, Description: fmt.Sprintf("%s(%f)", fieldName, *val1)})
+
+		return diffs
+	}
+
+	// val1 = nil, val2 != nil
+	diffs = append(diffs, TypeDiff{Change: AddedConstraint, Description: fmt.Sprintf("%s(%f)", fieldName, *val2)})
+
 	return diffs
 }
 
 // CompareIntValues compares to int data items.
 func CompareIntValues(fieldName string, val1 *int64, val2 *int64, ifGreaterCode SpecChangeCode, ifLessCode SpecChangeCode) []TypeDiff {
 	diffs := []TypeDiff{}
+
 	if val1 != nil && val2 != nil {
-		if *val2 > *val1 {
+		switch {
+		case *val2 > *val1:
 			diffs = append(diffs, TypeDiff{Change: ifGreaterCode, Description: fmt.Sprintf("%s %d->%d", fieldName, *val1, *val2)})
-		} else if *val2 < *val1 {
+		case *val2 < *val1:
 			diffs = append(diffs, TypeDiff{Change: ifLessCode, Description: fmt.Sprintf("%s %d->%d", fieldName, *val1, *val2)})
 		}
-	} else {
-		if val1 != val2 {
-			if val1 != nil {
-				diffs = append(diffs, TypeDiff{Change: DeletedConstraint, Description: fmt.Sprintf("%s(%d)", fieldName, *val1)})
-			} else {
-				diffs = append(diffs, TypeDiff{Change: AddedConstraint, Description: fmt.Sprintf("%s(%d)", fieldName, *val2)})
-			}
-		}
+
+		return diffs
 	}
+
+	if val1 == val2 {
+		return diffs
+	}
+
+	if val1 != nil { // thus val2 = nil
+		diffs = append(diffs, TypeDiff{Change: DeletedConstraint, Description: fmt.Sprintf("%s(%d)", fieldName, *val1)})
+
+		return diffs
+	}
+
+	// val1 = nil, val2 != nil
+	diffs = append(diffs, TypeDiff{Change: AddedConstraint, Description: fmt.Sprintf("%s(%d)", fieldName, *val2)})
+
 	return diffs
 }
 
 // CheckToFromPrimitiveType check for diff to or from a primitive.
-func CheckToFromPrimitiveType(diffs []TypeDiff, type1, type2 interface{}) []TypeDiff {
+func CheckToFromPrimitiveType(diffs []TypeDiff, type1, type2 any) []TypeDiff {
 	type1IsPrimitive := isPrimitive(type1)
 	type2IsPrimitive := isPrimitive(type2)
 
@@ -137,7 +162,7 @@ func CheckToFromPrimitiveType(diffs []TypeDiff, type1, type2 interface{}) []Type
 }
 
 // CheckRefChange has the property ref changed.
-func CheckRefChange(diffs []TypeDiff, type1, type2 interface{}) (diffReturn []TypeDiff) {
+func CheckRefChange(diffs []TypeDiff, type1, type2 any) (diffReturn []TypeDiff) {
 	diffReturn = diffs
 	if isRefType(type1) && isRefType(type2) {
 		// both refs but to different objects (TODO detect renamed object)
@@ -154,35 +179,42 @@ func CheckRefChange(diffs []TypeDiff, type1, type2 interface{}) (diffReturn []Ty
 
 // checkNumericTypeChanges checks for changes to or from a numeric type.
 func checkNumericTypeChanges(diffs []TypeDiff, type1, type2 *spec.SchemaProps) []TypeDiff {
-	// Number
 	_, type1IsNumeric := numberWideness[type1.Type[0]]
 	_, type2IsNumeric := numberWideness[type2.Type[0]]
 
-	if type1IsNumeric && type2IsNumeric {
-		foundDiff := false
-		if type1.ExclusiveMaximum && !type2.ExclusiveMaximum {
-			diffs = addTypeDiff(diffs, TypeDiff{Change: WidenedType, Description: fmt.Sprintf("Exclusive Maximum Removed:%v->%v", type1.ExclusiveMaximum, type2.ExclusiveMaximum)})
-			foundDiff = true
-		}
-		if !type1.ExclusiveMaximum && type2.ExclusiveMaximum {
-			diffs = addTypeDiff(diffs, TypeDiff{Change: NarrowedType, Description: fmt.Sprintf("Exclusive Maximum Added:%v->%v", type1.ExclusiveMaximum, type2.ExclusiveMaximum)})
-			foundDiff = true
-		}
-		if type1.ExclusiveMinimum && !type2.ExclusiveMinimum {
-			diffs = addTypeDiff(diffs, TypeDiff{Change: WidenedType, Description: fmt.Sprintf("Exclusive Minimum Removed:%v->%v", type1.ExclusiveMaximum, type2.ExclusiveMaximum)})
-			foundDiff = true
-		}
-		if !type1.ExclusiveMinimum && type2.ExclusiveMinimum {
-			diffs = addTypeDiff(diffs, TypeDiff{Change: NarrowedType, Description: fmt.Sprintf("Exclusive Minimum Added:%v->%v", type1.ExclusiveMinimum, type2.ExclusiveMinimum)})
-			foundDiff = true
-		}
-		if !foundDiff {
-			maxDiffs := CompareFloatValues("Maximum", type1.Maximum, type2.Maximum, WidenedType, NarrowedType)
-			diffs = append(diffs, maxDiffs...)
-			minDiffs := CompareFloatValues("Minimum", type1.Minimum, type2.Minimum, NarrowedType, WidenedType)
-			diffs = append(diffs, minDiffs...)
-		}
+	if !type1IsNumeric || !type2IsNumeric {
+		return diffs
 	}
+
+	foundDiff := false
+
+	if type1.ExclusiveMaximum && !type2.ExclusiveMaximum {
+		diffs = addTypeDiff(diffs, TypeDiff{Change: WidenedType, Description: fmt.Sprintf("Exclusive Maximum Removed:%v->%v", type1.ExclusiveMaximum, type2.ExclusiveMaximum)})
+		foundDiff = true
+	}
+
+	if !type1.ExclusiveMaximum && type2.ExclusiveMaximum {
+		diffs = addTypeDiff(diffs, TypeDiff{Change: NarrowedType, Description: fmt.Sprintf("Exclusive Maximum Added:%v->%v", type1.ExclusiveMaximum, type2.ExclusiveMaximum)})
+		foundDiff = true
+	}
+
+	if type1.ExclusiveMinimum && !type2.ExclusiveMinimum {
+		diffs = addTypeDiff(diffs, TypeDiff{Change: WidenedType, Description: fmt.Sprintf("Exclusive Minimum Removed:%v->%v", type1.ExclusiveMaximum, type2.ExclusiveMaximum)})
+		foundDiff = true
+	}
+
+	if !type1.ExclusiveMinimum && type2.ExclusiveMinimum {
+		diffs = addTypeDiff(diffs, TypeDiff{Change: NarrowedType, Description: fmt.Sprintf("Exclusive Minimum Added:%v->%v", type1.ExclusiveMinimum, type2.ExclusiveMinimum)})
+		foundDiff = true
+	}
+
+	if !foundDiff {
+		maxDiffs := CompareFloatValues("Maximum", type1.Maximum, type2.Maximum, WidenedType, NarrowedType)
+		diffs = append(diffs, maxDiffs...)
+		minDiffs := CompareFloatValues("Minimum", type1.Minimum, type2.Minimum, NarrowedType, WidenedType)
+		diffs = append(diffs, minDiffs...)
+	}
+
 	return diffs
 }
 
@@ -254,7 +286,7 @@ func getTypeHierarchyChange(type1, type2 string) TypeDiff {
 	return TypeDiff{Change: ChangedType, Description: diffDescription}
 }
 
-func isRefType(item interface{}) bool {
+func isRefType(item any) bool {
 	switch s := item.(type) {
 	case spec.Refable:
 		return s.Ref.String() != ""

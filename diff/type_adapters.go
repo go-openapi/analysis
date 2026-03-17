@@ -4,6 +4,8 @@
 package diff
 
 import (
+	"maps"
+
 	"github.com/go-openapi/spec"
 )
 
@@ -143,14 +145,12 @@ func propertiesFor(schema *spec.Schema, getRefFn SchemaFromRefFn) PropertyMap {
 	for _, e := range schema.AllOf {
 		eachAllOf := e
 		allOfMap := propertiesFor(&eachAllOf, getRefFn)
-		for name, prop := range allOfMap {
-			props[name] = prop
-		}
+		maps.Copy(props, allOfMap)
 	}
 	return props
 }
 
-func getRef(item interface{}) spec.Ref {
+func getRef(item any) spec.Ref {
 	switch s := item.(type) {
 	case *spec.Refable:
 		return s.Ref

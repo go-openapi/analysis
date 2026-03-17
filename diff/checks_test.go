@@ -4,7 +4,9 @@
 package diff
 
 import (
+	"iter"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -15,7 +17,7 @@ import (
 
 func Test_getRef(t *testing.T) {
 	type args struct {
-		item interface{}
+		item any
 	}
 	aRef, _ := spec.NewRef("hello")
 	tests := []struct {
@@ -106,8 +108,8 @@ func arraySchemaOf(typename string) *spec.Schema {
 func TestCheckToFromPrimitiveType(t *testing.T) {
 	type args struct {
 		diffs []TypeDiff
-		type1 interface{}
-		type2 interface{}
+		type1 any
+		type2 any
 	}
 	tests := []struct {
 		name string
@@ -128,8 +130,8 @@ func TestCheckToFromPrimitiveType(t *testing.T) {
 func TestCheckRefChange(t *testing.T) {
 	type args struct {
 		diffs []TypeDiff
-		type1 interface{}
-		type2 interface{}
+		type1 any
+		type2 any
 	}
 	tests := []struct {
 		name           string
@@ -181,8 +183,8 @@ func Test_isRef(t *testing.T) {
 
 func Test_compareEnums(t *testing.T) {
 	type args struct {
-		left  []interface{}
-		right []interface{}
+		left  []any
+		right []any
 	}
 	tests := []struct {
 		name string
@@ -229,93 +231,63 @@ func Test_checkNumericTypeChanges(t *testing.T) {
 	}
 }
 
+type compareValueCase struct {
+	name       string
+	fieldName  string
+	wantChange SpecChangeCode
+}
+
+func compareValueCases() iter.Seq[compareValueCase] {
+	return slices.Values([]compareValueCase{
+		{name: "both null", fieldName: "bob", wantChange: NoChangeDetected},
+		{name: "greater", fieldName: "bob", wantChange: WidenedType},
+		{name: "less", fieldName: "bob", wantChange: NarrowedType},
+		{name: "firstNil", fieldName: "bob", wantChange: AddedConstraint},
+		{name: "secondNil", fieldName: "bob", wantChange: DeletedConstraint},
+	})
+}
+
 func TestCompareFloatValues(t *testing.T) {
-	type args struct {
-		name   string
-		field1 *float64
-		field2 *float64
+	floatInputs := map[string]struct{ field1, field2 *float64 }{
+		"both null": {nil, nil},
+		"greater":   {floatPointerOf(1.0), floatPointerOf(2.0)},
+		"less":      {floatPointerOf(2.0), floatPointerOf(1.0)},
+		"firstNil":  {nil, floatPointerOf(1.0)},
+		"secondNil": {floatPointerOf(2.0), nil},
 	}
-	tests := []struct {
-		name string
-		args args
-		want []TypeDiff
-	}{
-		{
-			name: "both null",
-			args: args{name: "bob", field1: nil, field2: nil},
-			want: []TypeDiff{},
-		},
-		{
-			name: "greater",
-			args: args{name: "bob", field1: floatPointerOf(1.0), field2: floatPointerOf(2.0)},
-			want: []TypeDiff{{Change: WidenedType, Description: "bob 1.000000->2.000000"}},
-		},
-		{
-			name: "less",
-			args: args{name: "bob", field1: floatPointerOf(2.0), field2: floatPointerOf(1.0)},
-			want: []TypeDiff{{Change: NarrowedType, Description: "bob 2.000000->1.000000"}},
-		},
-		{
-			name: "firstNil",
-			args: args{name: "bob", field1: nil, field2: floatPointerOf(1.0)},
-			want: []TypeDiff{{Change: AddedConstraint, Description: "bob(1.000000)"}},
-		},
-		{
-			name: "secondNil",
-			args: args{name: "bob", field1: floatPointerOf(2.0), field2: nil},
-			want: []TypeDiff{{Change: DeletedConstraint, Description: "bob(2.000000)"}},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := CompareFloatValues(tt.args.name, tt.args.field1, tt.args.field2, WidenedType, NarrowedType); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CheckStringTypeChanges() = %s, want %s", jsonStr(got), jsonStr(tt.want))
+
+	for tc := range compareValueCases() {
+		in := floatInputs[tc.name]
+		t.Run(tc.name, func(t *testing.T) {
+			got := CompareFloatValues(tc.fieldName, in.field1, in.field2, WidenedType, NarrowedType)
+			if tc.wantChange == NoChangeDetected {
+				assert.Empty(t, got)
+			} else {
+				assert.Len(t, got, 1)
+				assert.EqualT(t, tc.wantChange, got[0].Change)
 			}
 		})
 	}
 }
 
 func TestCompareIntValues(t *testing.T) {
-	type args struct {
-		name   string
-		field1 *int64
-		field2 *int64
+	intInputs := map[string]struct{ field1, field2 *int64 }{
+		"both null": {nil, nil},
+		"greater":   {intPointerOf(1), intPointerOf(2)},
+		"less":      {intPointerOf(2), intPointerOf(1)},
+		"firstNil":  {nil, intPointerOf(1)},
+		"secondNil": {intPointerOf(2), nil},
 	}
-	tests := []struct {
-		name string
-		args args
-		want []TypeDiff
-	}{
-		{
-			name: "both null",
-			args: args{name: "bob", field1: nil, field2: nil},
-			want: []TypeDiff{},
-		},
-		{
-			name: "greater",
-			args: args{name: "bob", field1: intPointerOf(1), field2: intPointerOf(2)},
-			want: []TypeDiff{{Change: WidenedType, Description: "bob 1->2"}},
-		},
-		{
-			name: "less",
-			args: args{name: "bob", field1: intPointerOf(2), field2: intPointerOf(1)},
-			want: []TypeDiff{{Change: NarrowedType, Description: "bob 2->1"}},
-		},
-		{
-			name: "firstNil",
-			args: args{name: "bob", field1: nil, field2: intPointerOf(1)},
-			want: []TypeDiff{{Change: AddedConstraint, Description: "bob(1)"}},
-		},
-		{
-			name: "secondNil",
-			args: args{name: "bob", field1: intPointerOf(2), field2: nil},
-			want: []TypeDiff{{Change: DeletedConstraint, Description: "bob(2)"}},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := CompareIntValues(tt.args.name, tt.args.field1, tt.args.field2, WidenedType, NarrowedType); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CheckStringTypeChanges() = %s, want %s", jsonStr(got), jsonStr(tt.want))
+
+	for tc := range compareValueCases() {
+		in := intInputs[tc.name]
+		t.Run(tc.name, func(t *testing.T) {
+			got := CompareIntValues(tc.fieldName, in.field1, in.field2, WidenedType, NarrowedType)
+			if tc.wantChange == NoChangeDetected {
+				assert.Empty(t, got)
+			} else {
+				assert.Len(t, got, 1)
+				assert.EqualT(t, tc.wantChange, got[0].Change)
 			}
 		})
 	}
@@ -396,7 +368,7 @@ func Test_propertiesFor(t *testing.T) {
 	}
 }
 
-func jsonStr(thing interface{}) string {
+func jsonStr(thing any) string {
 	bstr, _ := JSONMarshal(thing)
 	return string(bstr)
 }

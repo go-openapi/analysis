@@ -5,10 +5,9 @@ package diff
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -153,17 +152,22 @@ func (sd SpecDifference) String() string {
 func (sd *SpecDifferences) ReportCompatibility() (io.Reader, error, error) {
 	var out bytes.Buffer
 	breakingCount := sd.BreakingChangeCount()
+
 	if breakingCount > 0 {
 		if len(*sd) != breakingCount {
 			fmt.Fprintln(&out, "")
 		}
+
 		fmt.Fprintln(&out, "BREAKING CHANGES:\n=================")
 		_, _ = out.ReadFrom(sd.reportChanges(Breaking))
 		msg := fmt.Sprintf("compatibility test FAILED: %d breaking changes detected", breakingCount)
 		fmt.Fprintln(&out, msg)
-		return &out, nil, errors.New(msg)
+
+		return &out, nil, fmt.Errorf("%s: %w", msg, ErrDiff)
 	}
+
 	fmt.Fprintf(&out, "compatibility test OK. No breaking changes identified.\n")
+
 	return &out, nil, nil
 }
 
@@ -207,9 +211,7 @@ func (sd SpecDifferences) reportChanges(compat Compatibility) io.Reader {
 		}
 	}
 
-	sort.Slice(toReportList, func(i, j int) bool {
-		return toReportList[i] < toReportList[j]
-	})
+	slices.Sort(toReportList)
 
 	for _, eachDiff := range toReportList {
 		fmt.Fprintln(&out, eachDiff)

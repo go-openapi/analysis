@@ -10,9 +10,9 @@ type CompatibilityPolicy struct {
 	ForChange   map[SpecChangeCode]Compatibility
 }
 
-var compatibility CompatibilityPolicy
+var compatibility CompatibilityPolicy //nolint:gochecknoglobals // package-level policy singleton
 
-func init() {
+func init() { //nolint:gochecknoinits // initializes the compatibility policy table
 	compatibility = CompatibilityPolicy{
 		ForResponse: map[SpecChangeCode]Compatibility{
 			AddedRequiredProperty:   Breaking,

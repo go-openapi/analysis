@@ -55,25 +55,25 @@ func (f fromArrayStruct) DiffsTo(toArray []string) (added, deleted, common []str
 
 // fromMapStruct utility struct to encompass diffing of string arrays.
 type fromMapStruct struct {
-	srcMap map[string]interface{}
+	srcMap map[string]any
 }
 
 // fromStringMap starts a comparison by declaring a source map.
-func fromStringMap(srcMap map[string]interface{}) fromMapStruct {
+func fromStringMap(srcMap map[string]any) fromMapStruct {
 	return fromMapStruct{srcMap}
 }
 
 // Pair stores a pair of items which share a key in two maps.
 type Pair struct {
-	First  interface{}
-	Second interface{}
+	First  any
+	Second any
 }
 
 // DiffsTo - generates diffs for a comparison.
-func (f fromMapStruct) DiffsTo(destMap map[string]interface{}) (added, deleted, common map[string]interface{}) {
-	added = make(map[string]interface{})
-	deleted = make(map[string]interface{})
-	common = make(map[string]interface{})
+func (f fromMapStruct) DiffsTo(destMap map[string]any) (added, deleted, common map[string]any) {
+	added = make(map[string]any)
+	deleted = make(map[string]any)
+	common = make(map[string]any)
 
 	inSrc := 1
 	inDest := 2

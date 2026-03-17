@@ -58,7 +58,7 @@ func (n Node) Copy() *Node {
 	return &newNode
 }
 
-func getSchemaDiffNode(name string, schema interface{}) *Node {
+func getSchemaDiffNode(name string, schema any) *Node {
 	node := Node{
 		Field: name,
 	}
