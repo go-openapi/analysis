@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Go library for analyzing, flattening, merging (mixin), and fixing
+Go library for analyzing, diffing, flattening, merging (mixin), and fixing
 [Swagger 2.0](https://swagger.io/specification/v2/) specifications. Built on top of
 `go-openapi/spec`, it is a central utility in the go-swagger ecosystem for code generation
 and validation tooling.
@@ -28,6 +28,17 @@ See [docs/MAINTAINERS.md](../docs/MAINTAINERS.md) for CI/CD, release process, an
 | `errors.go` | Sentinel errors (`ErrAnalysis`, `ErrNoSchema`) and error factory functions |
 | `debug.go` | Debug logger wired to `SWAGGER_DEBUG` env var |
 
+### `diff/` package
+
+| File | Contents |
+|------|----------|
+| `diff/spec_analyser.go` | `SpecAnalyser` — walks two specs and collects differences by endpoint, schema, parameter, response |
+| `diff/reporting.go` | `Compare(spec1, spec2 *spec.Swagger)` — top-level entry point returning `SpecDifferences` |
+| `diff/compatibility.go` | Backward-compatibility classification of each change |
+| `diff/spec_difference.go` | `SpecDifference`, `SpecDifferences`, `SpecChangeCode` — diff result types |
+| `diff/schema.go` | Schema-level diffing (properties, enums, allOf) |
+| `diff/checks.go` | Primitive comparisons: `CompareEnums()`, `CompareProperties()`, numeric range checks |
+
 ### Internal packages (`internal/`)
 
 | Package | Contents |
@@ -47,6 +58,7 @@ See [docs/MAINTAINERS.md](../docs/MAINTAINERS.md) for CI/CD, release process, an
 - `Schema(SchemaOpts) (*AnalyzedSchema, error)` — classify a schema (array, map, tuple, base type, etc.)
 - `Flatten(FlattenOpts) error` — flatten/expand a spec (inline schemas → definitions, remote refs → local)
 - `Mixin(primary, mixins...) []string` — merge multiple specs, returning collision warnings
+- `diff.Compare(spec1, spec2 *spec.Swagger) (SpecDifferences, error)` — compare two specs and report changes with compatibility info
 - `FixEmptyResponseDescriptions(*spec.Swagger)` — patch empty response descriptions
 
 ### Dependencies

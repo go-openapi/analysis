@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Go library for analyzing, flattening, merging (mixin), and fixing
+Go library for analyzing, diffing, flattening, merging (mixin), and fixing
 [Swagger 2.0](https://swagger.io/specification/v2/) specifications. Built on top of
 `go-openapi/spec`, it is a central utility in the go-swagger ecosystem for code generation
 and validation tooling.
@@ -16,6 +16,7 @@ and validation tooling.
 | `flatten.go` | `Flatten(FlattenOpts)` — multi-step pipeline: expand, normalize, name inline schemas, strip OAIGen, remove unused |
 | `mixin.go` | `Mixin(primary, mixins...)` — merges specs, returns collision warnings |
 | `fixer.go` | `FixEmptyResponseDescriptions()` — patches empty response descriptions |
+| `diff/` | `Compare(spec1, spec2)` — compares two specs and reports structural and compatibility changes |
 
 Internal packages live under `internal/` (debug, antest, flatten/{normalize,operations,replace,schutils,sortref}).
 
@@ -24,6 +25,7 @@ Internal packages live under `internal/` (debug, antest, flatten/{normalize,oper
 - `New(*spec.Swagger) *Spec` — build an analyzed index from a parsed spec
 - `Flatten(FlattenOpts) error` — flatten/expand a spec
 - `Mixin(primary, mixins...) []string` — merge multiple specs
+- `diff.Compare(spec1, spec2 *spec.Swagger) (SpecDifferences, error)` — compare two specs
 - `Schema(SchemaOpts) (*AnalyzedSchema, error)` — classify a schema
 
 ### Dependencies
