@@ -19,7 +19,7 @@
 | @mbohlool | 2 | <https://github.com/go-openapi/analysis/commits?author=mbohlool> |
 | @zmay2030 | 2 | <https://github.com/go-openapi/analysis/commits?author=zmay2030> |
 | @ujjwalsh | 1 | <https://github.com/go-openapi/analysis/commits?author=ujjwalsh> |
-| @EarthSoar | 1 | <https://github.com/go-openapi/analysis/commits?author=EarthSoar> |
+| @itengfei | 1 | <https://github.com/go-openapi/analysis/commits?author=itengfei> |
 | @nrnrk | 1 | <https://github.com/go-openapi/analysis/commits?author=nrnrk> |
 | @cuishuang | 1 | <https://github.com/go-openapi/analysis/commits?author=cuishuang> |
 | @tklauser | 1 | <https://github.com/go-openapi/analysis/commits?author=tklauser> |
