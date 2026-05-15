@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/swag/loading v0.26.0
 	github.com/go-openapi/swag/mangling v0.26.0
 	github.com/go-openapi/testify/v2 v2.5.0
-	golang.org/x/text v0.36.0
+	golang.org/x/text v0.37.0
 )
 
 require (
