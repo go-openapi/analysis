@@ -7,7 +7,7 @@ require (
 	github.com/go-openapi/loads v0.23.3
 	github.com/go-openapi/spec v0.22.4
 	github.com/go-openapi/swag/loading v0.26.0
-	github.com/go-openapi/testify/v2 v2.5.0
+	github.com/go-openapi/testify/v2 v2.5.1
 )
 
 require (
