@@ -18,7 +18,6 @@ A foundational library to analyze, diff, flatten, merge, and fix OAI specificati
 
 * **2025-12-19** : new community chat on discord
   * a new discord community channel is available to be notified of changes and support users
-  * our venerable Slack channel remains open, and will be eventually discontinued on **2026-03-31**
 
 You may join the discord community by clicking the invite link on the discord badge (also above). [![Discord Channel][discord-badge]][discord-url]
 
