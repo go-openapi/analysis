@@ -12,7 +12,7 @@ require (
 
 require (
 	github.com/go-openapi/errors v0.22.8 // indirect
-	github.com/go-openapi/jsonpointer v0.24.0 // indirect
+	github.com/go-openapi/jsonpointer v1.0.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.6 // indirect
 	github.com/go-openapi/strfmt v0.26.4 // indirect
 	github.com/go-openapi/swag/conv v0.27.0 // indirect
