@@ -215,7 +215,7 @@ func mergePaths(primary *spec.Swagger, m *spec.Swagger, opIDs map[string]bool, m
 			// collision we append "Mixin0" to the
 			// operatoinId we are adding, where 0 is mixin
 			// index.  We assume that operationIds with
-			// all the proivded specs are already unique.
+			// all the provided specs are already unique.
 			piops := pathItemOps(v)
 			for _, piop := range piops {
 				if opIDs[piop.ID] {
