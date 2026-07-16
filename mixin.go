@@ -358,7 +358,7 @@ func mergeSwaggerProps(primary *spec.Swagger, m *spec.Swagger) []string {
 
 	if primary.ExternalDocs == nil {
 		primary.ExternalDocs = m.ExternalDocs
-	} else if m != nil {
+	} else if m.ExternalDocs != nil {
 		skippedDocs = mergeExternalDocs(primary.ExternalDocs, m.ExternalDocs)
 		skipped = append(skipped, skippedDocs...)
 	}
