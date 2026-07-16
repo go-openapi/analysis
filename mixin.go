@@ -130,6 +130,7 @@ func pathItemOps(p spec.PathItem) []*spec.Operation {
 	rv = appendOp(rv, p.Post)
 	rv = appendOp(rv, p.Delete)
 	rv = appendOp(rv, p.Head)
+	rv = appendOp(rv, p.Options)
 	rv = appendOp(rv, p.Patch)
 
 	return rv
