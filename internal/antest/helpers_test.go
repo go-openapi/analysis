@@ -101,7 +101,7 @@ info:
 	}
 
 	require.NoError(t,
-		os.WriteFile(file, data, 0o600), //nolint:gosec // false positive on temp test dir: G703: Path traversal via taint analysis.
+		os.WriteFile(file, data, 0o600),
 	)
 
 	return file, func() {}
