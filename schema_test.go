@@ -14,9 +14,33 @@ import (
 
 	"github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
+	"github.com/go-openapi/swag/loading"
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/go-openapi/testify/v2/require"
 )
+
+// TestSchema_PathLoaderWithOptions verifies that a document loader injected through
+// SchemaOpts is the one used to resolve a remote $ref during schema analysis — the hook a caller
+// uses to confine loading when the schema may come from an untrusted source.
+func TestSchema_PathLoaderWithOptions(t *testing.T) {
+	serv := refServer()
+	defer serv.Close()
+
+	var calls int
+	loader := func(pth string, opts ...loading.Option) (json.RawMessage, error) {
+		calls++
+		return loading.LoadFromFileOrHTTP(pth, opts...)
+	}
+
+	refs := knownRefs(serv.URL)
+	sch, err := Schema(SchemaOpts{
+		Schema:                refSchema(refs[0]),
+		PathLoaderWithOptions: loader,
+	})
+	require.NoError(t, err)
+	assert.TrueT(t, sch.IsKnownType)
+	assert.TrueT(t, calls > 0, "expected the injected loader to resolve the remote $ref")
+}
 
 func TestSchemaAnalysis_KnownTypes(t *testing.T) {
 	for i, v := range knownSchemas() {
