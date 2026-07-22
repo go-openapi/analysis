@@ -1202,6 +1202,10 @@ func TestFlatten_1851(t *testing.T) {
 }
 
 func TestFlatten_RemoteAbsolute(t *testing.T) {
+	if !antest.LongTestsEnabled() {
+		t.Skip("requires remote fixtures; use -enable-long to run")
+	}
+
 	for _, toPin := range []string{
 		// this one has simple remote ref pattern
 		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-mini.json"),
