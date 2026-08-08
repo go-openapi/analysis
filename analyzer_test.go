@@ -289,6 +289,82 @@ func TestAnalyzer_ReferenceAnalysis(t *testing.T) {
 	assert.Lenf(t, an.AllItemsReferences(), 3, "Expected 3 items references in this spec")
 }
 
+func TestAnalyzer_AllRefsByLocation(t *testing.T) {
+	t.Parallel()
+
+	doc := antest.LoadOrFail(t, filepath.Join("fixtures", "references.yml"))
+	an := New(doc)
+
+	byLocation := an.AllRefsByLocation()
+	require.NotEmpty(t, byLocation)
+
+	t.Run("should key references by where they are declared", func(t *testing.T) {
+		t.Parallel()
+
+		for _, fixture := range []struct {
+			Location string
+			Expected string
+		}{
+			{
+				Location: "#/paths/~1some~1where~1{id}/parameters/0",
+				Expected: "#/parameters/idParam",
+			},
+			{
+				Location: "#/paths/~1some~1where~1{id}/get/parameters/0",
+				Expected: "#/parameters/limitParam",
+			},
+			{
+				Location: "#/paths/~1some~1where~1{id}/get/parameters/1/items",
+				Expected: "#/definitions/named",
+			},
+			{
+				Location: "#/responses/notFound/schema",
+				Expected: "#/definitions/error",
+			},
+			{
+				Location: "#/paths/~1other~1place",
+				Expected: "#/x-shared-path/getItems",
+			},
+		} {
+			require.MapContainsT(t, byLocation, fixture.Location)
+			ref := byLocation[fixture.Location]
+			assert.EqualT(t, fixture.Expected, ref.String(),
+				"unexpected reference at %q", fixture.Location)
+		}
+	})
+
+	t.Run("should agree with AllRefs on the referenced values", func(t *testing.T) {
+		t.Parallel()
+
+		// AllRefs is the same set, deduplicated and stripped of empty references
+		unique := make(map[string]struct{}, len(byLocation))
+		for _, declared := range byLocation {
+			ref := declared
+			if ref.String() == "" {
+				continue
+			}
+			unique[ref.String()] = struct{}{}
+		}
+
+		assert.Len(t, an.AllRefs(), len(unique))
+		for _, found := range an.AllRefs() {
+			ref := found
+			assert.MapContainsT(t, unique, ref.String())
+		}
+	})
+
+	t.Run("should return a clone", func(t *testing.T) {
+		t.Parallel()
+
+		const location = "#/responses/notFound/schema"
+		byLocation := an.AllRefsByLocation()
+		delete(byLocation, location)
+
+		require.MapContainsT(t, an.AllRefsByLocation(), location,
+			"expected the analyzer to be unaffected by changes to the returned map")
+	})
+}
+
 type expectedPattern struct {
 	Key     string
 	Pattern string
