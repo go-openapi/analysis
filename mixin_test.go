@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	widgetFile     = "fixtures/widget-crud.yml"
-	fooFile        = "fixtures/foo-crud.yml"
-	barFile        = "fixtures/bar-crud.yml"
-	noPathsFile    = "fixtures/no-paths.yml"
-	emptyPathsFile = "fixtures/empty-paths.json"
-	securityFile   = "fixtures/securitydef.yml"
-	otherMixin     = "fixtures/other-mixin.yml"
-	emptyProps     = "fixtures/empty-props.yml"
-	swaggerProps   = "fixtures/swagger-props.yml"
+	widgetFile     = "testdata/widget-crud.yml"
+	fooFile        = "testdata/foo-crud.yml"
+	barFile        = "testdata/bar-crud.yml"
+	noPathsFile    = "testdata/no-paths.yml"
+	emptyPathsFile = "testdata/empty-paths.json"
+	securityFile   = "testdata/securitydef.yml"
+	otherMixin     = "testdata/other-mixin.yml"
+	emptyProps     = "testdata/empty-props.yml"
+	swaggerProps   = "testdata/swagger-props.yml"
 )
 
 func TestMixin_All(t *testing.T) {

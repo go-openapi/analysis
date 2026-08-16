@@ -22,13 +22,13 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
-//go:embed all:fixtures
+//go:embed all:testdata
 var fixtureAssets embed.FS
 
 func Test_FlattenAzure(t *testing.T) {
 	t.Parallel()
 
-	file, err := filepath.Abs(filepath.Join("fixtures", "azure", "publicIpAddress.json"))
+	file, err := filepath.Abs(filepath.Join("testdata", "azure", "publicIpAddress.json"))
 	require.NoError(t, err)
 	b, err := loading.LoadFromFileOrHTTP(file)
 	assert.NoError(t, err)
@@ -50,7 +50,7 @@ func Test_FlattenAzure(t *testing.T) {
 func TestRemoteFlattenAzure_Expand(t *testing.T) {
 	t.Parallel()
 
-	server := fixtureServer(t, "fixtures/azure")
+	server := fixtureServer(t, "testdata/azure")
 
 	basePath := server.URL + "/publicIpAddress.json"
 
@@ -71,7 +71,7 @@ func TestRemoteFlattenAzure_Expand(t *testing.T) {
 func TestRemoteFlattenAzure_Flatten(t *testing.T) {
 	t.Parallel()
 
-	server := fixtureServer(t, "fixtures/azure")
+	server := fixtureServer(t, "testdata/azure")
 	basePath := server.URL + "/publicIpAddress.json"
 
 	swagger, err := loads.Spec(basePath)

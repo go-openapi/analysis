@@ -61,7 +61,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 
 	// this fixture is the same as external_definitions.yml, but no more
 	// checks if invalid construct is supported (i.e. $ref in parameters items)
-	bp := filepath.Join(".", "fixtures", "external_definitions_valid.yml")
+	bp := filepath.Join(".", "testdata", "external_definitions_valid.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	opts := &FlattenOpts{
@@ -113,7 +113,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 	}
 
 	// check the complete result for clarity
-	expected, err := os.ReadFile(filepath.Join("fixtures", "expected", "external-references-1.json"))
+	expected, err := os.ReadFile(filepath.Join("testdata", "expected", "external-references-1.json"))
 	require.NoError(t, err)
 
 	assert.JSONMarshalAsT(t, string(expected), sp)
@@ -138,7 +138,7 @@ func TestFlatten_ImportExternalReferences(t *testing.T) {
 
 	require.NoError(t, Flatten(FlattenOpts{Spec: an, BasePath: bp, Verbose: true, Minimal: true, RemoveUnused: true}))
 
-	expected, err = os.ReadFile(filepath.Join("fixtures", "expected", "external-references-2.json"))
+	expected, err = os.ReadFile(filepath.Join("testdata", "expected", "external-references-2.json"))
 	require.NoError(t, err)
 
 	assert.JSONMarshalAsT(t, string(expected), an.spec)
@@ -318,7 +318,7 @@ func makeFlattenFixtures() []refFixture {
 }
 
 func TestFlatten_CheckRef(t *testing.T) {
-	bp := filepath.Join("fixtures", "flatten.yml")
+	bp := filepath.Join("testdata", "flatten.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp}))
@@ -375,7 +375,7 @@ func TestFlatten_CheckRef(t *testing.T) {
 }
 
 func TestFlatten_FullWithOAIGen(t *testing.T) {
-	bp := filepath.Join("fixtures", "oaigen", "fixture-oaigen.yaml")
+	bp := filepath.Join("testdata", "oaigen", "fixture-oaigen.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	require.NoError(t, Flatten(FlattenOpts{
@@ -566,7 +566,7 @@ func TestFlatten_MinimalWithOAIGen(t *testing.T) {
 		}
 	}()
 
-	bp := filepath.Join("fixtures", "oaigen", "fixture-oaigen.yaml")
+	bp := filepath.Join("testdata", "oaigen", "fixture-oaigen.yaml")
 	sp = antest.LoadOrFail(t, bp)
 
 	var logCapture bytes.Buffer
@@ -734,14 +734,14 @@ func assertNoOAIGen(t *testing.T, bp string, sp *spec.Swagger) (success bool) {
 
 func TestFlatten_OAIGen(t *testing.T) {
 	for _, fixture := range []string{
-		filepath.Join("fixtures", "oaigen", "test3-swagger.yaml"),
-		filepath.Join("fixtures", "oaigen", "test3-bis-swagger.yaml"),
-		filepath.Join("fixtures", "oaigen", "test3-ter-swagger.yaml"),
+		filepath.Join("testdata", "oaigen", "test3-swagger.yaml"),
+		filepath.Join("testdata", "oaigen", "test3-bis-swagger.yaml"),
+		filepath.Join("testdata", "oaigen", "test3-ter-swagger.yaml"),
 	} {
 		t.Run("flatten_oiagen_1260_"+fixture, func(t *testing.T) {
 			t.Parallel()
 
-			bp := filepath.Join("fixtures", "oaigen", "test3-swagger.yaml")
+			bp := filepath.Join("testdata", "oaigen", "test3-swagger.yaml")
 			sp := antest.LoadOrFail(t, bp)
 
 			require.TrueTf(t, assertNoOAIGen(t, bp, sp), "did not expect an OAIGen definition here")
@@ -750,7 +750,7 @@ func TestFlatten_OAIGen(t *testing.T) {
 }
 
 func TestMoreNameInlinedSchemas(t *testing.T) {
-	bp := filepath.Join("fixtures", "more_nested_inline_schemas.yml")
+	bp := filepath.Join("testdata", "more_nested_inline_schemas.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: false}))
@@ -800,7 +800,7 @@ func TestRemoveUnused(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "oaigen", "fixture-oaigen.yaml")
+	bp := filepath.Join("testdata", "oaigen", "fixture-oaigen.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: false, Minimal: true, RemoveUnused: true}))
@@ -808,7 +808,7 @@ func TestRemoveUnused(t *testing.T) {
 	assert.Nil(t, sp.Parameters)
 	assert.Nil(t, sp.Responses)
 
-	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
+	bp = filepath.Join("testdata", "parameters", "fixture-parameters.yaml")
 	sp = antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -830,7 +830,7 @@ func TestRemoveUnused(t *testing.T) {
 	_, ok = sp.Definitions["unused"]
 	assert.FalseT(t, ok, "Did not expect to find #/definitions/unused")
 
-	bp = filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
+	bp = filepath.Join("testdata", "parameters", "fixture-parameters.yaml")
 	sp = antest.LoadOrFail(t, bp)
 
 	require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Verbose: true, Minimal: false, RemoveUnused: true}))
@@ -842,7 +842,7 @@ func TestRemoveUnused(t *testing.T) {
 }
 
 func TestOperationIDs(t *testing.T) {
-	bp := filepath.Join("fixtures", "operations", "fixture-operations.yaml")
+	bp := filepath.Join("testdata", "operations", "fixture-operations.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -898,7 +898,7 @@ func TestFlatten_Pointers(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "pointers", "fixture-pointers.yaml")
+	bp := filepath.Join("testdata", "pointers", "fixture-pointers.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -917,7 +917,7 @@ func TestFlatten_ErrorHandling(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
 
 	const wantedFailure = "Expected a failure"
-	bp := filepath.Join("fixtures", "errors", "fixture-unexpandable.yaml")
+	bp := filepath.Join("testdata", "errors", "fixture-unexpandable.yaml")
 
 	// invalid spec expansion
 	sp := antest.LoadOrFail(t, bp)
@@ -927,7 +927,7 @@ func TestFlatten_ErrorHandling(t *testing.T) {
 	sp = antest.LoadOrFail(t, bp)
 	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false}), wantedFailure)
 
-	bp = filepath.Join("fixtures", "errors", "fixture-unexpandable-2.yaml")
+	bp = filepath.Join("testdata", "errors", "fixture-unexpandable-2.yaml")
 	sp = antest.LoadOrFail(t, bp)
 	require.Errorf(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Expand: false}), wantedFailure)
 
@@ -940,7 +940,7 @@ func TestFlatten_PointersLoop(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "pointers", "fixture-pointers-loop.yaml")
+	bp := filepath.Join("testdata", "pointers", "fixture-pointers-loop.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -951,7 +951,7 @@ func TestFlatten_Bitbucket(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "bugs", "bitbucket.json")
+	bp := filepath.Join("testdata", "bugs", "bitbucket.json")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -986,7 +986,7 @@ func TestFlatten_Issue_1602(t *testing.T) {
 	// $ref as schema to #/responses or #/parameters
 
 	// minimal repro test case
-	bp := filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml")
+	bp := filepath.Join("testdata", "bugs", "1602", "fixture-1602-1.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1021,13 +1021,13 @@ func TestFlatten_Issue_1602(t *testing.T) {
 
 func TestFlatten_Issue_1602_All(t *testing.T) {
 	for _, toPin := range []string{
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-full.yaml"),
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-1.yaml"),
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-2.yaml"),
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-3.yaml"),
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-4.yaml"),
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-5.yaml"),
-		filepath.Join("fixtures", "bugs", "1602", "fixture-1602-6.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-full.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-1.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-2.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-3.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-4.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-5.yaml"),
+		filepath.Join("testdata", "bugs", "1602", "fixture-1602-6.yaml"),
 	} {
 		fixture := toPin
 		t.Run("issue_1602_all_"+fixture, func(t *testing.T) {
@@ -1050,7 +1050,7 @@ func TestFlatten_Issue_1614(t *testing.T) {
 	// $ref as schema to #/responses or #/parameters
 	// test warnings
 
-	bp := filepath.Join("fixtures", "bugs", "1614", "gitea.yaml")
+	bp := filepath.Join("testdata", "bugs", "1614", "gitea.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{
@@ -1068,7 +1068,7 @@ func TestFlatten_Issue_1621(t *testing.T) {
 	// repeated remote refs
 
 	// minimal repro test case
-	bp := filepath.Join("fixtures", "bugs", "1621", "fixture-1621.yaml")
+	bp := filepath.Join("testdata", "bugs", "1621", "fixture-1621.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{
@@ -1090,7 +1090,7 @@ func TestFlatten_Issue_1621(t *testing.T) {
 
 func TestFlatten_Issue_1796(t *testing.T) {
 	// remote cyclic ref
-	bp := filepath.Join("fixtures", "bugs", "1796", "queryIssue.json")
+	bp := filepath.Join("testdata", "bugs", "1796", "queryIssue.json")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1108,7 +1108,7 @@ func TestFlatten_Issue_1796(t *testing.T) {
 
 func TestFlatten_Issue_1767(t *testing.T) {
 	// remote cyclic ref again
-	bp := filepath.Join("fixtures", "bugs", "1767", "fixture-1767.yaml")
+	bp := filepath.Join("testdata", "bugs", "1767", "fixture-1767.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 	require.NoError(t, Flatten(FlattenOpts{
@@ -1125,7 +1125,7 @@ func TestFlatten_Issue_1767(t *testing.T) {
 
 func TestFlatten_Issue_1774(t *testing.T) {
 	// remote cyclic ref again
-	bp := filepath.Join("fixtures", "bugs", "1774", "def_api.yaml")
+	bp := filepath.Join("testdata", "bugs", "1774", "def_api.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1145,7 +1145,7 @@ func TestFlatten_Issue_1774(t *testing.T) {
 func TestFlatten_1429(t *testing.T) {
 	// nested / remote $ref in response / param schemas
 	// issue go-swagger/go-swagger#1429
-	bp := filepath.Join("fixtures", "bugs", "1429", "swagger.yaml")
+	bp := filepath.Join("testdata", "bugs", "1429", "swagger.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -1159,7 +1159,7 @@ func TestFlatten_1429(t *testing.T) {
 func TestFlatten_1851(t *testing.T) {
 	// nested / remote $ref in response / param schemas
 	// issue go-swagger/go-swagger#1851
-	bp := filepath.Join("fixtures", "bugs", "1851", "fixture-1851.yaml")
+	bp := filepath.Join("testdata", "bugs", "1851", "fixture-1851.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -1182,7 +1182,7 @@ func TestFlatten_1851(t *testing.T) {
 	assert.JSONMarshalAsT(t, `{"type": "string", "enum": [ "OK", "Not OK" ]}`, serverStatusDefinition)
 
 	// additional test case: this one used to work
-	bp = filepath.Join("fixtures", "bugs", "1851", "fixture-1851-2.yaml")
+	bp = filepath.Join("testdata", "bugs", "1851", "fixture-1851-2.yaml")
 	sp = antest.LoadOrFail(t, bp)
 
 	an = New(sp)
@@ -1204,13 +1204,13 @@ func TestFlatten_1851(t *testing.T) {
 func TestFlatten_RemoteAbsolute(t *testing.T) {
 	for _, toPin := range []string{
 		// this one has simple remote ref pattern
-		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-mini.json"),
+		filepath.Join("testdata", "bugs", "remote-absolute", "swagger-mini.json"),
 		// this has no remote ref
-		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger.json"),
+		filepath.Join("testdata", "bugs", "remote-absolute", "swagger.json"),
 		// this one has local ref, no naming conflict (same as previous but with external ref imported)
-		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-local-ref.json"),
+		filepath.Join("testdata", "bugs", "remote-absolute", "swagger-with-local-ref.json"),
 		// this one has remote ref, no naming conflict (same as previous but with external ref imported)
-		filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-remote-only-ref.json"),
+		filepath.Join("testdata", "bugs", "remote-absolute", "swagger-with-remote-only-ref.json"),
 	} {
 		fixture := toPin
 		t.Run("remote_absolute_"+fixture, func(t *testing.T) {
@@ -1224,7 +1224,7 @@ func TestFlatten_RemoteAbsolute(t *testing.T) {
 	// This one has both remote and local ref with naming conflict.
 	// This creates some "oiagen" definitions to address naming conflict,
 	// which are removed by the oaigen pruning process (reinlined / merged with parents).
-	an := testFlattenWithDefaults(t, filepath.Join("fixtures", "bugs", "remote-absolute", "swagger-with-ref.json"))
+	an := testFlattenWithDefaults(t, filepath.Join("testdata", "bugs", "remote-absolute", "swagger-with-ref.json"))
 	checkRefs(t, an.spec, false)
 }
 
@@ -1232,7 +1232,7 @@ func TestFlatten_2092(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "bugs", "2092", "swagger.yaml")
+	bp := filepath.Join("testdata", "bugs", "2092", "swagger.yaml")
 	rexOAIGen := regexp.MustCompile(`(?i)("\$ref":\s*")(.?oaigen.?)"`)
 
 	// #2092 exhibits a stability issue: repeat 100 times the process to make sure it is stable
@@ -1283,7 +1283,7 @@ func TestFlatten_2113(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "bugs", "2113", "base.yaml")
+	bp := filepath.Join("testdata", "bugs", "2113", "base.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1302,7 +1302,7 @@ func TestFlatten_2113(t *testing.T) {
 		RemoveUnused: false,
 	}))
 
-	expected, err := os.ReadFile(filepath.Join("fixtures", "expected", "issue-2113.json"))
+	expected, err := os.ReadFile(filepath.Join("testdata", "expected", "issue-2113.json"))
 	require.NoError(t, err)
 
 	assert.JSONMarshalAsT(t, string(expected), sp)
@@ -1313,7 +1313,7 @@ func TestFlatten_2334(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "bugs", "2334", "swagger.yaml")
+	bp := filepath.Join("testdata", "bugs", "2334", "swagger.yaml")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1336,7 +1336,7 @@ func TestFlatten_1898(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "bugs", "1898", "swagger.json")
+	bp := filepath.Join("testdata", "bugs", "1898", "swagger.json")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1363,7 +1363,7 @@ func TestFlatten_RemoveUnused_2657(t *testing.T) {
 	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stdout)
 
-	bp := filepath.Join("fixtures", "bugs", "2657", "schema.json")
+	bp := filepath.Join("testdata", "bugs", "2657", "schema.json")
 	sp := antest.LoadOrFail(t, bp)
 	an := New(sp)
 
@@ -1381,7 +1381,7 @@ func TestFlatten_Relative_2743(t *testing.T) {
 	defer log.SetOutput(os.Stdout)
 
 	t.Run("used to work, but should NOT", func(t *testing.T) {
-		bp := filepath.Join("fixtures", "bugs", "2743", "working", "spec.yaml")
+		bp := filepath.Join("testdata", "bugs", "2743", "working", "spec.yaml")
 		sp := antest.LoadOrFail(t, bp)
 		an := New(sp)
 
@@ -1393,7 +1393,7 @@ func TestFlatten_Relative_2743(t *testing.T) {
 	})
 
 	t.Run("used not to, but should work", func(t *testing.T) {
-		bp := filepath.Join("fixtures", "bugs", "2743", "not-working", "spec.yaml")
+		bp := filepath.Join("testdata", "bugs", "2743", "not-working", "spec.yaml")
 		sp := antest.LoadOrFail(t, bp)
 		an := New(sp)
 
