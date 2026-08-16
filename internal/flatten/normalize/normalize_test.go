@@ -4,6 +4,9 @@
 package normalize
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"path/filepath"
 	"runtime"
@@ -12,13 +15,13 @@ import (
 	_ "github.com/go-openapi/analysis/internal/antest"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/testify/v2/assert"
+	"github.com/go-openapi/testify/v2/require"
 )
 
 const (
 	definitionA    = "#/definitions/A"
 	definitionABC  = "#/definitions/abc"
 	definitionBase = "#/definitions/base"
-	exampleBase    = "https://example.com/base"
 )
 
 func TestNormalize_Path(t *testing.T) {
@@ -42,36 +45,77 @@ func TestNormalize_Path(t *testing.T) {
 func TestNormalize_RebaseRef(t *testing.T) {
 	t.Parallel()
 
-	assert.EqualT(t, definitionABC, RebaseRef(definitionBase, definitionABC))
-	assert.EqualT(t, definitionABC, RebaseRef("", definitionABC))
-	assert.EqualT(t, definitionABC, RebaseRef(".", definitionABC))
-	assert.EqualT(t, "otherfile"+definitionABC, RebaseRef("file"+definitionBase, "otherfile"+definitionABC))
-	assert.EqualT(t,
-		wrapWindowsPath("../otherfile")+definitionABC,
-		RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("./otherfile")+definitionABC),
-	)
-	assert.EqualT(t,
-		wrapWindowsPath("../otherfile")+definitionABC,
-		RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("otherfile")+definitionABC),
-	)
-	assert.EqualT(t,
-		wrapWindowsPath("local/remote/otherfile")+definitionABC,
-		RebaseRef(wrapWindowsPath("local/file")+definitionBase, wrapWindowsPath("remote/otherfile")+definitionABC),
-	)
-	assert.EqualT(t,
-		wrapWindowsPath("local/remote/otherfile.yaml"),
-		RebaseRef(wrapWindowsPath("local/file.yaml"), wrapWindowsPath("remote/otherfile.yaml")),
-	)
+	t.Run("with local refs", func(t *testing.T) {
+		t.Parallel()
 
-	assert.EqualT(t, "file#/definitions/abc", RebaseRef("file#/definitions/base", definitionABC))
+		assert.EqualT(t, definitionABC, RebaseRef(definitionBase, definitionABC))
+		assert.EqualT(t, definitionABC, RebaseRef("", definitionABC))
+		assert.EqualT(t, definitionABC, RebaseRef(".", definitionABC))
+		assert.EqualT(t, "otherfile"+definitionABC, RebaseRef("file"+definitionBase, "otherfile"+definitionABC))
+		assert.EqualT(t,
+			wrapWindowsPath("../otherfile")+definitionABC,
+			RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("./otherfile")+definitionABC),
+		)
+		assert.EqualT(t,
+			wrapWindowsPath("../otherfile")+definitionABC,
+			RebaseRef(wrapWindowsPath("../file")+definitionBase, wrapWindowsPath("otherfile")+definitionABC),
+		)
+		assert.EqualT(t,
+			wrapWindowsPath("local/remote/otherfile")+definitionABC,
+			RebaseRef(wrapWindowsPath("local/file")+definitionBase, wrapWindowsPath("remote/otherfile")+definitionABC),
+		)
+		assert.EqualT(t,
+			wrapWindowsPath("local/remote/otherfile.yaml"),
+			RebaseRef(wrapWindowsPath("local/file.yaml"), wrapWindowsPath("remote/otherfile.yaml")),
+		)
 
-	// with remote
-	assert.EqualT(t, exampleBase+definitionABC, RebaseRef(exampleBase, exampleBase+definitionABC))
-	assert.EqualT(t, exampleBase+definitionABC, RebaseRef(exampleBase, definitionABC))
-	assert.EqualT(t, exampleBase+"#/dir/definitions/abc", RebaseRef(exampleBase, "#/dir/definitions/abc"))
-	assert.EqualT(t, exampleBase+"/dir/definitions/abc", RebaseRef(exampleBase+"/spec.yaml", "dir/definitions/abc"))
-	assert.EqualT(t, exampleBase+"/dir/definitions/abc", RebaseRef(exampleBase+"/", "dir/definitions/abc"))
-	assert.EqualT(t, "https://example.com/dir/definitions/abc", RebaseRef(exampleBase, "dir/definitions/abc"))
+		assert.EqualT(t, "file#/definitions/abc", RebaseRef("file#/definitions/base", definitionABC))
+	})
+
+	t.Run("with remote refs", func(t *testing.T) {
+		t.Parallel()
+
+		server := remoteSpecServer(t)
+		remoteBase := server.URL + "/base"
+
+		assert.EqualT(t, remoteBase+definitionABC, RebaseRef(remoteBase, remoteBase+definitionABC))
+		assert.EqualT(t, remoteBase+definitionABC, RebaseRef(remoteBase, definitionABC))
+		assert.EqualT(t, remoteBase+"#/dir/definitions/abc", RebaseRef(remoteBase, "#/dir/definitions/abc"))
+		assert.EqualT(t, remoteBase+"/dir/definitions/abc", RebaseRef(remoteBase+"/spec.yaml", "dir/definitions/abc"))
+		assert.EqualT(t, remoteBase+"/dir/definitions/abc", RebaseRef(remoteBase+"/", "dir/definitions/abc"))
+		assert.EqualT(t, server.URL+"/dir/definitions/abc", RebaseRef(remoteBase, "dir/definitions/abc"))
+
+		t.Run("rebased ref should point to a reachable document", func(t *testing.T) {
+			rebased := RebaseRef(remoteBase, "dir/definitions/abc")
+
+			req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, rebased, nil)
+			require.NoError(t, err)
+
+			resp, err := server.Client().Do(req)
+			require.NoError(t, err)
+			t.Cleanup(func() { _ = resp.Body.Close() })
+
+			assert.EqualT(t, http.StatusOK, resp.StatusCode)
+		})
+	})
+}
+
+// remoteSpecServer starts a local TLS server standing in for a remote spec host.
+//
+// It serves a stub document at any path, so that refs rebased against it
+// resolve to a real, locally owned origin instead of a domain we don't control.
+func remoteSpecServer(t testing.TB) *httptest.Server {
+	t.Helper()
+
+	const stub = `{"definitions":{"abc":{"type":"string"}}}`
+
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, stub)
+	}))
+	t.Cleanup(server.Close)
+
+	return server
 }
 
 // wrapWindowsPath adapts path expectations for tests running on windows.
