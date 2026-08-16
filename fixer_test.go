@@ -17,7 +17,7 @@ import (
 func TestFixer_EmptyResponseDescriptions(t *testing.T) {
 	t.Parallel()
 
-	bp := filepath.Join("fixtures", "fixer", "fixer.yaml")
+	bp := filepath.Join("testdata", "fixer", "fixer.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	FixEmptyResponseDescriptions(sp)

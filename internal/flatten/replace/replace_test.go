@@ -17,7 +17,7 @@ import (
 func TestUpdateRef(t *testing.T) {
 	t.Parallel()
 
-	bp := filepath.Join("..", "..", "..", "fixtures", "external_definitions.yml")
+	bp := filepath.Join("..", "..", "..", "testdata", "external_definitions.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	for _, v := range refFixtures() {
@@ -48,7 +48,7 @@ func TestUpdateRef(t *testing.T) {
 func TestRewriteSchemaRef(t *testing.T) {
 	t.Parallel()
 
-	bp := filepath.Join("..", "..", "..", "fixtures", "inline_schemas.yml")
+	bp := filepath.Join("..", "..", "..", "testdata", "inline_schemas.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	for i, v := range refFixtures() {
@@ -80,7 +80,7 @@ func TestReplace_ErrorHandling(t *testing.T) {
 	t.Parallel()
 
 	const wantedFailure = "expected a failure"
-	bp := filepath.Join("..", "..", "..", "fixtures", "errors", "fixture-unexpandable-2.yaml")
+	bp := filepath.Join("..", "..", "..", "testdata", "errors", "fixture-unexpandable-2.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	t.Run("with invalid $ref", func(t *testing.T) {

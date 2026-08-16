@@ -152,7 +152,7 @@ func TestAnalyzer_All(t *testing.T) {
 func TestAnalyzer_DefinitionAnalysis(t *testing.T) {
 	t.Parallel()
 
-	doc := antest.LoadOrFail(t, filepath.Join("fixtures", "definitions.yml"))
+	doc := antest.LoadOrFail(t, filepath.Join("testdata", "definitions.yml"))
 
 	analyzer := New(doc)
 	definitions := analyzer.allSchemas
@@ -208,7 +208,7 @@ func TestAnalyzer_DefinitionAnalysis(t *testing.T) {
 func TestAnalyzer_ReferenceAnalysis(t *testing.T) {
 	t.Parallel()
 
-	doc := antest.LoadOrFail(t, filepath.Join("fixtures", "references.yml"))
+	doc := antest.LoadOrFail(t, filepath.Join("testdata", "references.yml"))
 	an := New(doc)
 
 	definitions := an.references
@@ -292,7 +292,7 @@ func TestAnalyzer_ReferenceAnalysis(t *testing.T) {
 func TestAnalyzer_AllRefsByLocation(t *testing.T) {
 	t.Parallel()
 
-	doc := antest.LoadOrFail(t, filepath.Join("fixtures", "references.yml"))
+	doc := antest.LoadOrFail(t, filepath.Join("testdata", "references.yml"))
 	an := New(doc)
 
 	byLocation := an.AllRefsByLocation()
@@ -373,7 +373,7 @@ type expectedPattern struct {
 func TestAnalyzer_PatternAnalysis(t *testing.T) {
 	t.Parallel()
 
-	doc := antest.LoadOrFail(t, filepath.Join("fixtures", "patterns.yml"))
+	doc := antest.LoadOrFail(t, filepath.Join("testdata", "patterns.yml"))
 	an := New(doc)
 	pt := an.patterns
 
@@ -760,7 +760,7 @@ func TestAnalyzer_SecurityRequirementsDefinitions(t *testing.T) {
 func TestAnalyzer_MoreParamAnalysis(t *testing.T) {
 	t.Parallel()
 
-	bp := filepath.Join("fixtures", "parameters", "fixture-parameters.yaml")
+	bp := filepath.Join("testdata", "parameters", "fixture-parameters.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	an := New(sp)
@@ -873,7 +873,7 @@ func TestAnalyzer_EdgeCases(t *testing.T) {
 func TestAnalyzer_EnumAnalysis(t *testing.T) {
 	t.Parallel()
 
-	doc := antest.LoadOrFail(t, filepath.Join("fixtures", "enums.yml"))
+	doc := antest.LoadOrFail(t, filepath.Join("testdata", "enums.yml"))
 
 	an := New(doc)
 	en := an.enums
@@ -1087,7 +1087,7 @@ func prepareTestParamsValid() *Spec {
 }
 
 func prepareTestParamsInvalid(t testing.TB, fixture string) *Spec {
-	bp := filepath.Join("fixtures", fixture)
+	bp := filepath.Join("testdata", fixture)
 	spec := antest.LoadOrFail(t, bp)
 
 	analyzer := New(spec)

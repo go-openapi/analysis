@@ -225,7 +225,7 @@ func TestSchemaAnalysis_SimpleSchema(t *testing.T) {
 func TestSchemaAnalys_InvalidSchema(t *testing.T) {
 	// explore error cases in schema analysis:
 	// the only cause for failure is a wrong $ref at some place
-	bp := filepath.Join("fixtures", "bugs", "1602", "other-invalid-pointers.yaml")
+	bp := filepath.Join("testdata", "bugs", "1602", "other-invalid-pointers.yaml")
 	sp := antest.LoadOrFail(t, bp)
 
 	// invalid ref not detected (no digging further)

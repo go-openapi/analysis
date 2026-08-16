@@ -239,7 +239,7 @@ func TestName_SplitKey(t *testing.T) {
 }
 
 func TestName_NamesFromKey(t *testing.T) {
-	bp := filepath.Join("fixtures", "inline_schemas.yml")
+	bp := filepath.Join("testdata", "inline_schemas.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	values := []struct {
@@ -461,7 +461,7 @@ func TestName_InlinedSchemas(t *testing.T) {
 		},
 	}
 
-	bp := filepath.Join("fixtures", "nested_inline_schemas.yml")
+	bp := filepath.Join("testdata", "nested_inline_schemas.yml")
 	sp := antest.LoadOrFail(t, bp)
 
 	require.NoError(t, spec.ExpandSpec(sp, &spec.ExpandOptions{

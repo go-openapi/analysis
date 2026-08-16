@@ -27,7 +27,7 @@ func TestDiffForVariousCombinations(t *testing.T) {
 	require.NotEmpty(t, allTests)
 
 	// To filter cases for debugging poke an individual case here eg "path", "enum" etc
-	// see the test cases in fixtures/diff
+	// see the test cases in testdata/diff
 	// Don't forget to remove it once you're done.
 	// (There's a test at the end to check all cases were run)
 	matches := allTests
@@ -110,8 +110,8 @@ func makeTestCases(t testing.TB, matches []string) []testCaseData {
 }
 
 func TestIssue2962(t *testing.T) {
-	oldSpec := filepath.Join("fixtures", "bugs", "2962", "old.json")
-	newSpec := filepath.Join("fixtures", "bugs", "2962", "new.json")
+	oldSpec := filepath.Join("testdata", "bugs", "2962", "old.json")
+	newSpec := filepath.Join("testdata", "bugs", "2962", "new.json")
 
 	t.Run("should diff", func(t *testing.T) {
 		diffs, err := getDiffs(oldSpec, newSpec)
@@ -130,7 +130,7 @@ func TestIssue2962(t *testing.T) {
 }
 
 func fixturePath(file string, parts ...string) string {
-	return filepath.Join("fixtures", strings.Join(append([]string{file}, parts...), ""))
+	return filepath.Join("testdata", strings.Join(append([]string{file}, parts...), ""))
 }
 
 type testCaseData struct {
