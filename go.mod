@@ -7,8 +7,8 @@ require (
 	github.com/go-openapi/swag/jsonutils v0.28.0
 	github.com/go-openapi/swag/loading v0.28.0
 	github.com/go-openapi/swag/mangling v0.28.0
-	github.com/go-openapi/testify/v2 v2.6.0
-	golang.org/x/text v0.40.0
+	github.com/go-openapi/testify/v2 v2.6.1
+	golang.org/x/text v0.41.0
 )
 
 require (
@@ -16,14 +16,14 @@ require (
 	github.com/go-openapi/jsonreference v1.0.0 // indirect
 	github.com/go-openapi/swag/conv v0.28.0 // indirect
 	github.com/go-openapi/swag/pools v0.28.0 // indirect
-	github.com/go-openapi/swag/stringutils v0.27.3 // indirect
+	github.com/go-openapi/swag/stringutils v0.28.0 // indirect
 	github.com/go-openapi/swag/typeutils v0.28.0 // indirect
 	github.com/go-openapi/swag/yamlutils v0.28.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/oklog/ulid/v2 v2.1.1 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.57.0 // indirect
+	github.com/oklog/ulid/v2 v2.1.2 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	golang.org/x/net v0.58.0 // indirect
 )
 
 go 1.25.0
