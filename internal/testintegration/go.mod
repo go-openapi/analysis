@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/go-openapi/analysis v0.26.0
-	github.com/go-openapi/loads v0.25.0
+	github.com/go-openapi/loads v0.25.1
 	github.com/go-openapi/spec v0.22.9
 	github.com/go-openapi/swag/loading v0.28.0
 	github.com/go-openapi/testify/v2 v2.6.1
