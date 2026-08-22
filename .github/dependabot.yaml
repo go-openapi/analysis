@@ -27,11 +27,13 @@ updates:
     # 2. golang.org-dependencies are auto-merged
     # 3. go-openapi patch updates are auto-merged. Minor/major version updates require a manual merge.
     # 4. other dependencies require a manual merge
-    directory: "/"
+    directories:
+      - "**/*"
     schedule:
-      interval: "weekly"
-      day: "friday"
-    open-pull-requests-limit: 4
+      interval: "cron"
+      cronjob: "35 8 * * 2,5"    # => update twice a week
+      timezone: CEST
+    open-pull-requests-limit: 8 # => {# modules} x {# groups}
     groups:
       development-dependencies:
         patterns:
