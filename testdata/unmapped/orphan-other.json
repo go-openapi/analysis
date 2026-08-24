@@ -1,0 +1,10 @@
+{
+  "definitions": {
+    "deep": {
+      "type": "object",
+      "properties": {"plain": {"type": "boolean"}},
+      "propertyNames": {"$ref": "#/definitions/leaf"}
+    },
+    "leaf": {"type": "string"}
+  }
+}

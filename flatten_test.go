@@ -1463,3 +1463,92 @@ func testFlattenWithDefaults(t *testing.T, bp string) *Spec {
 
 	return an
 }
+
+func TestFlatten_UnmappedKeywordRef(t *testing.T) {
+	// A $ref under a keyword the Swagger 2.0 model does not map - propertyNames, if - lands in
+	// spec.Schema.ExtraProps as raw JSON. Flatten used to leave it alone while importing the
+	// subtree that held it, so the pointer named a definition of the root document, or nothing.
+	for _, testCase := range []struct {
+		name     string
+		fixture  string
+		expected string
+		assert   func(t *testing.T, sp *spec.Swagger)
+	}{
+		{
+			name:     "the target is imported once, and shared",
+			fixture:  "root.json",
+			expected: "#/definitions/leaf",
+			assert: func(t *testing.T, sp *spec.Swagger) {
+				// the mapped $ref and the unmapped ones name the same imported definition
+				require.MapContainsT(t, sp.Definitions, "leaf")
+				mapped := sp.Definitions["deep"].Properties["mapped"]
+				assert.EqualT(t, "#/definitions/leaf", mapped.Ref.String())
+			},
+		},
+		{
+			name:     "the target is imported although nothing mapped points at it",
+			fixture:  "orphan-root.json",
+			expected: "#/definitions/leaf",
+			assert: func(t *testing.T, sp *spec.Swagger) {
+				require.MapContainsT(t, sp.Definitions, "leaf")
+				assert.TrueT(t, sp.Definitions["leaf"].Type.Contains("string"))
+			},
+		},
+		{
+			name:     "a name conflict with the root does not capture the pointer",
+			fixture:  "collide-root.json",
+			expected: "#/definitions/leafOAIGen",
+			assert: func(t *testing.T, sp *spec.Swagger) {
+				// the root keeps its own, unrelated "leaf"
+				assert.TrueT(t, sp.Definitions["leaf"].Type.Contains("integer"))
+				assert.TrueT(t, sp.Definitions["leafOAIGen"].Type.Contains("string"))
+			},
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			bp := filepath.Join(".", "testdata", "unmapped", testCase.fixture)
+			sp := antest.LoadOrFail(t, bp)
+
+			require.NoError(t, Flatten(FlattenOpts{Spec: New(sp), BasePath: bp, Minimal: true}))
+
+			deep := sp.Definitions["deep"]
+			assert.EqualT(t, testCase.expected, unmappedRef(t, deep.ExtraProps["propertyNames"]))
+			testCase.assert(t, sp)
+
+			t.Run("the flattened document is self-contained", func(t *testing.T) {
+				for _, ref := range New(sp).AllRefs() {
+					assert.TrueT(t, strings.HasPrefix(ref.String(), "#/"), "expected a local $ref, got %q", ref)
+				}
+				assertUnmappedRefsResolve(t, sp)
+			})
+		})
+	}
+}
+
+// unmappedRef returns the $ref held by a raw JSON node.
+func unmappedRef(t testing.TB, node any) string {
+	t.Helper()
+
+	asMap, ok := node.(map[string]any)
+	require.TrueT(t, ok)
+	ref, ok := asMap["$ref"].(string)
+	require.TrueT(t, ok)
+
+	return ref
+}
+
+// assertUnmappedRefsResolve checks that every $ref under an unmapped keyword names a definition
+// that the flattened document actually holds.
+func assertUnmappedRefsResolve(t *testing.T, sp *spec.Swagger) {
+	t.Helper()
+
+	an := New(sp)
+	require.NotEmpty(t, an.references.unmappedRefs)
+
+	for key := range an.references.unmappedRefs {
+		ref := an.references.unmappedRefs[key]
+		resolved, err := spec.ResolveRef(sp, &ref)
+		require.NoErrorf(t, err, "$ref %q at %s resolves to nothing", ref.String(), key)
+		require.NotNil(t, resolved)
+	}
+}

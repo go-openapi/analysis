@@ -1,0 +1,6 @@
+{
+  "swagger": "2.0",
+  "info": {"title": "nothing mapped points at the target", "version": "1.0.0"},
+  "paths": {},
+  "definitions": {"holder": {"$ref": "orphan-other.json#/definitions/deep"}}
+}
