@@ -1,0 +1,9 @@
+{
+  "swagger": "2.0",
+  "info": {"title": "the root has its own definition of that name", "version": "1.0.0"},
+  "paths": {},
+  "definitions": {
+    "holder": {"$ref": "collide-other.json#/definitions/deep"},
+    "leaf": {"type": "integer", "description": "unrelated to the leaf of the other document"}
+  }
+}
