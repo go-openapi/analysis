@@ -3,7 +3,7 @@ module github.com/go-openapi/analysis/internal/testintegration
 go 1.25.0
 
 require (
-	github.com/go-openapi/analysis v0.26.0
+	github.com/go-openapi/analysis v0.26.1
 	github.com/go-openapi/loads v0.25.1
 	github.com/go-openapi/spec v0.22.10
 	github.com/go-openapi/swag/loading v0.29.1
