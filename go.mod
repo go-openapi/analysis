@@ -2,8 +2,8 @@ module github.com/go-openapi/analysis
 
 require (
 	github.com/go-openapi/jsonpointer v1.0.0
-	github.com/go-openapi/spec v0.22.11
-	github.com/go-openapi/strfmt v0.27.0
+	github.com/go-openapi/spec v1.0.0
+	github.com/go-openapi/strfmt v0.27.1
 	github.com/go-openapi/swag/jsonutils v0.29.1
 	github.com/go-openapi/swag/loading v0.29.1
 	github.com/go-openapi/swag/mangling v0.29.1
@@ -26,4 +26,4 @@ require (
 	golang.org/x/net v0.58.0 // indirect
 )
 
-go 1.25.0
+go 1.26.0
