@@ -231,6 +231,60 @@ func Test_checkNumericTypeChanges(t *testing.T) {
 	}
 }
 
+func TestCheckStringTypeChanges(t *testing.T) {
+	tests := []struct {
+		name  string
+		type1 *spec.SchemaProps
+		type2 *spec.SchemaProps
+		want  []TypeDiff
+	}{
+		{
+			name:  "MaxLength added",
+			type1: &spec.StringProperty().SchemaProps,
+			type2: &spec.StringProperty().WithMaxLength(255).SchemaProps,
+			want:  []TypeDiff{{Change: AddedConstraint, Description: "MaxLength(255)"}},
+		},
+		{
+			name:  "MinLength and MaxLength added",
+			type1: &spec.StringProperty().SchemaProps,
+			type2: &spec.StringProperty().WithMinLength(1).WithMaxLength(255).SchemaProps,
+			want: []TypeDiff{
+				{Change: AddedConstraint, Description: "MinLength(1)"},
+				{Change: AddedConstraint, Description: "MaxLength(255)"},
+			},
+		},
+		{
+			name:  "MaxLength narrowed",
+			type1: &spec.StringProperty().WithMaxLength(1000).SchemaProps,
+			type2: &spec.StringProperty().WithMaxLength(255).SchemaProps,
+			want:  []TypeDiff{{Change: NarrowedType, Description: "MaxLength 1000->255"}},
+		},
+		{
+			name:  "MaxLength widened",
+			type1: &spec.StringProperty().WithMaxLength(255).SchemaProps,
+			type2: &spec.StringProperty().WithMaxLength(1000).SchemaProps,
+			want:  []TypeDiff{{Change: WidenedType, Description: "MaxLength 255->1000"}},
+		},
+		{
+			name:  "MaxLength removed",
+			type1: &spec.StringProperty().WithMaxLength(255).SchemaProps,
+			type2: &spec.StringProperty().SchemaProps,
+			want:  []TypeDiff{{Change: DeletedConstraint, Description: "MaxLength(255)"}},
+		},
+		{
+			name:  "MinLength changed with MaxLength unchanged",
+			type1: &spec.StringProperty().WithMinLength(1).WithMaxLength(255).SchemaProps,
+			type2: &spec.StringProperty().WithMinLength(2).WithMaxLength(255).SchemaProps,
+			want:  []TypeDiff{{Change: NarrowedType, Description: "MinLength 1->2"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, CheckStringTypeChanges(nil, tt.type1, tt.type2))
+		})
+	}
+}
+
 type compareValueCase struct {
 	name       string
 	fieldName  string
